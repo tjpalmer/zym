@@ -1,0 +1,29 @@
+{
+  "name": "zym",
+  "version": "0.2.0",
+  "description": "Zym",
+  "repository": {
+    "type": "git",
+    "url": "about:blank"
+  },
+  "devDependencies": {
+    "@types/three": "0.0.21",
+    "awesome-typescript-loader": "^2.1.1",
+    "css-loader": "^0.23.1",
+    "json-loader": "^0.5.4",
+    "style-loader": "^0.13.1",
+    "tslint": "^3.14.0",
+    "tslint-loader": "^2.1.5",
+    "typescript": "^2.0.0",
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "^1.14.1"
+  },
+  "scripts": {
+    "prepublish": "webpack --color -p",
+    "watch": "webpack-dev-server --color -d --port 2017"
+  },
+  "dependencies": {
+    "font-awesome": "^4.6.3",
+    "three": "^0.80.1"
+  }
+}

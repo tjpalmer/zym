@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Zym</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+    <!--script src="node_modules/three/build/three.min.js"></script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r80/three.min.js"></script>
+    <script src="app.js"></script>
+  </head>
+  <body>
+    <!-- TODO Move out all UI! -->
+    <form class="panel toolbox">
+      <label class="hero selected">
+        <input name="tool" type="radio"/>
+      </label>
+      <label class="brick">
+        <input name="tool" type="radio"/>
+      </label>
+      <label class="ladder">
+        <input name="tool" type="radio"/>
+      </label>
+    </form>
+    <div class="view"></div>
+    <div class="panel">
+      <i class="fa fa-reply undo"></i>
+      <i class="fa fa-share redo"></i>
+    </div>
+  </body>
+</html>
