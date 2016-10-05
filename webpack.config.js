@@ -13,6 +13,9 @@ module.exports = {
         test: /\.json$/,
         loader: 'json',
       }, {
+        test: /\.png$/,
+        loader: "url",
+      }, {
         test: /\.ts$/,
         loader: 'awesome-typescript',
       },

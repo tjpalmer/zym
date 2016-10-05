@@ -2,5 +2,6 @@
 // coming from different source files.
 
 export * from './control';
+export * from './level';
 export * from './stage';
 export * from './toolbox';

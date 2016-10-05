@@ -1,3 +1,4 @@
+import {Art} from './gold';
 import {Control, Stage, Toolbox} from './';
 import './index.css';
 
@@ -7,6 +8,7 @@ window.onload = main;
 declare function require(name: string): any;
 
 function main() {
+  let art = new Art();
   let stage = new Stage();
   new Control(stage);
   new Toolbox(document.body, stage);
