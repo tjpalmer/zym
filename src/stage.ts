@@ -1,3 +1,4 @@
+import {Level} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -48,10 +49,21 @@ export class Stage {
     window.setTimeout(() => {
       // Now take the available space.
       let view = document.body.querySelector('.view');
-      let size = new Vector2(view.clientWidth, view.clientHeight);
+      let viewSize = new Vector2(view.clientWidth, view.clientHeight);
+      let viewRatio = viewSize.x / viewSize.y;
+      let pixelRatio = Level.pixelCount.x / Level.pixelCount.y;
+      let canvasSize = new Vector2();
+      if (pixelRatio < viewRatio) {
+        canvasSize.x = Math.round(pixelRatio * viewSize.y);
+        canvasSize.y = viewSize.y;
+      } else {
+        canvasSize.x = viewSize.x;
+        canvasSize.y = Math.round(viewSize.x / pixelRatio);
+      }
+      // TODO OrthographicCamera version of this.
       // this.camera.aspect = size.x / size.y;
       // this.camera.updateProjectionMatrix();
-      // this.renderer.setSize(size.x, size.y);
+      this.renderer.setSize(canvasSize.x, canvasSize.y);
       if (this.scene) {
         this.render();
       }
