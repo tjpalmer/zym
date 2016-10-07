@@ -1,7 +1,7 @@
 body {
   align-content: stretch;
   align-items: stretch;
-  background: #222;
+  background: black;
   bottom: 0;
   color: white;
   display: flex;
@@ -35,6 +35,19 @@ label.ladder:before {
   padding: 0.2em 0.3em;
 }
 
+.stage {
+  background: black;
+  border: 8px solid #333;
+  border-radius: 8px;
+  display: none;
+  left: 50%;
+  margin-bottom: auto;
+  margin-top: auto;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .toolbox i {
   margin-top: 2em;
 }
@@ -55,14 +68,4 @@ label.ladder:before {
 .view {
   flex: 1;
   position: relative;
-}
-
-.view canvas {
-  background: black;
-  left: 50%;
-  margin-bottom: auto;
-  margin-top: auto;
-  position: fixed;
-  top: 50%;
-  transform: translate(-50%, -50%);
 }

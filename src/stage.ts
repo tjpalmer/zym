@@ -12,13 +12,15 @@ export class Stage {
   constructor() {
     // TODO Extract some setup to graphics modes?
     // Renderer.
-    let renderer = this.renderer = new WebGLRenderer({antialias: false});
-    document.body.querySelector('.view').appendChild(renderer.domElement);
+    let canvas = <HTMLCanvasElement>document.body.querySelector('.stage');
+    let renderer = this.renderer =
+      new WebGLRenderer({antialias: false, canvas});
     // Camera.
     // TODO
     // Resize handling after renderer and camera.
     window.addEventListener('resize', () => this.resize());
     this.resize();
+    canvas.style.display = 'block';
     // Scene.
     let scene = this.scene = new Scene();
     // Ambient light.
@@ -53,12 +55,17 @@ export class Stage {
       let viewRatio = viewSize.x / viewSize.y;
       let pixelRatio = Level.pixelCount.x / Level.pixelCount.y;
       let canvasSize = new Vector2();
+      let {classList} = this.renderer.domElement;
       if (pixelRatio < viewRatio) {
         canvasSize.x = Math.round(pixelRatio * viewSize.y);
         canvasSize.y = viewSize.y;
+        classList.add('vertical');
+        classList.remove('horizontal');
       } else {
         canvasSize.x = viewSize.x;
         canvasSize.y = Math.round(viewSize.x / pixelRatio);
+        classList.add('horizontal');
+        classList.remove('vertical');
       }
       // TODO OrthographicCamera version of this.
       // this.camera.aspect = size.x / size.y;
