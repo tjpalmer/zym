@@ -1,6 +1,7 @@
 import {Art} from './gold';
 import {Control, Stage, Toolbox} from './';
 import './index.css';
+import 'font-awesome';
 
 window.onload = main;
 
