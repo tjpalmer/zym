@@ -16,40 +16,38 @@ module.exports = {
   module: {
     loaders: [
       {
+        test: /\.css$/,
+        loader: 'style!css',
+      }, {
         // Take out all but woff from font-awesome.
-        test: /font-awesome/,
+        test: /font-awesome\.css/,
         loader: 'string-replace',
         query: {
           multiple: [
             {
               // Remove the standalone eot.
               flags: '',
-              search: /src: url\([^)]+webfont\.eot[^)]+\);/,
+              search: 'src: url[(][^)]+webfont\.eot[^)]+[)];',
               replace: '',
             },
             {
               // Remove all but woff2 from the list.
               flags: 'g',
               search:
-                /url\([^)]+webfont\.(eot|svg|ttf|woff)\?[^)]+\) */.source +
-                /format\([^)]+\),?/.source,
+                // This gets '\' -> '/', so use '[...]' instead.
+                'url[(][^)]+webfont[.](eot|svg|ttf|woff)[?][^)]+[)] *' +
+                'format[(][^)]+[)],?',
               replace: '',
             },
             {
               // Remove the comma after woff2.
               flags: '',
-              search: /, *;/,
+              search: ', *;',
               replace: ';',
             },
           ],
         },
       }, {
-        test: /\.css$/,
-        loader: 'style!css',
-      }, {
-      //   test: /webfont\.(eot|svg|ttf|woff2)/,
-      //   loader: 'ignore',
-      // }, {
         test: /\.json$/,
         loader: 'json',
       }, {
