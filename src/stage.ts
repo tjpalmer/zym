@@ -16,18 +16,21 @@ export class Stage {
     let renderer = this.renderer =
       new WebGLRenderer({antialias: false, canvas});
     // Camera.
-    // TODO
+    this.camera = new OrthographicCamera(
+      0, Level.pixelCount.x, Level.pixelCount.y, 0, -1e5, 1e5,
+    );
+    this.camera.position.z = 1;
     // Resize handling after renderer and camera.
     window.addEventListener('resize', () => this.resize());
     this.resize();
     canvas.style.display = 'block';
     // Scene.
-    let scene = this.scene = new Scene();
+    this.scene = new Scene();
     // Ambient light.
-    let ambient = new AmbientLight(0xFFFFFF, 0.5);
-    scene.add(ambient);
-    // Render.
-    this.render();
+    let ambient = new AmbientLight(0xFFFFFF, 1);
+    this.scene.add(ambient);
+    // // Render.
+    // this.render();
     // requestAnimationFrame(() => this.render());
   }
 
@@ -37,7 +40,7 @@ export class Stage {
     // Prep next frame first for best fps.
     // requestAnimationFrame(() => this.render());
     // Render scene.
-    // this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
   }
 
   renderer: WebGLRenderer;

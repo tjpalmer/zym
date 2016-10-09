@@ -13,4 +13,5 @@ function main() {
   let stage = new Stage();
   new Control(stage);
   new Toolbox(document.body, stage);
+  art.handle(stage);
 }
