@@ -36,10 +36,15 @@ export class Stage {
 
   camera: OrthographicCamera;
 
+  redraw?: () => void;
+
   render() {
     // Prep next frame first for best fps.
     // requestAnimationFrame(() => this.render());
     // Render scene.
+    if (this.redraw) {
+      this.redraw();
+    }
     this.renderer.render(this.scene, this.camera);
   }
 

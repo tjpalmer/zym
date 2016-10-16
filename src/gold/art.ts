@@ -1,7 +1,7 @@
 import {Level, Stage} from '../';
 import {
-  Mesh, MeshBasicMaterial, NearestFilter, PlaneBufferGeometry, ShaderMaterial,
-  Texture, Vector2
+  BufferAttribute, BufferGeometry, Mesh, MeshBasicMaterial, NearestFilter,
+  PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
 } from 'three';
 
 export class Art {
@@ -16,6 +16,7 @@ export class Art {
   }
 
   handle(stage: Stage) {
+    stage.scene.children.forEach(kid => stage.scene.remove(kid));
     // Background test.
     let plane =
       new PlaneBufferGeometry(Level.pixelCount.x, Level.pixelCount.y, 1, 1);
@@ -25,9 +26,7 @@ export class Art {
     let mesh = new Mesh(plane, planeMaterial);
     mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
     stage.scene.add(mesh);
-    // Tile test.
-    let tilePlane =
-      new PlaneBufferGeometry(Level.tileSize.x, Level.tileSize.y, 1, 1);
+    // Tiles.
     let tileMaterial = new ShaderMaterial({
       uniforms: {
         map: {value: this.texture},
@@ -35,18 +34,48 @@ export class Art {
       fragmentShader: tileFragmentShader,
       vertexShader: tileVertexShader,
     });
+    let tilePlane = new BufferGeometry();
+    tilePlane.addAttribute('position', new BufferAttribute(new Float32Array([
+      // Leave the coords at 3D for now to match default expectations.
+      // And they'll be translated.
+      8, 0, 0, 0, 10, 0, 0, 0, 0,
+      8, 0, 0, 8, 10, 0, 0, 10, 0,
+    ]), 3));
+    tilePlane.addAttribute('tile',
+      // Tile map offsets, repeated.
+      new BufferAttribute(new Float32Array(2 * 6), 2)
+    );
+    tilePlane.addAttribute('uv', new BufferAttribute(new Float32Array([
+      // Uv are 2D.
+      1, 0, 0, 1, 0, 0,
+      1, 0, 1, 1, 0, 1,
+    ]), 2));
+    // TODO Tile number!
+    let tilePlanes = new BufferGeometry();
+    let tileCount = Level.tileCount.x * Level.tileCount.y;
+    for (let name in tilePlane.attributes) {
+      let attribute = tilePlane.getAttribute(name);
+      tilePlanes.addAttribute(name, new BufferAttribute(new Float32Array(
+        tileCount * attribute.array.length
+      ), attribute.itemSize));
+    }
+    // TODO
     let offset = new Vector2();
-    for (let j = 0; j < Level.tileCount.x; ++j) {
+    for (let j = 0, t = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i) {
-        let tileMesh = new Mesh(tilePlane, tileMaterial);
-        offset.set(j + 0.5, i + 0.5).multiply(Level.tileSize);
-        tileMesh.position.set(offset.x, offset.y, 0);
-        stage.scene.add(tileMesh);
-        break;
+        offset.set(j, i).multiply(Level.tileSize);
+        tilePlane.translate(offset.x, offset.y, 0);
+        tilePlanes.merge(tilePlane, 6 * t);
+        tilePlane.translate(-offset.x, -offset.y, 0);
+        ++t;
+        // break;
       }
     }
+    let tilesMesh = new Mesh(tilePlanes, tileMaterial);
+    stage.scene.add(tilesMesh);
     // Render.
     stage.render();
+    // stage.redraw = () => this.handle(stage);
   }
 
   prepareImage(image: HTMLImageElement) {

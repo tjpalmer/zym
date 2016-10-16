@@ -7,7 +7,7 @@ export class Level {
 
   static tileSize = new Vector2(8, 10);
 
-  static pixelCount = Level.tileCount.multiply(Level.tileSize);
+  static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
   tiles: Array<Part>;
 
