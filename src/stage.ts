@@ -1,4 +1,4 @@
-import {Level} from './';
+import {EditMode, Level} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -6,6 +6,10 @@ import {
   OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial,
   Vector2, Vector3, WebGLRenderer,
 } from 'three';
+
+export interface Mode {
+
+}
 
 export class Stage {
 
@@ -36,11 +40,13 @@ export class Stage {
 
   camera: OrthographicCamera;
 
+  mode: Mode = new EditMode(this);
+
   redraw?: () => void;
 
   render() {
     // Prep next frame first for best fps.
-    // requestAnimationFrame(() => this.render());
+    requestAnimationFrame(() => this.render());
     // Render scene.
     if (this.redraw) {
       this.redraw();

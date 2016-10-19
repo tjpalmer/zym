@@ -1,7 +1,7 @@
 body {
   align-content: stretch;
   align-items: stretch;
-  background: black;
+  background: #111;
   bottom: 0;
   color: white;
   display: flex;
@@ -26,6 +26,7 @@ label.ladder:before {
 }
 
 .panel {
+  /*display: none;*/
   flex: 0;
   font-size: 2em;
 }
@@ -37,15 +38,13 @@ label.ladder:before {
 
 .stage {
   background: black;
-  border: 8px solid #333;
-  border-radius: 8px;
   display: none;
   left: 50%;
   margin-bottom: auto;
   margin-top: auto;
   position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  /*top: 50%;*/
+  transform: translate(-50%, 0);
 }
 
 .toolbox i {

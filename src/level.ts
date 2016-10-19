@@ -1,4 +1,4 @@
-import {Part} from './parts';
+import {Grid, Part} from './';
 import {Vector2} from 'three';
 
 export class Level {
@@ -9,6 +9,6 @@ export class Level {
 
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
-  tiles: Array<Part>;
+  tiles: Grid<Part>;
 
 }
