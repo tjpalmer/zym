@@ -17,18 +17,20 @@ export class Art {
   }
 
   handle(stage: Stage) {
-    stage.scene.children.forEach(kid => stage.scene.remove(kid));
-    // Background test.
-    let plane =
-      new PlaneBufferGeometry(Level.pixelCount.x, Level.pixelCount.y, 1, 1);
-    let planeMaterial = new MeshBasicMaterial({
-      map: this.texture,
-    });
-    let mesh = new Mesh(plane, planeMaterial);
-    mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
-    stage.scene.add(mesh);
-    // Tiles.
+    // stage.scene.children.forEach(kid => stage.scene.remove(kid));
     if (!this.tilePlanes) {
+      if (false) {
+        // Background test.
+        let plane =
+          new PlaneBufferGeometry(Level.pixelCount.x, Level.pixelCount.y, 1, 1);
+        let planeMaterial = new MeshBasicMaterial({
+          map: this.texture,
+        });
+        let mesh = new Mesh(plane, planeMaterial);
+        mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
+        stage.scene.add(mesh);
+      }
+      // Tiles.
       let tileMaterial = new ShaderMaterial({
         depthTest: false,
         fragmentShader: tileFragmentShader,
@@ -66,6 +68,7 @@ export class Art {
       // Add to scene.
       this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
       stage.scene.add(this.tilesMesh);
+      stage.redraw = () => this.handle(stage);
     }
     let tileIndices = this.tileIndices;
     let tilePlanes = this.tilePlanes;
@@ -76,12 +79,14 @@ export class Art {
       for (let i = 0; i < Level.tileCount.y; ++i) {
         offset.set(j, i);
         let part = stage.level.tiles.get(offset);
-        // Parts.tileIndices.get(part);
+        let currentTileIndices =
+          Parts.tileIndices.get(part && part.constructor)!;
         offset.multiply(Level.tileSize);
+        // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(offset.x, offset.y, 0);
         for (let k = 0; k < tileIndices.length; k += 2) {
-          tileIndices[k + 0] = Level.tileCount.x - j - 1;
-          tileIndices[k + 1] = 16;
+          tileIndices[k + 0] = currentTileIndices.x;
+          tileIndices[k + 1] = currentTileIndices.y;
         }
         tilePlanes.merge(tilePlane, 6 * t);
         tilePlane.translate(-offset.x, -offset.y, 0);
@@ -94,7 +99,6 @@ export class Art {
     attributes.tile.needsUpdate = true;
     // Render.
     // stage.render();
-    // stage.redraw = () => this.handle(stage);
   }
 
   level = new Level();

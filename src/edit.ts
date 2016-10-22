@@ -20,7 +20,7 @@ export class EditMode implements Mode {
     }
     tiles.set(point, $new);
     // this.stage.update();
-    console.log('mouseDown', point);
+    // console.log('mouseDown', point);
   }
 
   mouseMove(event: PointEvent) {

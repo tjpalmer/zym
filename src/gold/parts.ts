@@ -2,7 +2,7 @@ import {Brick} from '../parts/';
 import {Vector2} from 'three';
 
 export class Parts {
-  static tileIndices = new Map([
+  static tileIndices = new Map<Function | undefined, Vector2>([
     [Brick, new Vector2(2, 18)],
     [undefined, new Vector2(0, 2)],
   ]);
