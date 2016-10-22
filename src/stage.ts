@@ -7,7 +7,17 @@ import {
   Vector2, Vector3, WebGLRenderer,
 } from 'three';
 
+export interface PointEvent {
+  point: Vector2;
+}
+
 export interface Mode {
+
+  mouseDown(event: PointEvent): void;
+
+  mouseMove(event: PointEvent): void;
+
+  mouseUp(event: PointEvent): void;
 
 }
 
@@ -33,6 +43,10 @@ export class Stage {
     // Ambient light.
     let ambient = new AmbientLight(0xFFFFFF, 1);
     this.scene.add(ambient);
+    // Input handlers.
+    canvas.addEventListener('mousedown', event => this.mouseDown(event));
+    window.addEventListener('mousemove', event => this.mouseMove(event));
+    window.addEventListener('mouseup', event => this.mouseUp(event));
     // // Render.
     // this.render();
     // requestAnimationFrame(() => this.render());
@@ -40,7 +54,28 @@ export class Stage {
 
   camera: OrthographicCamera;
 
+  level = new Level();
+
   mode: Mode = new EditMode(this);
+
+  mouseDown(event: MouseEvent) {
+    this.mode.mouseDown({
+      point: this.scalePoint(new Vector2(event.offsetX, event.offsetY)),
+    });
+    event.preventDefault();
+  }
+
+  mouseMove(event: MouseEvent) {
+    this.mode.mouseMove({
+      point: new Vector2(),
+    });
+  }
+
+  mouseUp(event: MouseEvent) {
+    this.mode.mouseUp({
+      point: new Vector2(),
+    });
+  }
 
   redraw?: () => void;
 
@@ -89,6 +124,15 @@ export class Stage {
         this.render();
       }
     }, 0);
+  }
+
+  scalePoint(point: Vector2): Vector2 {
+    let canvas = this.renderer.domElement;
+    point.divide(new Vector2(canvas.clientWidth, canvas.clientHeight));
+    // Put +y up, like GL.
+    point.y = 1 - point.y;
+    point.multiply(Level.pixelCount);
+    return point;
   }
 
   scene: Scene;

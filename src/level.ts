@@ -9,6 +9,6 @@ export class Level {
 
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
-  tiles: Grid<Part>;
+  tiles = new Grid<Part | undefined>(Level.tileCount);
 
 }

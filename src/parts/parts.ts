@@ -1,3 +1,5 @@
+import {Vector2} from 'three';
+
 export class Part {
-  // TODO
+  point = new Vector2();
 }

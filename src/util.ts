@@ -7,9 +7,16 @@ export class Grid<Item> {
     this.size = size.clone();
   }
 
-  public get(index: Vector2): Item {
-    // TODO Bounds check?
-    return this.items[index.x * this.size.y + index.y];
+  public get(point: Vector2): Item {
+    return this.items[this.index(point)];
+  }
+
+  public index(point: Vector2): number {
+    return point.x * this.size.y + point.y;
+  }
+
+  public set(point: Vector2, item: Item) {
+    this.items[this.index(point)] = item;
   }
 
   private items: Array<Item>;
