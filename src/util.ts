@@ -15,11 +15,11 @@ export class Grid<Item> {
     return point.x * this.size.y + point.y;
   }
 
+  items: Array<Item>;
+
   public set(point: Vector2, item: Item) {
     this.items[this.index(point)] = item;
   }
-
-  private items: Array<Item>;
 
   size: Vector2;
 

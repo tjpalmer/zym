@@ -78,9 +78,10 @@ export class Art {
     for (let j = 0, t = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i) {
         offset.set(j, i);
-        let part = stage.level.tiles.get(offset);
-        let currentTileIndices =
-          Parts.tileIndices.get(part && part.constructor)!;
+        // Use offset for tiles before we scale it.
+        let type = stage.level.tiles.get(offset);
+        let currentTileIndices = Parts.tileIndices.get(type)!;
+        // Scale now.
         offset.multiply(Level.tileSize);
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(offset.x, offset.y, 0);

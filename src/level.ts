@@ -1,4 +1,5 @@
 import {Grid, Part} from './';
+import {None} from './parts';
 import {Vector2} from 'three';
 
 export class Level {
@@ -9,6 +10,11 @@ export class Level {
 
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
-  tiles = new Grid<Part | undefined>(Level.tileCount);
+  constructor() {
+    this.tiles = new Grid<new () => Part>(Level.tileCount);
+    this.tiles.items.fill(None);
+  }
+
+  tiles: Grid<new () => Part>;
 
 }

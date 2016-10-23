@@ -59,15 +59,22 @@ export class Stage {
   mode: Mode = new EditMode(this);
 
   mouseDown(event: MouseEvent) {
+    let point = new Vector2(event.offsetX, event.offsetY);
     this.mode.mouseDown({
-      point: this.scalePoint(new Vector2(event.offsetX, event.offsetY)),
+      point: this.scalePoint(point),
     });
     event.preventDefault();
   }
 
   mouseMove(event: MouseEvent) {
+    let bounding = this.renderer.domElement.getBoundingClientRect();
+    // TODO I'm not sure the scroll math is right, but I don't scroll anyway.
+    let point = new Vector2(
+      event.pageX - (bounding.left + window.scrollX),
+      event.pageY - (bounding.top + window.scrollY),
+    );
     this.mode.mouseMove({
-      point: new Vector2(),
+      point: this.scalePoint(point),
     });
   }
 

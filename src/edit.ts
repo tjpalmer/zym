@@ -1,6 +1,7 @@
 import {Level, Mode, Part, PointEvent, Stage} from './';
 // TODO List parts only in some Toolbox registry or such.
-import {Brick} from './parts';
+import {Brick, None} from './parts';
+import {Vector2} from 'three';
 
 export class EditMode implements Mode {
 
@@ -8,29 +9,42 @@ export class EditMode implements Mode {
     this.stage = stage;
   }
 
+  active = false;
+
   mouseDown(event: PointEvent) {
-    let point = event.point.clone().divide(Level.tileSize).floor();
+    let point = this.tilePoint(event.point);
     let {tiles} = this.stage.level;
     let old = tiles.get(point);
-    let $new: Part | undefined;
-    if (old instanceof Brick) {
-      $new = undefined;
+    if (old == Brick) {
+      this.tool = None;
     } else {
-      $new = new Brick();
+      this.tool = Brick;
     }
-    tiles.set(point, $new);
-    // this.stage.update();
+    tiles.set(point, this.tool);
+    this.active = true;
     // console.log('mouseDown', point);
   }
 
   mouseMove(event: PointEvent) {
-    // console.log('mouseMove', event);
+    let point = this.tilePoint(event.point);
+    let {tiles} = this.stage.level;
+    if (this.active) {
+      tiles.set(point, this.tool);
+    }
+    // console.log('mouseMove', event.point);
   }
 
   mouseUp(event: PointEvent) {
+    this.active = false;
     // console.log('mouseUp', event);
   }
 
   stage: Stage;
+
+  tilePoint(stagePoint: Vector2) {
+    return stagePoint.clone().divide(Level.tileSize).floor();
+  }
+
+  tool: new () => Part = Brick;
 
 }
