@@ -12,7 +12,8 @@ export class EditMode implements Mode {
   active = false;
 
   mouseDown(event: PointEvent) {
-    let point = this.tilePoint(event.point);
+    // Mouse down is always in bounds.
+    let point = this.tilePoint(event.point)!;
     let {tiles} = this.stage.level;
     let old = tiles.get(point);
     if (old == Brick) {
@@ -27,6 +28,10 @@ export class EditMode implements Mode {
 
   mouseMove(event: PointEvent) {
     let point = this.tilePoint(event.point);
+    if (!point) {
+      // Move and up can be out of bounds.
+      return;
+    }
     let {tiles} = this.stage.level;
     if (this.active) {
       tiles.set(point, this.tool);
@@ -42,7 +47,14 @@ export class EditMode implements Mode {
   stage: Stage;
 
   tilePoint(stagePoint: Vector2) {
-    return stagePoint.clone().divide(Level.tileSize).floor();
+    let point = stagePoint.clone().divide(Level.tileSize).floor();
+    if (point.x < 0 || point.x >= Level.tileCount.x) {
+      return;
+    }
+    if (point.y < 0 || point.y >= Level.tileCount.y) {
+      return;
+    }
+    return point;
   }
 
   tool: new () => Part = Brick;
