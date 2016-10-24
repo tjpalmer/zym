@@ -1,3 +1,3 @@
-import {Part} from './';
+import {Part} from '../';
 
 export class None extends Part {}

@@ -1,4 +1,4 @@
-import {Part} from './';
+import {Part} from '../';
 
 export class Brick extends Part {
 

@@ -1,4 +1,5 @@
-import {Brick, None, Part} from '../parts/';
+import {Brick, None} from '../parts/';
+import {Part} from '../';
 import {Vector2} from 'three';
 
 export class Parts {

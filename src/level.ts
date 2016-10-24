@@ -1,4 +1,4 @@
-import {Grid, Part} from './';
+import {Grid, Part, Scene} from './';
 import {None} from './parts';
 import {Vector2} from 'three';
 
@@ -16,5 +16,9 @@ export class Level {
   }
 
   tiles: Grid<new () => Part>;
+
+  updateScene(scene: Scene) {
+    // TODO Loop through. Include none parts or not?
+  }
 
 }
