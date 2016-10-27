@@ -1,2 +1,2 @@
-export * from './art';
 export * from './parts';
+export * from './theme';

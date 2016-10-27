@@ -7,6 +7,18 @@ import {
 
 export class Art {
 
+  editTile: Vector2;
+
+}
+
+export class GoldPart extends Part {
+
+  art: Art;
+
+}
+
+export class Theme {
+
   constructor() {
     let image = new Image();
     image.src = require('./blocks.png');
