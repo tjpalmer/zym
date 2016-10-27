@@ -11,6 +11,11 @@ export class EditMode implements Mode {
 
   active = false;
 
+  apply(tilePoint: Vector2) {
+    this.stage.level.tiles.set(tilePoint, this.tool);
+    this.stage.level.updateScene(this.stage.scene);
+  }
+
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
     let point = this.tilePoint(event.point)!;
@@ -21,7 +26,7 @@ export class EditMode implements Mode {
     } else {
       this.tool = Brick;
     }
-    tiles.set(point, this.tool);
+    this.apply(point);
     this.active = true;
     // console.log('mouseDown', point);
   }
@@ -34,7 +39,7 @@ export class EditMode implements Mode {
     }
     let {tiles} = this.stage.level;
     if (this.active) {
-      tiles.set(point, this.tool);
+      this.apply(point);
     }
     // console.log('mouseMove', event.point);
   }

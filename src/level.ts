@@ -17,8 +17,22 @@ export class Level {
 
   tiles: Grid<new () => Part>;
 
+  // For use from the editor.
   updateScene(scene: Scene) {
-    // TODO Loop through. Include none parts or not?
+    for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
+      for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
+        let tile = this.tiles.items[k];
+        let part = scene.parts[k];
+        // If it's the same type as what we already had, presume it's already in
+        // the right place.
+        if (!(part instanceof tile)) {
+          // Needs to be a new part.
+          let part = new tile();
+          part.point.set(j, i).multiply(Level.tileSize);
+          scene.parts[k] = part;
+        }
+      }
+    }
   }
 
 }

@@ -1,9 +1,9 @@
-import {EditMode, Level} from './';
+import {EditMode, Level, Scene} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
   Line, LineBasicMaterial, Mesh, MeshBasicMaterial, MeshPhongMaterial,
-  OrthographicCamera, PlaneBufferGeometry, Scene, ShaderMaterial,
+  OrthographicCamera, PlaneBufferGeometry, Scene as Scene3, ShaderMaterial,
   Vector2, Vector3, WebGLRenderer,
 } from 'three';
 
@@ -39,10 +39,10 @@ export class Stage {
     this.resize();
     canvas.style.display = 'block';
     // Scene.
-    this.scene = new Scene();
+    this.scene3 = new Scene3();
     // Ambient light.
     let ambient = new AmbientLight(0xFFFFFF, 1);
-    this.scene.add(ambient);
+    this.scene3.add(ambient);
     // Input handlers.
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
     window.addEventListener('mousemove', event => this.mouseMove(event));
@@ -93,7 +93,7 @@ export class Stage {
     if (this.redraw) {
       this.redraw();
     }
-    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.scene3, this.camera);
   }
 
   renderer: WebGLRenderer;
@@ -127,7 +127,7 @@ export class Stage {
       // this.camera.aspect = size.x / size.y;
       // this.camera.updateProjectionMatrix();
       this.renderer.setSize(canvasSize.x, canvasSize.y);
-      if (this.scene) {
+      if (this.scene3) {
         this.render();
       }
     }, 0);
@@ -142,6 +142,8 @@ export class Stage {
     return point;
   }
 
-  scene: Scene;
+  scene = new Scene();
+
+  scene3: Scene3;
 
 }

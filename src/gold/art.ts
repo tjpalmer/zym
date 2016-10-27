@@ -1,5 +1,5 @@
 import {Parts} from './';
-import {Level, Stage} from '../';
+import {Level, Part, Stage} from '../';
 import {
   BufferAttribute, BufferGeometry, Mesh, MeshBasicMaterial, NearestFilter,
   PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
@@ -28,7 +28,7 @@ export class Art {
         });
         let mesh = new Mesh(plane, planeMaterial);
         mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
-        stage.scene.add(mesh);
+        stage.scene3.add(mesh);
       }
       // Tiles.
       let tileMaterial = new ShaderMaterial({
@@ -67,33 +67,28 @@ export class Art {
       }
       // Add to scene.
       this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
-      stage.scene.add(this.tilesMesh);
+      stage.scene3.add(this.tilesMesh);
       stage.redraw = () => this.handle(stage);
     }
     let tileIndices = this.tileIndices;
     let tilePlanes = this.tilePlanes;
     let tilePlane = this.tilePlane!;
     // Duplicate prototype, translated and tile indexed.
-    let offset = new Vector2();
-    for (let j = 0, t = 0; j < Level.tileCount.x; ++j) {
-      for (let i = 0; i < Level.tileCount.y; ++i) {
-        offset.set(j, i);
-        // Use offset for tiles before we scale it.
-        let type = stage.level.tiles.get(offset);
-        let currentTileIndices = Parts.tileIndices.get(type)!;
-        // Scale now.
-        offset.multiply(Level.tileSize);
-        // Translate and merge are expensive. TODO Make my own functions?
-        tilePlane.translate(offset.x, offset.y, 0);
-        for (let k = 0; k < tileIndices.length; k += 2) {
-          tileIndices[k + 0] = currentTileIndices.x;
-          tileIndices[k + 1] = currentTileIndices.y;
-        }
-        tilePlanes.merge(tilePlane, 6 * t);
-        tilePlane.translate(-offset.x, -offset.y, 0);
-        ++t;
+    // TODO How to make sure tilePlanes is large enough?
+    // TODO Fill the back with none parts when it's too big?
+    let parts = stage.scene.parts;
+    stage.scene.parts.forEach((part, partIndex) => {
+      let type = <new () => Part>part.constructor;
+      let currentTileIndices = Parts.tileIndices.get(type)!;
+      // Translate and merge are expensive. TODO Make my own functions?
+      tilePlane.translate(part.point.x, part.point.y, 0);
+      for (let k = 0; k < tileIndices.length; k += 2) {
+        tileIndices[k + 0] = currentTileIndices.x;
+        tileIndices[k + 1] = currentTileIndices.y;
       }
-    }
+      tilePlanes.merge(tilePlane, 6 * partIndex);
+      tilePlane.translate(-part.point.x, -part.point.y, 0);
+    });
     // For some reason, needsUpdate is missing on attributes, so go any here.
     let attributes: any = tilePlanes.attributes;
     attributes.position.needsUpdate = true;
