@@ -1,4 +1,4 @@
-import {EditMode, Level, Scene} from './';
+import {EditMode, Level, Scene, Theme} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -145,5 +145,7 @@ export class Stage {
   scene = new Scene();
 
   scene3: Scene3;
+
+  theme: Theme;
 
 }

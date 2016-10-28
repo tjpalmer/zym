@@ -1,7 +1,8 @@
+import {Art} from './';
 import {Vector2} from 'three';
 
-export class Brick {
+export class BrickArt implements Art {
 
-  tileIndex = new Vector2(2, 18);
+  editTile = new Vector2(2, 18);
 
 }

@@ -1,23 +1,17 @@
 import {Parts} from './';
-import {Level, Part, Stage} from '../';
+import {Level, Part, Stage, Theme} from '../';
 import {
   BufferAttribute, BufferGeometry, Mesh, MeshBasicMaterial, NearestFilter,
   PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
 } from 'three';
 
-export class Art {
+export interface Art {
 
   editTile: Vector2;
 
 }
 
-export class GoldPart extends Part {
-
-  art: Art;
-
-}
-
-export class Theme {
+export class GoldTheme implements Theme {
 
   constructor() {
     let image = new Image();
@@ -26,6 +20,11 @@ export class Theme {
     this.texture = new Texture(scaled);
     this.texture.magFilter = NearestFilter;
     this.texture.needsUpdate = true;
+  }
+
+  buildArt(part: Part) {
+    let makeArt = Parts.tileArts.get(<new () => Part>part.constructor);
+    part.art = makeArt ? makeArt() : undefined;
   }
 
   handle(stage: Stage) {
@@ -90,8 +89,7 @@ export class Theme {
     // TODO Fill the back with none parts when it's too big?
     let parts = stage.scene.parts;
     stage.scene.parts.forEach((part, partIndex) => {
-      let type = <new () => Part>part.constructor;
-      let currentTileIndices = Parts.tileIndices.get(type)!;
+      let currentTileIndices = (<Art>part.art).editTile;
       // Translate and merge are expensive. TODO Make my own functions?
       tilePlane.translate(part.point.x, part.point.y, 0);
       for (let k = 0; k < tileIndices.length; k += 2) {

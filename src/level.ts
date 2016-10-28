@@ -1,4 +1,4 @@
-import {Grid, Part, Scene} from './';
+import {Grid, Part, Stage} from './';
 import {None} from './parts';
 import {Vector2} from 'three';
 
@@ -18,7 +18,9 @@ export class Level {
   tiles: Grid<new () => Part>;
 
   // For use from the editor.
-  updateScene(scene: Scene) {
+  updateScene(stage: Stage) {
+    let scene = stage.scene;
+    let theme = stage.theme;
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
         let tile = this.tiles.items[k];
@@ -28,6 +30,7 @@ export class Level {
         if (!(part instanceof tile)) {
           // Needs to be a new part.
           let part = new tile();
+          theme.buildArt(part);
           part.point.set(j, i).multiply(Level.tileSize);
           scene.parts[k] = part;
         }

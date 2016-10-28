@@ -13,7 +13,7 @@ export class EditMode implements Mode {
 
   apply(tilePoint: Vector2) {
     this.stage.level.tiles.set(tilePoint, this.tool);
-    this.stage.level.updateScene(this.stage.scene);
+    this.stage.level.updateScene(this.stage);
   }
 
   mouseDown(event: PointEvent) {
