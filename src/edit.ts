@@ -1,6 +1,6 @@
 import {Level, Mode, Part, PointEvent, Stage} from './';
 // TODO List parts only in some Toolbox registry or such.
-import {Brick, None} from './parts';
+import {Brick, None, Parts} from './parts';
 import {Vector2} from 'three';
 
 export class EditMode implements Mode {
