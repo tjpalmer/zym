@@ -24,7 +24,12 @@ export class GoldTheme implements Theme {
 
   buildArt(part: Part) {
     let makeArt = Parts.tileArts.get(<new () => Part>part.constructor);
-    part.art = makeArt ? makeArt() : undefined;
+    if (!makeArt) {
+      // This makes it easier to deal with problems up front.
+      throw new Error(`No art for part type ${part.constructor.name}`);
+    }
+    // Mark art non-optional so this would catch the error?
+    part.art = makeArt();
   }
 
   handle(stage: Stage) {

@@ -1,11 +1,12 @@
-import {Stage} from './';
+import {EditMode} from './';
 import {Vector3} from 'three';
 
 export class Toolbox {
 
-  constructor(body: HTMLElement, stage: Stage) {
+  constructor(body: HTMLElement, edit: EditMode) {
     // Toolbox.
     this.container = <HTMLElement>body.querySelector('.toolbox');
+    this.edit = edit;
     this.markSelected();
     let container = this.container;
     for (let any of <any>container.querySelectorAll('input')) {
@@ -23,16 +24,16 @@ export class Toolbox {
 
   container: HTMLElement;
 
+  edit: EditMode;
+
   markSelected() {
     let selected = this.container.querySelector('input:checked');
     let label = <HTMLElement>selected.closest('label');
     label.classList.add('selected');
     // Get the class name that's not selected.
     // TODO Instead put name on the input?
-    this.selected = [...label.classList].filter(name => name != 'selected')[0];
-    console.log(this.selected);
+    let name = [...label.classList].filter(name => name != 'selected')[0];
+    this.edit.setToolFromName(name);
   }
-
-  selected: string;
 
 }

@@ -99,6 +99,10 @@ export class Stage {
   renderer: WebGLRenderer;
 
   resize() {
+    // -----------------------------------------------------------------------
+    // TODO After a few resizing, frame rate drops permanently and keeps going
+    // TODO down with each resize. What's up????
+    // -----------------------------------------------------------------------
     // This is a hack to let the layout adjust without concern for the canvas
     // size.
     // TODO Set a class that lets us overflow instead of shrinking?

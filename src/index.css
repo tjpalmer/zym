@@ -25,6 +25,10 @@ label.ladder:before {
   content: 'H';
 }
 
+label.none:before {
+  content: 'X';
+}
+
 .panel {
   /*display: none;*/
   flex: 0;

@@ -1,4 +1,4 @@
-import {Level, Mode, Part, PointEvent, Stage} from './';
+import {Level, Mode, Part, PointEvent, Stage, Toolbox} from './';
 // TODO List parts only in some Toolbox registry or such.
 import {Brick, None, Parts} from './parts';
 import {Vector2} from 'three';
@@ -7,24 +7,37 @@ export class EditMode implements Mode {
 
   constructor(stage: Stage) {
     this.stage = stage;
+    this.toolbox = new Toolbox(document.body, this);
   }
 
   active = false;
 
   apply(tilePoint: Vector2) {
-    this.stage.level.tiles.set(tilePoint, this.tool);
-    this.stage.level.updateScene(this.stage);
+    let {level} = this.stage;
+    let tool = this.tool;
+    if (this.erasing) {
+      if (tool == level.tiles.get(tilePoint)) {
+        tool = None;
+      } else {
+        // We only erase those matching our current tool, so get out.
+        return;
+      }
+    }
+    level.tiles.set(tilePoint, tool);
+    level.updateScene(this.stage);
   }
+
+  erasing = false;
 
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
     let point = this.tilePoint(event.point)!;
     let {tiles} = this.stage.level;
     let old = tiles.get(point);
-    if (old == Brick) {
-      this.tool = None;
+    if (this.tool == None) {
+      this.erasing = false;
     } else {
-      this.tool = Brick;
+      this.erasing = old == this.tool;
     }
     this.apply(point);
     this.active = true;
@@ -49,6 +62,19 @@ export class EditMode implements Mode {
     // console.log('mouseUp', event);
   }
 
+  namedTools = new Map(Parts.inventory.map(type => <[string, new () => Part]>[
+    type.name.toLowerCase(), type
+  ]));
+
+  setToolFromName(name: string) {
+    let tool = this.namedTools.get(name);
+    if (!tool) {
+      console.warn(`No such part: ${name}`);
+      tool = None;
+    }
+    this.tool = tool;
+  }
+
   stage: Stage;
 
   tilePoint(stagePoint: Vector2) {
@@ -63,5 +89,7 @@ export class EditMode implements Mode {
   }
 
   tool: new () => Part = Brick;
+
+  toolbox: Toolbox;
 
 }
