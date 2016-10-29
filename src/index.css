@@ -13,18 +13,6 @@ body {
   top: 0;
 }
 
-label.brick:before {
-  content: 'B';
-}
-
-label.hero:before {
-  content: 'R';
-}
-
-label.ladder:before {
-  content: 'H';
-}
-
 label.none:before {
   content: 'X';
 }
@@ -61,6 +49,10 @@ label.none:before {
 
 .toolbox label {
   display: inline-block;
+  /* These are wiggy but work for me right now.
+   * TODO Use image elements instead? */
+  height: 30px;
+  width: 16px;
 }
 
 .toolbox > .selected {

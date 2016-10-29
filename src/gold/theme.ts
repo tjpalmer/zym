@@ -16,6 +16,7 @@ export class GoldTheme implements Theme {
   constructor() {
     let image = new Image();
     image.src = require('./blocks.png');
+    this.image = image;
     let scaled = this.prepareImage(image);
     this.texture = new Texture(scaled);
     this.texture.magFilter = NearestFilter;
@@ -46,6 +47,8 @@ export class GoldTheme implements Theme {
         mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
         stage.scene3.add(mesh);
       }
+      // Panels.
+      this.preparePanels(stage);
       // Tiles.
       let tileMaterial = new ShaderMaterial({
         depthTest: false,
@@ -112,6 +115,8 @@ export class GoldTheme implements Theme {
     // stage.render();
   }
 
+  image: HTMLImageElement;
+
   level = new Level();
 
   prepareImage(image: HTMLImageElement) {
@@ -123,6 +128,37 @@ export class GoldTheme implements Theme {
     let context = canvas.getContext('2d')!;
     context.drawImage(image, 0, 0);
     return canvas;
+  }
+
+  preparePanels(stage: Stage) {
+    let {toolbox} = stage.edit;
+    let canvas = document.createElement('canvas');
+    canvas.width = Level.tileSize.x;
+    canvas.height = Level.tileSize.y;
+    let context = canvas.getContext('2d')!;
+    for (let button of toolbox.getToolButtons()) {
+      // Get the art for this tool. TODO Simplify this process?
+      let name = toolbox.getToolName(button);
+      let type = stage.edit.namedTools.get(name);
+      if (!type) {
+        throw new Error(`Unknown type: ${name}`);
+      }
+      let part = new type();
+      this.buildArt(part);
+      // Now calculate the pixel point.
+      let point = (<Art>part.art).editTile.clone();
+      point.y = Level.tileCount.y - point.y - 1;
+      point.multiply(Level.tileSize);
+      // Now draw to our canvas and to the button background.
+      context.drawImage(
+        this.image, point.x, point.y, canvas.width, canvas.height,
+        0, 0, canvas.width, canvas.height,
+      );
+      button.style.backgroundImage = `url(${canvas.toDataURL()})`;
+      button.style.backgroundRepeat = 'no-repeat';
+      button.style.backgroundSize = '100%';
+      button.style.imageRendering = 'pixelated';
+    }
   }
 
   texture: Texture;
