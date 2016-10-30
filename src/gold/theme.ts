@@ -132,13 +132,20 @@ export class GoldTheme implements Theme {
 
   preparePanels(stage: Stage) {
     let {toolbox} = stage.edit;
-    let canvas = document.createElement('canvas');
-    canvas.width = Level.tileSize.x;
-    canvas.height = Level.tileSize.y;
-    let context = canvas.getContext('2d')!;
+    // let buttonHeight = '1em';
+    // Fit about 20 tiles at vertically, but use integer scaling for kindness.
+    // Base this on screen size rather than window size, presuming that screen
+    // size implies what looks reasonable for ui elements.
+    let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
+    let buttonHeight = `${scale * Level.tileSize.y}px`;
     for (let button of toolbox.getToolButtons()) {
       // Get the art for this tool. TODO Simplify this process?
       let name = toolbox.getToolName(button);
+      if (name == 'none') {
+        // We don't draw a standard tile for this one.
+        button.style.height = buttonHeight;
+        continue;
+      }
       let type = stage.edit.namedTools.get(name);
       if (!type) {
         throw new Error(`Unknown type: ${name}`);
@@ -149,15 +156,22 @@ export class GoldTheme implements Theme {
       let point = (<Art>part.art).editTile.clone();
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
+      // Now make a canvas to draw to.
+      let canvas = document.createElement('canvas');
+      canvas.width = Level.tileSize.x;
+      canvas.height = Level.tileSize.y;
+      // Style it.
+      canvas.style.display = 'block';
+      (<any>canvas.style).imageRendering = 'pixelated';
+      canvas.style.margin = 'auto';
+      canvas.style.height = buttonHeight;
+      let context = canvas.getContext('2d')!;
       // Now draw to our canvas and to the button background.
       context.drawImage(
-        this.image, point.x, point.y, canvas.width, canvas.height,
+        this.image, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
         0, 0, canvas.width, canvas.height,
       );
-      button.style.backgroundImage = `url(${canvas.toDataURL()})`;
-      button.style.backgroundRepeat = 'no-repeat';
-      button.style.backgroundSize = '100%';
-      button.style.imageRendering = 'pixelated';
+      button.appendChild(canvas);
     }
   }
 

@@ -13,10 +13,6 @@ body {
   top: 0;
 }
 
-label.none:before {
-  content: 'X';
-}
-
 .panel {
   /*display: none;*/
   flex: 0;
@@ -25,7 +21,11 @@ label.none:before {
 
 .panel > * {
   border: 0.1em solid transparent;
-  padding: 0.2em 0.3em;
+  padding: 0.1em;
+}
+
+.panel .play {
+  margin-bottom: 0.5em;
 }
 
 .stage {
@@ -39,20 +39,30 @@ label.none:before {
   transform: translate(-50%, 0);
 }
 
-.toolbox i {
-  margin-top: 2em;
-}
-
 .toolbox input {
   display: none;
 }
 
 .toolbox label {
-  display: inline-block;
-  /* These are wiggy but work for me right now.
-   * TODO Use image elements instead? */
-  height: 30px;
-  width: 16px;
+  display: block;
+  /* This margin makes the borders overlap across neighbors. */
+  margin-bottom: -0.1em;
+}
+
+.toolbox label.none {
+  margin-bottom: 0;
+}
+
+.toolbox .none i {
+  display: block;
+  position: relative;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.toolbox .none i * {
+  display: block;
 }
 
 .toolbox > .selected {
