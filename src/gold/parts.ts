@@ -1,5 +1,5 @@
-import {Art, BrickArt} from './';
-import {Bar, Brick, Ladder, None} from '../parts/';
+import {Art, BrickArt, RunnerArt} from './';
+import {Bar, Brick, Hero, Ladder, None} from '../parts/';
 import {Part} from '../';
 import {Vector2} from 'three';
 
@@ -14,6 +14,7 @@ export class Parts {
   static tileArts = new Map<new () => Part, () => Art>([
     [Bar, () => arts.Bar],
     [Brick, () => new BrickArt()],
+    [Hero, () => new RunnerArt()],
     [Ladder, () => arts.Ladder], 
     [None, () => arts.None],
   ]);

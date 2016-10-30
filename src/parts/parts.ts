@@ -1,4 +1,4 @@
-import {Bar, Brick, Ladder, None} from './';
+import {Bar, Brick, Hero, Ladder, None} from './';
 import {Vector2} from 'three';
 
 export class Parts {
@@ -6,6 +6,7 @@ export class Parts {
     Bar,
     Brick,
     Ladder,
+    Hero,
     None,
   ];
 }
