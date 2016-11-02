@@ -24,10 +24,16 @@ export class EditMode implements Mode {
       }
     }
     level.tiles.set(tilePoint, tool);
+    if (tool) {
+      // TODO Some static interface to avoid construction?
+      new tool().editPlacedAt(this.stage, tilePoint);
+    }
     level.updateScene(this.stage);
   }
 
   erasing = false;
+
+  history = new Array<Level>();
 
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
@@ -39,6 +45,14 @@ export class EditMode implements Mode {
     } else {
       this.erasing = old == this.tool;
     }
+    // Copy current before applying changes.
+    // TODO What if no changes actually occur?
+    this.history.push(this.stage.level.copy());
+    if (this.history.length > 100) {
+      // Clear out super old.
+      this.history.shift();
+    }
+    // Now changes.
     this.apply(point);
     this.active = true;
     // console.log('mouseDown', point);

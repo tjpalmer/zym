@@ -1,9 +1,12 @@
-import {Level} from './';
+import {Level, Stage} from './';
 import {Vector2} from 'three';
 
 export class Part {
 
   art: any = undefined;
+
+  // For overriding.
+  editPlacedAt(stage: Stage, tilePoint: Vector2) {}
 
   point = new Vector2();
 

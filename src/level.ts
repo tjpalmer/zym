@@ -10,9 +10,17 @@ export class Level {
 
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
-  constructor() {
-    this.tiles = new Grid<new () => Part>(Level.tileCount);
-    this.tiles.items.fill(None);
+  constructor({tiles}: {tiles?: Grid<new () => Part>} = {}) {
+    if (tiles) {
+      this.tiles = tiles;
+    } else {
+      this.tiles = new Grid<new () => Part>(Level.tileCount);
+      this.tiles.items.fill(None);
+    }
+  }
+
+  copy() {
+    return new Level({tiles: this.tiles.copy()});
   }
 
   tiles: Grid<new () => Part>;
