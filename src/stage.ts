@@ -43,8 +43,10 @@ export class Stage {
     // Ambient light.
     let ambient = new AmbientLight(0xFFFFFF, 1);
     this.scene3.add(ambient);
-    // Input handlers.
+    // Modes.
+    this.edit = new EditMode(this);
     this.mode = this.edit;
+    // Input handlers.
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
     window.addEventListener('mousemove', event => this.mouseMove(event));
     window.addEventListener('mouseup', event => this.mouseUp(event));
@@ -55,7 +57,7 @@ export class Stage {
 
   camera: OrthographicCamera;
 
-  edit = new EditMode(this);
+  edit: EditMode;
 
   level = new Level();
 

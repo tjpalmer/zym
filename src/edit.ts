@@ -1,13 +1,19 @@
 import {Level, Mode, Part, PointEvent, Stage, Toolbox} from './';
-// TODO List parts only in some Toolbox registry or such.
-import {Brick, None, Parts} from './parts';
+import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
 export class EditMode implements Mode {
 
   constructor(stage: Stage) {
+    let {body} = document;
     this.stage = stage;
-    this.toolbox = new Toolbox(document.body, this);
+    this.toolbox = new Toolbox(body, this);
+    // Buttons.
+    let panel = body.querySelector('.panel.commands');
+    panel.querySelector('.redo').addEventListener('click', () => this.redo());
+    panel.querySelector('.undo').addEventListener('click', () => this.undo());
+    // Initial history entry.
+    this.pushHistory();
   }
 
   active = false;
@@ -28,12 +34,15 @@ export class EditMode implements Mode {
       // TODO Some static interface to avoid construction?
       new tool().editPlacedAt(this.stage, tilePoint);
     }
+    // TODO Push history after edit, not before!
     level.updateScene(this.stage);
   }
 
   erasing = false;
 
   history = new Array<Level>();
+
+  historyIndex = -1;
 
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
@@ -44,13 +53,6 @@ export class EditMode implements Mode {
       this.erasing = false;
     } else {
       this.erasing = old == this.tool;
-    }
-    // Copy current before applying changes.
-    // TODO What if no changes actually occur?
-    this.history.push(this.stage.level.copy());
-    if (this.history.length > 100) {
-      // Clear out super old.
-      this.history.shift();
     }
     // Now changes.
     this.apply(point);
@@ -72,13 +74,44 @@ export class EditMode implements Mode {
   }
 
   mouseUp(event: PointEvent) {
-    this.active = false;
     // console.log('mouseUp', event);
+    this.active = false;
+    // TODO Push history only when changes when any click, up, or down anywhere?
+    this.pushHistory();
   }
 
   namedTools = new Map(Parts.inventory.map(type => <[string, new () => Part]>[
     type.name.toLowerCase(), type
   ]));
+
+  pushHistory() {
+    // TODO Check for actual changes here? Or record as changes happen?
+    if (
+      this.history.length &&
+      this.stage.level.equals(this.history[this.historyIndex])
+    ) {
+      // Nothing changed. Stay put.
+      return;
+    }
+    // Delete anything after our current position.
+    this.history.splice(this.historyIndex + 1, this.history.length);
+    // Add the new.
+    this.history.push(this.stage.level.copy());
+    this.historyIndex += 1;
+    // Clear out super old, though it's hard to believe we'll blow out ram.
+    if (this.history.length > 100) {
+      this.history.shift();
+      this.historyIndex -= 1;
+    }
+  }
+
+  redo() {
+    if (this.historyIndex < this.history.length - 1) {
+      this.historyIndex += 1;
+      this.stage.level = this.history[this.historyIndex].copy();
+      this.stage.level.updateScene(this.stage);
+    }
+  }
 
   setToolFromName(name: string) {
     let tool = this.namedTools.get(name);
@@ -102,8 +135,17 @@ export class EditMode implements Mode {
     return point;
   }
 
-  tool: new () => Part = Brick;
+  // Default gets set from HTML settings.
+  tool: new () => Part;
 
   toolbox: Toolbox;
+
+  undo() {
+    if (this.historyIndex > 0) {
+      this.historyIndex -= 1;
+      this.stage.level = this.history[this.historyIndex].copy();
+      this.stage.level.updateScene(this.stage);
+    }
+  }
 
 }

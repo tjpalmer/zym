@@ -8,7 +8,8 @@ export class Hero extends Part {
     let placedIndex = stage.level.tiles.index(tilePoint);
     stage.level.tiles.items.forEach((type, index) => {
       if (type == Hero && index != placedIndex) {
-        let last = stage.edit.history.slice(-1)[0].tiles.items[index];
+        let last =
+          stage.edit.history[stage.edit.historyIndex].tiles.items[index];
         stage.level.tiles.items[index] = last == Hero ? None : last;
       }
     });

@@ -23,6 +23,15 @@ export class Level {
     return new Level({tiles: this.tiles.copy()});
   }
 
+  equals(other: Level): boolean {
+    for (let i = 0; i < this.tiles.items.length; ++i) {
+      if (this.tiles.items[i] != other.tiles.items[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   tiles: Grid<new () => Part>;
 
   // For use from the editor.
