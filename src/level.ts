@@ -1,5 +1,5 @@
-import {Grid, Part, Stage} from './';
-import {None} from './parts';
+import {Grid, Part, PartType, Stage} from './';
+import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
 export class Level {
@@ -10,11 +10,11 @@ export class Level {
 
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
-  constructor({tiles}: {tiles?: Grid<new () => Part>} = {}) {
+  constructor({tiles}: {tiles?: Grid<PartType>} = {}) {
     if (tiles) {
       this.tiles = tiles;
     } else {
-      this.tiles = new Grid<new () => Part>(Level.tileCount);
+      this.tiles = new Grid<PartType>(Level.tileCount);
       this.tiles.items.fill(None);
     }
   }
@@ -32,7 +32,22 @@ export class Level {
     return true;
   }
 
-  tiles: Grid<new () => Part>;
+  tiles: Grid<PartType>;
+
+  toPlain() {
+    let point = new Vector2();
+    let rows: Array<string> = [];
+    for (let i = Level.tileCount.y -1 ; i >= 0; --i) {
+      let row: Array<string> = [];
+      for (let j = 0; j < Level.tileCount.x; ++j) {
+        let type = this.tiles.get(point.set(j, i));
+        let char = Parts.partChars.get(type);
+        row.push(char || '?');
+      }
+      rows.push(row.join(''));
+    }
+    return {tiles: rows.join('\n')};
+  }
 
   // For use from the editor.
   updateScene(stage: Stage) {

@@ -12,6 +12,11 @@ export class Part {
 
 }
 
+export interface PartType {
+  new (): Part;
+  char: string;
+}
+
 export class Scene {
 
   // During level editing, these corresponding exactly to level tile indices.

@@ -1,5 +1,5 @@
 import {Parts} from './';
-import {Level, Part, Stage, Theme} from '../';
+import {Level, Part, PartType, Stage, Theme} from '../';
 import {
   BufferAttribute, BufferGeometry, Mesh, MeshBasicMaterial, NearestFilter,
   PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
@@ -24,7 +24,7 @@ export class GoldTheme implements Theme {
   }
 
   buildArt(part: Part) {
-    let makeArt = Parts.tileArts.get(<new () => Part>part.constructor);
+    let makeArt = Parts.tileArts.get(<PartType>part.constructor);
     if (!makeArt) {
       // This makes it easier to deal with problems up front.
       throw new Error(`No art for part type ${part.constructor.name}`);

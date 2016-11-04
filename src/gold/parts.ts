@@ -1,6 +1,6 @@
 import {Art, BrickArt, RunnerArt} from './';
 import {Bar, Brick, Hero, Ladder, None} from '../parts/';
-import {Part} from '../';
+import {Part, PartType} from '../';
 import {Vector2} from 'three';
 
 // Simple arts for unchanging parts.
@@ -11,7 +11,7 @@ let arts = {
 };
 
 export class Parts {
-  static tileArts = new Map<new () => Part, () => Art>([
+  static tileArts = new Map<PartType, () => Art>([
     [Bar, () => arts.Bar],
     [Brick, () => new BrickArt()],
     [Hero, () => new RunnerArt()],

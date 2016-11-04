@@ -1,4 +1,4 @@
-import {Level, Mode, Part, PointEvent, Stage, Toolbox} from './';
+import {Level, Mode, Part, PartType, PointEvent, Stage, Toolbox} from './';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
@@ -80,7 +80,7 @@ export class EditMode implements Mode {
     this.pushHistory();
   }
 
-  namedTools = new Map(Parts.inventory.map(type => <[string, new () => Part]>[
+  namedTools = new Map(Parts.inventory.map(type => <[string, PartType]>[
     type.name.toLowerCase(), type
   ]));
 
@@ -136,7 +136,7 @@ export class EditMode implements Mode {
   }
 
   // Default gets set from HTML settings.
-  tool: new () => Part;
+  tool: PartType;
 
   toolbox: Toolbox;
 

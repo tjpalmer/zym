@@ -4,6 +4,8 @@ import {Vector2} from 'three';
 
 export class Hero extends Part {
 
+  static char = 'R';
+
   editPlacedAt(stage: Stage, tilePoint: Vector2) {
     let placedIndex = stage.level.tiles.index(tilePoint);
     stage.level.tiles.items.forEach((type, index) => {
