@@ -18,8 +18,4 @@ export class Parts {
     part => <[string, PartType]>[part.char, part]
   ));
 
-  static partChars = new Map(Parts.inventory.map(
-    part => <[PartType, string]>[part, part.char]
-  ));
-
 }

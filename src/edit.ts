@@ -20,6 +20,8 @@ export class EditMode implements Mode {
   active = false;
 
   apply(tilePoint: Vector2) {
+    // Even if we don't make changes, the user seems active, so push off save.
+    this.updateChangeTime();
     let {level} = this.stage;
     let tool = this.tool;
     if (this.erasing) {
@@ -29,6 +31,10 @@ export class EditMode implements Mode {
         // We only erase those matching our current tool, so get out.
         return;
       }
+    }
+    if (level.tiles.get(tilePoint) == tool) {
+      // No need to spin wheels when no change.
+      return;
     }
     level.tiles.set(tilePoint, tool);
     if (tool) {
@@ -55,6 +61,8 @@ export class EditMode implements Mode {
   history = new Array<Level>();
 
   historyIndex = -1;
+
+  lastChangeTime = 0;
 
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
@@ -115,7 +123,7 @@ export class EditMode implements Mode {
       this.history.shift();
       this.historyIndex -= 1;
     }
-    this.updateUndoRedo();
+    this.trackChange();
   }
 
   redo() {
@@ -123,7 +131,29 @@ export class EditMode implements Mode {
       this.historyIndex += 1;
       this.stage.level = this.history[this.historyIndex].copy();
       this.stage.level.updateScene(this.stage);
-      this.updateUndoRedo();
+      this.trackChange();
+    }
+  }
+
+  saveDelay = 3e3;
+
+  saveNeeded = false;
+
+  saveLevel() {
+    // TODO Level and world naming conventions. UUIDs with index object?
+    let encoded = this.stage.level.encode();
+    window.localStorage['zym.level'] = JSON.stringify(encoded);
+    this.saveNeeded = false;
+  }
+
+  saveLevelMaybe() {
+    if (this.saveNeeded) {
+      if (window.performance.now() - this.lastChangeTime > this.saveDelay) {
+        // console.log(`Saving at ${window.performance.now()}`)
+        this.saveLevel();
+      } else {
+        // console.log(`Waiting to save at ${window.performance.now()}`)
+      }
     }
   }
 
@@ -154,18 +184,31 @@ export class EditMode implements Mode {
 
   toolbox: Toolbox;
 
+  trackChange() {
+    // Track time for saving.
+    this.saveNeeded = true;
+    this.updateChangeTime();
+    // Enable or disable undo/redo.
+    this.enable('redo', this.historyIndex < this.history.length - 1);
+    this.enable('undo', this.historyIndex > 0);
+  }
+
   undo() {
     if (this.historyIndex > 0) {
       this.historyIndex -= 1;
       this.stage.level = this.history[this.historyIndex].copy();
       this.stage.level.updateScene(this.stage);
-      this.updateUndoRedo();
+      this.trackChange();
     }
   }
 
-  updateUndoRedo() {
-    this.enable('redo', this.historyIndex < this.history.length - 1);
-    this.enable('undo', this.historyIndex > 0);
+  updateChangeTime() {
+    this.lastChangeTime = window.performance.now();
+    if (this.saveNeeded) {
+      // Make sure we have some event out past save time.
+      // console.log(`Setting timeout for save at ${window.performance.now()}`);
+      window.setTimeout(() => this.saveLevelMaybe(), this.saveDelay + 0.5);
+    }
   }
 
 }

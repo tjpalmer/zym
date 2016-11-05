@@ -23,6 +23,34 @@ export class Level {
     return new Level({tiles: this.tiles.copy()});
   }
 
+  decode(encoded: EncodedLevel) {
+    let level = new Level();
+    let point = new Vector2();
+    let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
+    rows.forEach((row, i) => {
+      i = Level.tileCount.y - i - 1;
+      for (let j = 0; j < Math.min(row.length, Level.tileCount.x); ++j) {
+        let type = Parts.charParts.get(row.charAt(j));
+        level.tiles.set(point.set(j, i), type || None);
+      }
+    });
+    return level;
+  }
+
+  encode() {
+    let point = new Vector2();
+    let rows: Array<string> = [];
+    for (let i = Level.tileCount.y - 1 ; i >= 0; --i) {
+      let row: Array<string> = [];
+      for (let j = 0; j < Level.tileCount.x; ++j) {
+        let type = this.tiles.get(point.set(j, i));
+        row.push(type.char || '?');
+      }
+      rows.push(row.join(''));
+    }
+    return {tiles: rows.join('\n')};
+  }
+
   equals(other: Level): boolean {
     for (let i = 0; i < this.tiles.items.length; ++i) {
       if (this.tiles.items[i] != other.tiles.items[i]) {
@@ -33,21 +61,6 @@ export class Level {
   }
 
   tiles: Grid<PartType>;
-
-  toPlain() {
-    let point = new Vector2();
-    let rows: Array<string> = [];
-    for (let i = Level.tileCount.y -1 ; i >= 0; --i) {
-      let row: Array<string> = [];
-      for (let j = 0; j < Level.tileCount.x; ++j) {
-        let type = this.tiles.get(point.set(j, i));
-        let char = Parts.partChars.get(type);
-        row.push(char || '?');
-      }
-      rows.push(row.join(''));
-    }
-    return {tiles: rows.join('\n')};
-  }
 
   // For use from the editor.
   updateScene(stage: Stage) {
@@ -69,5 +82,11 @@ export class Level {
       }
     }
   }
+
+}
+
+export interface EncodedLevel {
+
+  tiles: string;
 
 }
