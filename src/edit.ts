@@ -9,7 +9,8 @@ export class EditMode implements Mode {
     this.stage = stage;
     this.toolbox = new Toolbox(body, this);
     // Buttons.
-    let panel = body.querySelector('.panel.commands');
+    let panel = <HTMLElement>body.querySelector('.panel.commands');
+    this.commandsContainer = panel;
     panel.querySelector('.redo').addEventListener('click', () => this.redo());
     panel.querySelector('.undo').addEventListener('click', () => this.undo());
     // Initial history entry.
@@ -36,6 +37,17 @@ export class EditMode implements Mode {
     }
     // TODO Push history after edit, not before!
     level.updateScene(this.stage);
+  }
+
+  commandsContainer: HTMLElement;
+
+  enable(command: string, enabled: boolean) {
+    let classes = this.commandsContainer.querySelector(`.${command}`).classList;
+    if (enabled) {
+      classes.remove('disabled');
+    } else {
+      classes.add('disabled');
+    }
   }
 
   erasing = false;
@@ -103,6 +115,7 @@ export class EditMode implements Mode {
       this.history.shift();
       this.historyIndex -= 1;
     }
+    this.updateUndoRedo();
   }
 
   redo() {
@@ -110,6 +123,7 @@ export class EditMode implements Mode {
       this.historyIndex += 1;
       this.stage.level = this.history[this.historyIndex].copy();
       this.stage.level.updateScene(this.stage);
+      this.updateUndoRedo();
     }
   }
 
@@ -145,7 +159,13 @@ export class EditMode implements Mode {
       this.historyIndex -= 1;
       this.stage.level = this.history[this.historyIndex].copy();
       this.stage.level.updateScene(this.stage);
+      this.updateUndoRedo();
     }
+  }
+
+  updateUndoRedo() {
+    this.enable('redo', this.historyIndex < this.history.length - 1);
+    this.enable('undo', this.historyIndex > 0);
   }
 
 }
