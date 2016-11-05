@@ -14,7 +14,7 @@ export class EditMode implements Mode {
     panel.querySelector('.redo').addEventListener('click', () => this.redo());
     panel.querySelector('.undo').addEventListener('click', () => this.undo());
     // Initial history entry.
-    this.pushHistory();
+    this.pushHistory(true);
   }
 
   active = false;
@@ -104,7 +104,7 @@ export class EditMode implements Mode {
     type.name.toLowerCase(), type
   ]));
 
-  pushHistory() {
+  pushHistory(initial = false) {
     // TODO Check for actual changes here? Or record as changes happen?
     if (
       this.history.length &&
@@ -123,7 +123,7 @@ export class EditMode implements Mode {
       this.history.shift();
       this.historyIndex -= 1;
     }
-    this.trackChange();
+    this.trackChange(initial);
   }
 
   redo() {
@@ -144,6 +144,13 @@ export class EditMode implements Mode {
     let encoded = this.stage.level.encode();
     window.localStorage['zym.level'] = JSON.stringify(encoded);
     this.saveNeeded = false;
+    // Show saved long enough to let people notice.
+    this.showSaveState('saved');
+    window.setTimeout(() => {
+      if (this.showingCommand('saved')) {
+        this.showSaveState('none');
+      }
+    }, 1e3);
   }
 
   saveLevelMaybe() {
@@ -166,6 +173,26 @@ export class EditMode implements Mode {
     this.tool = tool;
   }
 
+  showCommand(command: string, shown: boolean) {
+    let element =
+      <HTMLElement>this.commandsContainer.querySelector(`.${command}`);
+    // TODO How to default to inline-block through style sheet?
+    element.style.display = shown ? 'inline-block' : 'none';
+  }
+
+  showingCommand(command: string) {
+    let element =
+      <HTMLElement>this.commandsContainer.querySelector(`.${command}`);
+    return element.style.display != 'none';
+  }
+
+  showSaveState(state: 'changing' | 'none' | 'saved') {
+    // These aren't really commands, but eh.
+    for (let command of ['changing', 'saved']) {
+      this.showCommand(command, command == state);
+    }
+  }
+
   stage: Stage;
 
   tilePoint(stagePoint: Vector2) {
@@ -184,10 +211,12 @@ export class EditMode implements Mode {
 
   toolbox: Toolbox;
 
-  trackChange() {
-    // Track time for saving.
-    this.saveNeeded = true;
-    this.updateChangeTime();
+  trackChange(initial = false) {
+    if (!initial) {
+      // Track time for saving.
+      this.saveNeeded = true;
+      this.updateChangeTime();
+    }
     // Enable or disable undo/redo.
     this.enable('redo', this.historyIndex < this.history.length - 1);
     this.enable('undo', this.historyIndex > 0);
@@ -204,6 +233,8 @@ export class EditMode implements Mode {
 
   updateChangeTime() {
     this.lastChangeTime = window.performance.now();
+    // Change/save indicators aren't really commands, but eh.
+    this.showSaveState('changing');
     if (this.saveNeeded) {
       // Make sure we have some event out past save time.
       // console.log(`Setting timeout for save at ${window.performance.now()}`);

@@ -24,12 +24,17 @@ export interface Mode {
 export class Stage {
 
   constructor() {
+    // Load the current level.
+    // TODO Define what "current level" means.
+    // TODO An encoding more human-friendly than JSON.
+    this.level.decode(JSON.parse(window.localStorage['zym.level']));
     // TODO Extract some setup to graphics modes?
     // Renderer.
     let canvas = <HTMLCanvasElement>document.body.querySelector('.stage');
     let renderer = this.renderer =
       new WebGLRenderer({antialias: false, canvas});
     // Camera.
+    // Retain this view across themes.
     this.camera = new OrthographicCamera(
       0, Level.pixelCount.x, Level.pixelCount.y, 0, -1e5, 1e5,
     );
@@ -40,9 +45,6 @@ export class Stage {
     canvas.style.display = 'block';
     // Scene.
     this.scene3 = new Scene3();
-    // Ambient light.
-    let ambient = new AmbientLight(0xFFFFFF, 1);
-    this.scene3.add(ambient);
     // Modes.
     this.edit = new EditMode(this);
     this.mode = this.edit;

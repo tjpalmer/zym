@@ -13,6 +13,10 @@ body {
   top: 0;
 }
 
+.commands .changing, .commands .saved  {
+  display: none;
+}
+
 .commands .play, .commands .redo  {
   margin-bottom: 0.5em;
 }

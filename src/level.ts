@@ -24,17 +24,15 @@ export class Level {
   }
 
   decode(encoded: EncodedLevel) {
-    let level = new Level();
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
     rows.forEach((row, i) => {
       i = Level.tileCount.y - i - 1;
       for (let j = 0; j < Math.min(row.length, Level.tileCount.x); ++j) {
         let type = Parts.charParts.get(row.charAt(j));
-        level.tiles.set(point.set(j, i), type || None);
+        this.tiles.set(point.set(j, i), type || None);
       }
     });
-    return level;
   }
 
   encode() {
