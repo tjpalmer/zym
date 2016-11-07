@@ -1,4 +1,4 @@
-import {Grid, Part, PartType, Stage} from './';
+import {Grid, Part, PartType, Game} from './';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
@@ -61,13 +61,13 @@ export class Level {
   tiles: Grid<PartType>;
 
   // For use from the editor.
-  updateScene(stage: Stage) {
-    let scene = stage.scene;
-    let theme = stage.theme;
+  updateStage(game: Game) {
+    let stage = game.stage;
+    let theme = game.theme;
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
         let tile = this.tiles.items[k];
-        let part = scene.parts[k];
+        let part = stage.parts[k];
         // If it's the same type as what we already had, presume it's already in
         // the right place.
         if (!(part instanceof tile)) {
@@ -75,7 +75,7 @@ export class Level {
           let part = new tile();
           theme.buildArt(part);
           part.point.set(j, i).multiply(Level.tileSize);
-          scene.parts[k] = part;
+          stage.parts[k] = part;
         }
       }
     }

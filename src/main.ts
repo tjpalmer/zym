@@ -1,4 +1,4 @@
-import {Control, Stage, Toolbox} from './';
+import {Control, Game, Toolbox} from './';
 import {GoldTheme} from './gold';
 import './index.css';
 import 'font-awesome';
@@ -10,11 +10,11 @@ declare function require(name: string): any;
 
 function main() {
   let theme = new GoldTheme();
-  let stage = new Stage();
-  stage.theme = theme;
-  new Control(stage);
+  let game = new Game();
+  game.theme = theme;
+  new Control(game);
   // Fill in even empty/none parts before the first drawing, so uv and such get
   // in there.
-  stage.level.updateScene(stage);
-  theme.handle(stage);
+  game.level.updateStage(game);
+  theme.handle(game);
 }

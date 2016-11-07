@@ -1,5 +1,5 @@
 import {Parts} from './';
-import {Level, Part, PartType, Stage, Theme} from '../';
+import {Level, Part, PartType, Game, Theme} from '../';
 import {
   BufferAttribute, BufferGeometry, Mesh, MeshBasicMaterial, NearestFilter,
   PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
@@ -33,8 +33,8 @@ export class GoldTheme implements Theme {
     part.art = makeArt();
   }
 
-  handle(stage: Stage) {
-    // stage.scene.children.forEach(kid => stage.scene.remove(kid));
+  handle(game: Game) {
+    // game.stage.children.forEach(kid => game.stage.remove(kid));
     if (!this.tilePlanes) {
       if (false) {
         // Background test.
@@ -45,10 +45,10 @@ export class GoldTheme implements Theme {
         });
         let mesh = new Mesh(plane, planeMaterial);
         mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
-        stage.scene3.add(mesh);
+        game.scene.add(mesh);
       }
       // Panels.
-      this.preparePanels(stage);
+      this.preparePanels(game);
       // Tiles.
       let tileMaterial = new ShaderMaterial({
         depthTest: false,
@@ -84,10 +84,10 @@ export class GoldTheme implements Theme {
           tileCount * attribute.array.length
         ), attribute.itemSize));
       }
-      // Add to scene.
+      // Add to stage.
       this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
-      stage.scene3.add(this.tilesMesh);
-      stage.redraw = () => this.handle(stage);
+      game.scene.add(this.tilesMesh);
+      game.redraw = () => this.handle(game);
     }
     let tileIndices = this.tileIndices;
     let tilePlanes = this.tilePlanes;
@@ -95,8 +95,8 @@ export class GoldTheme implements Theme {
     // Duplicate prototype, translated and tile indexed.
     // TODO How to make sure tilePlanes is large enough?
     // TODO Fill the back with none parts when it's too big?
-    let parts = stage.scene.parts;
-    stage.scene.parts.forEach((part, partIndex) => {
+    let parts = game.stage.parts;
+    game.stage.parts.forEach((part, partIndex) => {
       let currentTileIndices = (<Art>part.art).editTile;
       // Translate and merge are expensive. TODO Make my own functions?
       tilePlane.translate(part.point.x, part.point.y, 0);
@@ -112,7 +112,7 @@ export class GoldTheme implements Theme {
     attributes.position.needsUpdate = true;
     attributes.tile.needsUpdate = true;
     // Render.
-    // stage.render();
+    // game.render();
   }
 
   image: HTMLImageElement;
@@ -130,8 +130,8 @@ export class GoldTheme implements Theme {
     return canvas;
   }
 
-  preparePanels(stage: Stage) {
-    let {toolbox} = stage.edit;
+  preparePanels(game: Game) {
+    let {toolbox} = game.edit;
     // let buttonHeight = '1em';
     // Fit about 20 tiles at vertically, but use integer scaling for kindness.
     // Base this on screen size rather than window size, presuming that screen
@@ -146,7 +146,7 @@ export class GoldTheme implements Theme {
         button.style.height = buttonHeight;
         continue;
       }
-      let type = stage.edit.namedTools.get(name);
+      let type = game.edit.namedTools.get(name);
       if (!type) {
         throw new Error(`Unknown type: ${name}`);
       }

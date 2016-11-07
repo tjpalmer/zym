@@ -1,12 +1,12 @@
-import {Level, Mode, Part, PartType, PointEvent, Stage, Toolbox} from './';
+import {Level, Mode, Part, PartType, PointEvent, Game, Toolbox} from './';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
 export class EditMode implements Mode {
 
-  constructor(stage: Stage) {
+  constructor(game: Game) {
     let {body} = document;
-    this.stage = stage;
+    this.game = game;
     this.toolbox = new Toolbox(body, this);
     // Buttons.
     let panel = <HTMLElement>body.querySelector('.panel.commands');
@@ -22,7 +22,7 @@ export class EditMode implements Mode {
   apply(tilePoint: Vector2) {
     // Even if we don't make changes, the user seems active, so push off save.
     this.updateChangeTime();
-    let {level} = this.stage;
+    let {level} = this.game;
     let tool = this.tool;
     if (this.erasing) {
       if (tool == level.tiles.get(tilePoint)) {
@@ -39,10 +39,10 @@ export class EditMode implements Mode {
     level.tiles.set(tilePoint, tool);
     if (tool) {
       // TODO Some static interface to avoid construction?
-      new tool().editPlacedAt(this.stage, tilePoint);
+      new tool().editPlacedAt(this.game, tilePoint);
     }
     // TODO Push history after edit, not before!
-    level.updateScene(this.stage);
+    level.updateStage(this.game);
   }
 
   commandsContainer: HTMLElement;
@@ -67,7 +67,7 @@ export class EditMode implements Mode {
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
     let point = this.tilePoint(event.point)!;
-    let {tiles} = this.stage.level;
+    let {tiles} = this.game.level;
     let old = tiles.get(point);
     if (this.tool == None) {
       this.erasing = false;
@@ -86,7 +86,7 @@ export class EditMode implements Mode {
       // Move and up can be out of bounds.
       return;
     }
-    let {tiles} = this.stage.level;
+    let {tiles} = this.game.level;
     if (this.active) {
       this.apply(point);
     }
@@ -108,7 +108,7 @@ export class EditMode implements Mode {
     // TODO Check for actual changes here? Or record as changes happen?
     if (
       this.history.length &&
-      this.stage.level.equals(this.history[this.historyIndex])
+      this.game.level.equals(this.history[this.historyIndex])
     ) {
       // Nothing changed. Stay put.
       return;
@@ -116,7 +116,7 @@ export class EditMode implements Mode {
     // Delete anything after our current position.
     this.history.splice(this.historyIndex + 1, this.history.length);
     // Add the new.
-    this.history.push(this.stage.level.copy());
+    this.history.push(this.game.level.copy());
     this.historyIndex += 1;
     // Clear out super old, though it's hard to believe we'll blow out ram.
     if (this.history.length > 100) {
@@ -129,8 +129,8 @@ export class EditMode implements Mode {
   redo() {
     if (this.historyIndex < this.history.length - 1) {
       this.historyIndex += 1;
-      this.stage.level = this.history[this.historyIndex].copy();
-      this.stage.level.updateScene(this.stage);
+      this.game.level = this.history[this.historyIndex].copy();
+      this.game.level.updateStage(this.game);
       this.trackChange();
     }
   }
@@ -141,7 +141,7 @@ export class EditMode implements Mode {
 
   saveLevel() {
     // TODO Level and world naming conventions. UUIDs with index object?
-    let encoded = this.stage.level.encode();
+    let encoded = this.game.level.encode();
     window.localStorage['zym.level'] = JSON.stringify(encoded);
     this.saveNeeded = false;
     // Show saved long enough to let people notice.
@@ -193,7 +193,7 @@ export class EditMode implements Mode {
     }
   }
 
-  stage: Stage;
+  game: Game;
 
   tilePoint(stagePoint: Vector2) {
     let point = stagePoint.clone().divide(Level.tileSize).floor();
@@ -225,8 +225,8 @@ export class EditMode implements Mode {
   undo() {
     if (this.historyIndex > 0) {
       this.historyIndex -= 1;
-      this.stage.level = this.history[this.historyIndex].copy();
-      this.stage.level.updateScene(this.stage);
+      this.game.level = this.history[this.historyIndex].copy();
+      this.game.level.updateStage(this.game);
       this.trackChange();
     }
   }
