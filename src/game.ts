@@ -1,4 +1,4 @@
-import {EditMode, Level, Stage, Theme} from './';
+import {EditMode, Level, PlayMode, Stage, Theme} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -11,13 +11,19 @@ export interface PointEvent {
   point: Vector2;
 }
 
-export interface Mode {
+export class Mode {
 
-  mouseDown(event: PointEvent): void;
+  constructor(game: Game) {
+    this.game = game;
+  }
 
-  mouseMove(event: PointEvent): void;
+  game: Game;
 
-  mouseUp(event: PointEvent): void;
+  mouseDown(event: PointEvent) {}
+  mouseMove(event: PointEvent) {}
+  mouseUp(event: PointEvent) {}
+
+  tick() {}
 
 }
 
@@ -47,6 +53,7 @@ export class Game {
     this.scene = new Scene();
     // Modes.
     this.edit = new EditMode(this);
+    this.play = new PlayMode(this);
     this.mode = this.edit;
     // Input handlers.
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
@@ -91,12 +98,15 @@ export class Game {
     });
   }
 
+  play: PlayMode;
+
   redraw?: () => void;
 
   render() {
     // Prep next frame first for best fps.
     requestAnimationFrame(() => this.render());
     // Render stage.
+    this.mode.tick();
     if (this.redraw) {
       this.redraw();
     }
@@ -153,7 +163,7 @@ export class Game {
     return point;
   }
 
-  stage = new Stage();
+  stage = new Stage(this);
 
   scene: Scene;
 

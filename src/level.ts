@@ -61,7 +61,7 @@ export class Level {
   tiles: Grid<PartType>;
 
   // For use from the editor.
-  updateStage(game: Game) {
+  updateStage(game: Game, reset = false) {
     let stage = game.stage;
     let theme = game.theme;
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
@@ -70,9 +70,9 @@ export class Level {
         let part = stage.parts[k];
         // If it's the same type as what we already had, presume it's already in
         // the right place.
-        if (!(part instanceof tile)) {
+        if (reset || !(part instanceof tile)) {
           // Needs to be a new part.
-          let part = new tile();
+          let part = new tile(game);
           theme.buildArt(part);
           part.point.set(j, i).multiply(Level.tileSize);
           stage.parts[k] = part;

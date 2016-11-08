@@ -3,21 +3,35 @@ import {Vector2} from 'three';
 
 export class Part {
 
+  constructor(game: Game) {
+    this.game = game;
+  }
+
   art: any = undefined;
 
   // For overriding.
-  editPlacedAt(game: Game, tilePoint: Vector2) {}
+  editPlacedAt(tilePoint: Vector2) {}
+
+  game: Game;
 
   point = new Vector2();
+
+  tick() {}
 
 }
 
 export interface PartType {
-  new (): Part;
+  new (game: Game): Part;
   char: string;
 }
 
 export class Stage {
+
+  constructor(game: Game) {
+    this.game = game;
+  }
+
+  game: Game;
 
   // During level editing, these corresponding exactly to level tile indices.
   // This can include nones.
@@ -26,6 +40,12 @@ export class Stage {
   // inserting and deleting all the time, life will be easier.
   // Of course, we can skip the nones when building for actual play, if we want.
   parts = new Array<Part>(Level.tileCount.x * Level.tileCount.y);
+
+  tick() {
+    for (let part of this.parts) {
+      part.tick();
+    }
+  }
 
 }
 

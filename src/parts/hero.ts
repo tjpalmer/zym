@@ -6,7 +6,8 @@ export class Hero extends Part {
 
   static char = 'R';
 
-  editPlacedAt(game: Game, tilePoint: Vector2) {
+  editPlacedAt(tilePoint: Vector2) {
+    let game = this.game;
     let placedIndex = game.level.tiles.index(tilePoint);
     game.level.tiles.items.forEach((type, index) => {
       if (type == Hero && index != placedIndex) {
@@ -15,6 +16,10 @@ export class Hero extends Part {
         game.level.tiles.items[index] = last == Hero ? None : last;
       }
     });
+  }
+
+  tick() {
+    this.point.x += 1;
   }
 
 }

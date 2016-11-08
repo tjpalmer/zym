@@ -1,12 +1,13 @@
 // This file allows exporting the entire package api as a unified whole, while
 // coming from different source files.
 
-// Some others depend on Part from here for now, so import it first.
+// Some others depend on Mode and Part from these for now, so import it first.
+export * from './game';
 export * from './stage';
 
 export * from './control';
 export * from './edit';
 export * from './level';
-export * from './game';
+export * from './play';
 export * from './toolbox';
 export * from './util';

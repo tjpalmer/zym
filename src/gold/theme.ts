@@ -150,7 +150,7 @@ export class GoldTheme implements Theme {
       if (!type) {
         throw new Error(`Unknown type: ${name}`);
       }
-      let part = new type();
+      let part = new type(game);
       this.buildArt(part);
       // Now calculate the pixel point.
       let point = (<Art>part.art).editTile.clone();

@@ -2,17 +2,17 @@ import {Level, Mode, Part, PartType, PointEvent, Game, Toolbox} from './';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
-export class EditMode implements Mode {
+export class EditMode extends Mode {
 
   constructor(game: Game) {
+    super(game);
     let {body} = document;
-    this.game = game;
     this.toolbox = new Toolbox(body, this);
     // Buttons.
-    let panel = <HTMLElement>body.querySelector('.panel.commands');
-    this.commandsContainer = panel;
-    panel.querySelector('.redo').addEventListener('click', () => this.redo());
-    panel.querySelector('.undo').addEventListener('click', () => this.undo());
+    this.commandsContainer = <HTMLElement>body.querySelector('.panel.commands');
+    this.onClick('play', () => this.play());
+    this.onClick('redo', () => this.redo());
+    this.onClick('undo', () => this.undo());
     // Initial history entry.
     this.pushHistory(true);
   }
@@ -39,16 +39,19 @@ export class EditMode implements Mode {
     level.tiles.set(tilePoint, tool);
     if (tool) {
       // TODO Some static interface to avoid construction?
-      new tool().editPlacedAt(this.game, tilePoint);
+      new tool(this.game).editPlacedAt(tilePoint);
     }
-    // TODO Push history after edit, not before!
     level.updateStage(this.game);
+  }
+
+  getButton(command: string): HTMLElement {
+    return <HTMLElement>this.commandsContainer.querySelector(`.${command}`);
   }
 
   commandsContainer: HTMLElement;
 
   enable(command: string, enabled: boolean) {
-    let classes = this.commandsContainer.querySelector(`.${command}`).classList;
+    let classes = this.getButton(command).classList;
     if (enabled) {
       classes.remove('disabled');
     } else {
@@ -104,6 +107,26 @@ export class EditMode implements Mode {
     type.name.toLowerCase(), type
   ]));
 
+  onClick(command: string, handler: () => void) {
+    this.getButton(command).addEventListener('click', handler);
+  }
+
+  play() {
+    // TODO Real handling.
+    this.game.mode = this.game.mode == this.game.play ?
+      this.game.edit : this.game.play;
+    let classes = this.getButton('play').classList;
+    if (this.game.mode == this.game.edit) {
+      // Reset on pause.
+      this.game.level.updateStage(this.game, true);
+      classes.add('fa-play');
+      classes.remove('fa-pause');
+    } else {
+      classes.add('fa-pause');
+      classes.remove('fa-play');
+    }
+  }
+
   pushHistory(initial = false) {
     // TODO Check for actual changes here? Or record as changes happen?
     if (
@@ -145,6 +168,9 @@ export class EditMode implements Mode {
     window.localStorage['zym.level'] = JSON.stringify(encoded);
     this.saveNeeded = false;
     // Show saved long enough to let people notice.
+    // TODO Replace all this with onbeforeunload to handle potential problems.
+    // TODO Could possibly wait out even longer than 3 seconds if we do that.
+    // TODO Besides, in Electron we might have more control, anyway.
     this.showSaveState('saved');
     window.setTimeout(() => {
       if (this.showingCommand('saved')) {
@@ -174,15 +200,13 @@ export class EditMode implements Mode {
   }
 
   showCommand(command: string, shown: boolean) {
-    let element =
-      <HTMLElement>this.commandsContainer.querySelector(`.${command}`);
+    let element = this.getButton(command);
     // TODO How to default to inline-block through style sheet?
     element.style.display = shown ? 'inline-block' : 'none';
   }
 
   showingCommand(command: string) {
-    let element =
-      <HTMLElement>this.commandsContainer.querySelector(`.${command}`);
+    let element = this.getButton(command);
     return element.style.display != 'none';
   }
 
@@ -192,8 +216,6 @@ export class EditMode implements Mode {
       this.showCommand(command, command == state);
     }
   }
-
-  game: Game;
 
   tilePoint(stagePoint: Vector2) {
     let point = stagePoint.clone().divide(Level.tileSize).floor();
