@@ -10,7 +10,7 @@ declare function require(name: string): any;
 
 function main() {
   let theme = new GoldTheme();
-  let game = new Game();
+  let game = new Game(window.document.body);
   game.theme = theme;
   // Fill in even empty/none parts before the first drawing, so uv and such get
   // in there.

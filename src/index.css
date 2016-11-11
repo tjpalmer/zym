@@ -17,7 +17,7 @@ body {
   display: none;
 }
 
-.commands .play, .commands .redo  {
+.commands .play, .commands .redo, .status .pause  {
   margin-bottom: 0.5em;
 }
 
@@ -25,15 +25,22 @@ body {
   opacity: 0.4;
 }
 
+.editMode .status {
+  display: none;
+}
+
 .panel {
-  /*display: none;*/
   flex: 0;
-  font-size: 2em;
 }
 
 .panel > * {
   border: 0.1em solid transparent;
+  font-size: 2em;
   padding: 0.1em;
+}
+
+.playMode .commands, .playMode .toolbox {
+  display: none;
 }
 
 .stage {
@@ -45,6 +52,10 @@ body {
   position: absolute;
   /*top: 50%;*/
   transform: translate(-50%, 0);
+}
+
+.status.other {
+  visibility: hidden;
 }
 
 .toolbox input {

@@ -22,6 +22,8 @@ export class Control {
 
   down = false;
 
+  enter = false;
+
   // Double-press for these.
   // TODO fast = false;
 
@@ -30,6 +32,8 @@ export class Control {
     ArrowLeft: 'left',
     ArrowRight: 'right',
     ArrowUp: 'up',
+    Enter: 'enter',
+    ' ': 'pause',
     X: 'burnRight',
     Z: 'burnLeft',
   };
@@ -38,15 +42,38 @@ export class Control {
 
   left = false;
 
+  onChange(fieldName: string) {
+    switch (fieldName) {
+      case 'enter': {
+        if (this.enter) {
+          this.game.edit.play();
+        }
+        break;
+      }
+      case 'pause': {
+        if (this.pause) {
+          this.game.play.togglePause();
+        }
+        break;
+      }
+    }
+  }
+
   onKey(event: KeyboardEvent, down: boolean) {
     // console.log(event.key);
     let field = this.keyFields[event.key];
     if (field) {
-      (this as any)[field] = down;
+      let old = (this as any)[field];
+      if (old != down) {
+        (this as any)[field] = down;
+        this.onChange(field);
+      }
       event.preventDefault();
       // console.log(`Set ${field} to ${down}`);
     }
   }
+
+  pause = false;
 
   right = false;
 

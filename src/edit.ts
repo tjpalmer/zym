@@ -45,10 +45,6 @@ export class EditMode extends Mode {
     level.updateStage(this.game);
   }
 
-  getButton(command: string): HTMLElement {
-    return this.commandsContainer.querySelector(`.${command}`) as HTMLElement;
-  }
-
   commandsContainer: HTMLElement;
 
   enable(command: string, enabled: boolean) {
@@ -108,24 +104,23 @@ export class EditMode extends Mode {
     type.name.toLowerCase(), type
   ] as [string, PartType]));
 
-  onClick(command: string, handler: () => void) {
-    this.getButton(command).addEventListener('click', handler);
-  }
-
   play() {
-    // TODO Real handling.
     this.game.mode = this.game.mode == this.game.play ?
       this.game.edit : this.game.play;
-    let classes = this.getButton('play').classList;
-    if (this.game.mode == this.game.edit) {
-      // Reset on pause.
+    let isEdit = this.game.mode == this.game.edit;
+    if (isEdit) {
+      // Reset on stop.
       this.game.level.updateStage(this.game, true);
-      classes.add('fa-play');
-      classes.remove('fa-pause');
-    } else {
-      classes.add('fa-pause');
-      classes.remove('fa-play');
+      if (this.game.play.paused) {
+        // TODO Activate function on modes for general handling?
+        this.game.play.togglePause();
+      }
     }
+    this.toggleClasses({
+      element: this.game.body,
+      falseClass: 'playMode', trueClass: 'editMode',
+      value: isEdit,
+    });
   }
 
   pushHistory(initial = false) {

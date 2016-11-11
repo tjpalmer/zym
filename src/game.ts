@@ -17,19 +17,41 @@ export class Mode {
     this.game = game;
   }
 
+  getButton(command: string): HTMLElement {
+    return this.game.body.querySelector(`.panel .${command}`) as HTMLElement;
+  }
+
   game: Game;
 
   mouseDown(event: PointEvent) {}
   mouseMove(event: PointEvent) {}
   mouseUp(event: PointEvent) {}
 
+  onClick(command: string, handler: () => void) {
+    this.getButton(command).addEventListener('click', handler);
+  }
+
   tick() {}
+
+  toggleClasses(options: {
+    element: HTMLElement, falseClass: string, trueClass: string, value: boolean
+  }) {
+    let {classList} = options.element;
+    if (options.value) {
+      classList.add(options.trueClass);
+      classList.remove(options.falseClass);
+    } else {
+      classList.add(options.falseClass);
+      classList.remove(options.trueClass);
+    }
+  }
 
 }
 
 export class Game {
 
-  constructor() {
+  constructor(body: HTMLElement) {
+    this.body = body;
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
@@ -64,6 +86,8 @@ export class Game {
     // this.render();
     // requestAnimationFrame(() => this.render());
   }
+
+  body: HTMLElement;
 
   camera: OrthographicCamera;
 

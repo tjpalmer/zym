@@ -6,7 +6,7 @@
     <script src="vendor.js"></script>
     <script src="app.js"></script>
   </head>
-  <body>
+  <body class="editMode">
     <!-- TODO Move out all UI! -->
     <form class="panel toolbox">
       <label class="hero">
@@ -22,8 +22,16 @@
         <input name="tool" type="radio"/>
       </label>
     </form>
+    <div class="panel status other">
+      <!-- Placeholder for space. -->
+      <i class="fa fa-stop"></i>
+    </div>
     <div class="view">
       <canvas class="stage"></canvas>
+    </div>
+    <div class="panel status">
+      <i class="fa fa-pause pause"></i>
+      <i class="fa fa-stop stop"></i>
     </div>
     <div class="panel commands">
       <i class="fa fa-play play"></i>
