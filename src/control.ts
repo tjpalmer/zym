@@ -4,34 +4,52 @@ import {Vector2} from 'three';
 export class Control {
 
   constructor(game: Game) {
-    this.active = false;
-    // this.last = new Vector2();
     this.game = game;
-    // let canvas = game.renderer.domElement;
-    // canvas.addEventListener('mousedown', event => this.mouseDown(event));
-    window.addEventListener('mousemove', event => this.mouseMove(event));
-    // window.addEventListener('mouseup', event => this.mouseUp(event));
+    // TODO Capture below window level?
+    window.addEventListener('keydown', event => this.onKey(event, true));
+    window.addEventListener('keyup', event => this.onKey(event, false));
+    // Store both cases for letter keys.
+    Object.keys(this.keyFields).forEach(key => {
+      if (key.length == 1) {
+        (<any>this.keyFields)[key.toLowerCase()] = this.keyFields[key];
+      }
+    });
   }
 
-  active: boolean;
+  burnLeft = false;
 
-  mouseDown(event: MouseEvent) {
-    this.active = true;
-  }
+  burnRight = false;
 
-  mouseMove(event: MouseEvent) {
-    if (!this.active) return;
-    this.update();
-  }
+  down = false;
 
-  mouseUp(event: MouseEvent) {
-    this.active = false;
-  }
+  // Double-press for these.
+  // TODO fast = false;
+
+  keyFields = <{[key: string]: string}>{
+    ArrowDown: 'down',
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+    ArrowUp: 'up',
+    X: 'burnRight',
+    Z: 'burnLeft',
+  };
 
   game: Game;
 
-  update() {
-    // this.game.render();
+  left = false;
+
+  onKey(event: KeyboardEvent, down: boolean) {
+    // console.log(event.key);
+    let field = this.keyFields[event.key];
+    if (field) {
+      (<any>this)[field] = down;
+      event.preventDefault();
+      // console.log(`Set ${field} to ${down}`);
+    }
   }
+
+  right = false;
+
+  up = false;
 
 }

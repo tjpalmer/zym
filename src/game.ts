@@ -1,4 +1,4 @@
-import {EditMode, Level, PlayMode, Stage, Theme} from './';
+import {Control, EditMode, Level, PlayMode, Stage, Theme} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -56,6 +56,7 @@ export class Game {
     this.play = new PlayMode(this);
     this.mode = this.edit;
     // Input handlers.
+    this.control = new Control(this)
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
     window.addEventListener('mousemove', event => this.mouseMove(event));
     window.addEventListener('mouseup', event => this.mouseUp(event));
@@ -65,6 +66,8 @@ export class Game {
   }
 
   camera: OrthographicCamera;
+
+  control: Control;
 
   edit: EditMode;
 
