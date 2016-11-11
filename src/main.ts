@@ -16,4 +16,6 @@ function main() {
   // in there.
   game.level.updateStage(game);
   theme.handle(game);
+  // Now kick off the display.
+  game.render();
 }

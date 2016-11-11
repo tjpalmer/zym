@@ -151,9 +151,6 @@ export class Game {
       // this.camera.aspect = size.x / size.y;
       // this.camera.updateProjectionMatrix();
       this.renderer.setSize(canvasSize.x, canvasSize.y);
-      if (this.scene) {
-        this.render();
-      }
     }, 0);
   }
 
