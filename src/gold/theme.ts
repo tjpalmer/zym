@@ -24,7 +24,7 @@ export class GoldTheme implements Theme {
   }
 
   buildArt(part: Part) {
-    let makeArt = Parts.tileArts.get(<PartType>part.constructor);
+    let makeArt = Parts.tileArts.get(part.constructor as PartType);
     if (!makeArt) {
       // This makes it easier to deal with problems up front.
       throw new Error(`No art for part type ${part.constructor.name}`);
@@ -97,7 +97,7 @@ export class GoldTheme implements Theme {
     // TODO Fill the back with none parts when it's too big?
     let parts = game.stage.parts;
     game.stage.parts.forEach((part, partIndex) => {
-      let currentTileIndices = (<Art>part.art).editTile;
+      let currentTileIndices = (part.art as Art).editTile;
       // Translate and merge are expensive. TODO Make my own functions?
       tilePlane.translate(part.point.x, part.point.y, 0);
       for (let k = 0; k < tileIndices.length; k += 2) {
@@ -153,7 +153,7 @@ export class GoldTheme implements Theme {
       let part = new type(game);
       this.buildArt(part);
       // Now calculate the pixel point.
-      let point = (<Art>part.art).editTile.clone();
+      let point = (part.art as Art).editTile.clone();
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
       // Now make a canvas to draw to.
@@ -162,7 +162,7 @@ export class GoldTheme implements Theme {
       canvas.height = Level.tileSize.y;
       // Style it.
       canvas.style.display = 'block';
-      (<any>canvas.style).imageRendering = 'pixelated';
+      (canvas.style as any).imageRendering = 'pixelated';
       canvas.style.margin = 'auto';
       canvas.style.height = buttonHeight;
       let context = canvas.getContext('2d')!;

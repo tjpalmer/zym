@@ -11,7 +11,7 @@ export class Control {
     // Store both cases for letter keys.
     Object.keys(this.keyFields).forEach(key => {
       if (key.length == 1) {
-        (<any>this.keyFields)[key.toLowerCase()] = this.keyFields[key];
+        this.keyFields[key.toLowerCase()] = this.keyFields[key];
       }
     });
   }
@@ -25,7 +25,7 @@ export class Control {
   // Double-press for these.
   // TODO fast = false;
 
-  keyFields = <{[key: string]: string}>{
+  keyFields: {[key: string]: string} = {
     ArrowDown: 'down',
     ArrowLeft: 'left',
     ArrowRight: 'right',
@@ -42,7 +42,7 @@ export class Control {
     // console.log(event.key);
     let field = this.keyFields[event.key];
     if (field) {
-      (<any>this)[field] = down;
+      (this as any)[field] = down;
       event.preventDefault();
       // console.log(`Set ${field} to ${down}`);
     }

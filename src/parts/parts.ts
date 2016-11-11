@@ -15,7 +15,7 @@ export class Parts {
   // TODO Assert no duplicate chars!
 
   static charParts = new Map(Parts.inventory.map(
-    part => <[string, PartType]>[part.char, part]
+    part => [part.char, part] as [string, PartType]
   ));
 
 }

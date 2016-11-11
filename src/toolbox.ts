@@ -5,12 +5,11 @@ export class Toolbox {
 
   constructor(body: HTMLElement, edit: EditMode) {
     // Toolbox.
-    this.container = <HTMLElement>body.querySelector('.toolbox');
+    this.container = body.querySelector('.toolbox') as HTMLElement;
     this.edit = edit;
     this.markSelected();
     let container = this.container;
-    for (let any of <any>container.querySelectorAll('input')) {
-      let input: HTMLInputElement = any;
+    for (let input of container.querySelectorAll('input')) {
       input.addEventListener('click', () => {
         for (let other of this.getToolButtons()) {
           other.classList.remove('selected');
@@ -35,7 +34,7 @@ export class Toolbox {
 
   markSelected() {
     let selected = this.container.querySelector('input:checked');
-    let label = <HTMLElement>selected.closest('label');
+    let label = selected.closest('label') as HTMLElement;
     label.classList.add('selected');
     // Get the class name that's not selected.
     // TODO Instead put name on the input?

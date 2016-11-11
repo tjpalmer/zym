@@ -9,7 +9,8 @@ export class EditMode extends Mode {
     let {body} = document;
     this.toolbox = new Toolbox(body, this);
     // Buttons.
-    this.commandsContainer = <HTMLElement>body.querySelector('.panel.commands');
+    this.commandsContainer =
+      body.querySelector('.panel.commands') as HTMLElement;
     this.onClick('play', () => this.play());
     this.onClick('redo', () => this.redo());
     this.onClick('undo', () => this.undo());
@@ -45,7 +46,7 @@ export class EditMode extends Mode {
   }
 
   getButton(command: string): HTMLElement {
-    return <HTMLElement>this.commandsContainer.querySelector(`.${command}`);
+    return this.commandsContainer.querySelector(`.${command}`) as HTMLElement;
   }
 
   commandsContainer: HTMLElement;
@@ -103,9 +104,9 @@ export class EditMode extends Mode {
     this.pushHistory();
   }
 
-  namedTools = new Map(Parts.inventory.map(type => <[string, PartType]>[
+  namedTools = new Map(Parts.inventory.map(type => [
     type.name.toLowerCase(), type
-  ]));
+  ] as [string, PartType]));
 
   onClick(command: string, handler: () => void) {
     this.getButton(command).addEventListener('click', handler);

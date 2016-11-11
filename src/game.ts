@@ -36,7 +36,7 @@ export class Game {
     this.level.decode(JSON.parse(window.localStorage['zym.level']));
     // TODO Extract some setup to graphics modes?
     // Renderer.
-    let canvas = <HTMLCanvasElement>document.body.querySelector('.stage');
+    let canvas = document.body.querySelector('.stage') as HTMLCanvasElement;
     let renderer = this.renderer =
       new WebGLRenderer({antialias: false, canvas});
     // Camera.
