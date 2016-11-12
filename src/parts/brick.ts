@@ -10,4 +10,6 @@ export class Brick extends Part {
     return true;
   }
 
+  surface = true;
+
 }

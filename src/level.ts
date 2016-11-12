@@ -67,15 +67,19 @@ export class Level {
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
         let tile = this.tiles.items[k];
-        let part = stage.parts[k];
+        let oldPart = stage.parts[k];
         // If it's the same type as what we already had, presume it's already in
         // the right place.
-        if (reset || !(part instanceof tile)) {
+        if (reset || !(oldPart instanceof tile)) {
           // Needs to be a new part.
           let part = new tile(game);
           theme.buildArt(part);
           part.point.set(j, i).multiply(Level.tileSize);
           stage.parts[k] = part;
+          if (oldPart) {
+            stage.removed(oldPart);
+          }
+          stage.added(part);
         }
       }
     }
