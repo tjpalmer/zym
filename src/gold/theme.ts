@@ -5,9 +5,29 @@ import {
   PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
 } from 'three';
 
+export enum Layer {
+  // Normally I go alphabetical, but instead put this in back to front order.
+  // Back is all for static items that people go in front of.
+  back,
+  hero,
+  // All enemies appear above player to be aggressive.
+  // Biggies go behind other enemies because they are bigger.
+  biggie,
+  enemy,
+  // Front is also static.
+  front,
+  // Just to track the number of enum values.
+  length,
+}
+
 export interface Art {
 
   editTile: Vector2;
+
+  // Layer is usually (always?) constant by part type, but it's not a big deal
+  // just to replicate.
+  // TODO Will layers also exist on 3D, or will it all be z-ordered?
+  layer: Layer;
 
 }
 
@@ -21,6 +41,12 @@ export class GoldTheme implements Theme {
     this.texture = new Texture(scaled);
     this.texture.magFilter = NearestFilter;
     this.texture.needsUpdate = true;
+    // Prepare layers.
+    // Add 1 to allow an undefined at the end.
+    let maxLayerPartCount = Level.tileCount.x * Level.tileCount.y + 1;
+    for (let i = 0; i < Layer.length; ++i) {
+      this.layers.push(new Array<Part>(maxLayerPartCount));
+    }
   }
 
   buildArt(part: Part) {
@@ -33,89 +59,111 @@ export class GoldTheme implements Theme {
     part.art = makeArt();
   }
 
+  buildDone(game: Game) {
+    let layerPartIndices = this.layers.map(() => 0);
+    game.stage.parts.forEach(part => {
+      let {layer} = part.art as Art;
+      this.layers[layer][layerPartIndices[layer]++] = part;
+    });
+    layerPartIndices.forEach((layerPartIndex, layer) => {
+      this.layers[layer][layerPartIndex] = undefined;
+    });
+  }
+
   handle(game: Game) {
-    // game.stage.children.forEach(kid => game.stage.remove(kid));
     if (!this.tilePlanes) {
-      if (false) {
-        // Background test.
-        let plane =
-          new PlaneBufferGeometry(Level.pixelCount.x, Level.pixelCount.y, 1, 1);
-        let planeMaterial = new MeshBasicMaterial({
-          map: this.texture,
-        });
-        let mesh = new Mesh(plane, planeMaterial);
-        mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
-        game.scene.add(mesh);
-      }
-      // Panels.
-      this.preparePanels(game);
-      // Tiles.
-      let tileMaterial = new ShaderMaterial({
-        depthTest: false,
-        fragmentShader: tileFragmentShader,
-        transparent: true,
-        uniforms: {
-          map: {value: this.texture},
-        },
-        vertexShader: tileVertexShader,
-      });
-      // Prototypical tile.
-      this.tilePlane = new BufferGeometry();
-      let tilePlane = this.tilePlane;
-      tilePlane.addAttribute('position', new BufferAttribute(new Float32Array([
-        // Leave the coords at 3D for now to match default expectations.
-        // And they'll be translated.
-        8, 0, 0, 0, 10, 0, 0, 0, 0,
-        8, 0, 0, 8, 10, 0, 0, 10, 0,
-      ]), 3));
-      // Tile map offsets, repeated.
-      tilePlane.addAttribute('tile', new BufferAttribute(this.tileIndices, 2));
-      tilePlane.addAttribute('uv', new BufferAttribute(new Float32Array([
-        // Uv are 2D.
-        1, 0, 0, 1, 0, 0,
-        1, 0, 1, 1, 0, 1,
-      ]), 2));
-      // All tiles in a batch.
-      this.tilePlanes = new BufferGeometry();
-      let tileCount = Level.tileCount.x * Level.tileCount.y;
-      for (let name in tilePlane.attributes) {
-        let attribute = tilePlane.getAttribute(name);
-        this.tilePlanes.addAttribute(name, new BufferAttribute(new Float32Array(
-          tileCount * attribute.array.length
-        ), attribute.itemSize));
-      }
-      // Add to stage.
-      this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
-      game.scene.add(this.tilesMesh);
-      game.redraw = () => this.handle(game);
+      this.initTilePlanes(game);
     }
     let tileIndices = this.tileIndices;
-    let tilePlanes = this.tilePlanes;
+    let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
     // Duplicate prototype, translated and tile indexed.
     // TODO How to make sure tilePlanes is large enough?
     // TODO Fill the back with none parts when it's too big?
-    let parts = game.stage.parts;
-    game.stage.parts.forEach((part, partIndex) => {
-      let currentTileIndices = (part.art as Art).editTile;
-      // Translate and merge are expensive. TODO Make my own functions?
-      tilePlane.translate(part.point.x, part.point.y, 0);
-      for (let k = 0; k < tileIndices.length; k += 2) {
-        tileIndices[k + 0] = currentTileIndices.x;
-        tileIndices[k + 1] = currentTileIndices.y;
+    let partIndex = 0;
+    this.layers.forEach(layer => {
+      for (let part of layer) {
+        if (!part) {
+          // That's the end of this layer.
+          break;
+        }
+        let currentTileIndices = (part.art as Art).editTile;
+        // Translate and merge are expensive. TODO Make my own functions?
+        tilePlane.translate(part.point.x, part.point.y, 0);
+        for (let k = 0; k < tileIndices.length; k += 2) {
+          tileIndices[k + 0] = currentTileIndices.x;
+          tileIndices[k + 1] = currentTileIndices.y;
+        }
+        tilePlanes.merge(tilePlane, 6 * partIndex);
+        tilePlane.translate(-part.point.x, -part.point.y, 0);
+        ++partIndex;
       }
-      tilePlanes.merge(tilePlane, 6 * partIndex);
-      tilePlane.translate(-part.point.x, -part.point.y, 0);
     });
+    // TODO What if the amount varies? Need to back fill with nones?
     // For some reason, needsUpdate is missing on attributes, so go any here.
     let attributes: any = tilePlanes.attributes;
     attributes.position.needsUpdate = true;
     attributes.tile.needsUpdate = true;
-    // Render.
-    // game.render();
   }
 
   image: HTMLImageElement;
+
+  initTilePlanes(game: Game) {
+    if (false) {
+      // Background test.
+      let plane =
+        new PlaneBufferGeometry(Level.pixelCount.x, Level.pixelCount.y, 1, 1);
+      let planeMaterial = new MeshBasicMaterial({
+        map: this.texture,
+      });
+      let mesh = new Mesh(plane, planeMaterial);
+      mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
+      game.scene.add(mesh);
+    }
+    // Panels.
+    this.preparePanels(game);
+    // Tiles.
+    let tileMaterial = new ShaderMaterial({
+      depthTest: false,
+      fragmentShader: tileFragmentShader,
+      transparent: true,
+      uniforms: {
+        map: {value: this.texture},
+      },
+      vertexShader: tileVertexShader,
+    });
+    // Prototypical tile.
+    this.tilePlane = new BufferGeometry();
+    let tilePlane = this.tilePlane;
+    tilePlane.addAttribute('position', new BufferAttribute(new Float32Array([
+      // Leave the coords at 3D for now to match default expectations.
+      // And they'll be translated.
+      8, 0, 0, 0, 10, 0, 0, 0, 0,
+      8, 0, 0, 8, 10, 0, 0, 10, 0,
+    ]), 3));
+    // Tile map offsets, repeated.
+    tilePlane.addAttribute('tile', new BufferAttribute(this.tileIndices, 2));
+    tilePlane.addAttribute('uv', new BufferAttribute(new Float32Array([
+      // Uv are 2D.
+      1, 0, 0, 1, 0, 0,
+      1, 0, 1, 1, 0, 1,
+    ]), 2));
+    // All tiles in a batch.
+    let tileCount = Level.tileCount.x * Level.tileCount.y;
+    this.tilePlanes = new BufferGeometry();
+    for (let name in tilePlane.attributes) {
+      let attribute = tilePlane.getAttribute(name);
+      this.tilePlanes.addAttribute(name, new BufferAttribute(new Float32Array(
+        tileCount * attribute.array.length
+      ), attribute.itemSize));
+    }
+    // Add to stage.
+    this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
+    game.scene.add(this.tilesMesh);
+    game.redraw = () => this.handle(game);
+  }
+
+  layers = new Array<Array<Part | undefined>>();
 
   level = new Level();
 

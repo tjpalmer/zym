@@ -1,6 +1,13 @@
 import {Level, Game} from './';
 import {Vector2} from 'three';
 
+export enum Edge {
+  top,
+  right,
+  bottom,
+  left,
+}
+
 export class Part {
 
   constructor(game: Game) {
@@ -15,6 +22,12 @@ export class Part {
   game: Game;
 
   point = new Vector2();
+
+  solid(edge: Edge) {
+    return false;
+  }
+
+  surface = false;
 
   tick() {}
 
@@ -52,5 +65,7 @@ export class Stage {
 export interface Theme {
 
   buildArt(part: Part): void;
+
+  buildDone(game: Game): void;
 
 }

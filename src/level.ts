@@ -79,6 +79,7 @@ export class Level {
         }
       }
     }
+    theme.buildDone(game);
   }
 
 }
