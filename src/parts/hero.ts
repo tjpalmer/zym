@@ -32,6 +32,12 @@ export class Hero extends Part {
     });
   }
 
+  getClimbable(leftParts: Array<Part>, rightParts: Array<Part>) {
+    return (
+      leftParts.find(part => part.climbable) ||
+      rightParts.find(part => part.climbable));
+  }
+
   getSurface(leftParts: Array<Part>, rightParts: Array<Part>) {
     return (
       leftParts.find(part => part.surface) ||
@@ -53,6 +59,11 @@ export class Hero extends Part {
     let leftParts = this.partsAt(3, -1);
     let rightParts = this.partsAt(4, -1);
     let surface = this.getSurface(leftParts, rightParts);
+    let inClimbable = this.getClimbable(this.partsAt(3, 0), this.partsAt(4, 0));
+    let climbable = this.getClimbable(leftParts, rightParts) || inClimbable;
+    if (!surface) {
+      surface = climbable;
+    }
     if (this.encased()) {
       // This could happen if a brick just enclosed on part of us.
       // TODO Die.
@@ -62,14 +73,25 @@ export class Hero extends Part {
         move.x = -1;
       } else if (control.right) {
         move.x = 1;
+      } else if (climbable) {
+        if (control.down) {
+          alignX = true;
+          move.y = -1;
+        } else if (control.up && inClimbable) {
+          alignX = true;
+          move.y = 1;
+        }
       }
     } else {
+      // TODO On trying to climb ladder, can push away from it!
       alignX = true;
       move.y = -1;
     }
-    point.add(move);  // .multiplyScalar(3));
+    // move.multiplyScalar(3);
+    point.add(move);
     if (!alignX) {
       // See if we need to align x for solids.
+      // TODO If openings partially above or below, move and align y!
       if (move.x < 0) {
         if (
           this.partsAt(0, 0).some(part => part.solid(Edge.right)) ||
@@ -92,6 +114,12 @@ export class Hero extends Part {
         let newSurface =
           this.getSurface(this.partsAt(3, -1), this.partsAt(4, -1));
         if (newSurface && !surface) {
+          // For landing on ladder. TODO Bars.
+          alignY = true;
+        } else if (
+          this.partsAt(0, 0).some(part => part.solid(Edge.top)) ||
+          this.partsAt(7, 0).some(part => part.solid(Edge.top))
+        ) {
           alignY = true;
         }
       } else if (move.y > 0) {
