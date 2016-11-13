@@ -25,7 +25,7 @@ export class Part {
 
   point = new Vector2();
 
-  solid(edge: Edge) {
+  solid(edge?: Edge) {
     return false;
   }
 
