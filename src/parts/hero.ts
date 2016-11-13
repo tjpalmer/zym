@@ -74,6 +74,14 @@ export class Hero extends Part {
       } else if (control.right) {
         move.x = 1;
       } else if (climbable) {
+        // First see if our alignment will round the wrong way.
+        // TODO Could the same thing happen for x movement ever?
+        let alignedX =
+          Level.tileSize.x * Math.round(point.x / Level.tileSize.x);
+        if (alignedX != climbable.point.x) {
+          move.x = Math.sign(climbable.point.x - point.x);
+        }
+        // Now move up or down.
         if (control.down) {
           alignX = true;
           move.y = -1;
@@ -83,7 +91,6 @@ export class Hero extends Part {
         }
       }
     } else {
-      // TODO On trying to climb ladder, can push away from it!
       alignX = true;
       move.y = -1;
     }
