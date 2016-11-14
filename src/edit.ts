@@ -8,6 +8,12 @@ export class EditMode extends Mode {
     super(game);
     let {body} = document;
     this.toolbox = new Toolbox(body, this);
+    window.addEventListener('beforeunload', () => {
+      // Always save on exit.
+      if (this.saveNeeded) {
+        this.saveLevel();
+      }
+    });
     // Buttons.
     this.commandsContainer =
       body.querySelector('.panel.commands') as HTMLElement;
@@ -154,7 +160,7 @@ export class EditMode extends Mode {
     }
   }
 
-  saveDelay = 3e3;
+  saveDelay = 10e3;
 
   saveNeeded = false;
 
@@ -207,10 +213,12 @@ export class EditMode extends Mode {
   }
 
   showSaveState(state: 'changing' | 'none' | 'saved') {
-    // These aren't really commands, but eh.
-    for (let command of ['changing', 'saved']) {
-      this.showCommand(command, command == state);
-    }
+    // Once saving beforeunload, these become less useful.
+    // TODO Indicators useful to show saving to servers?
+    // // These aren't really commands, but eh.
+    // for (let command of ['changing', 'saved']) {
+    //   this.showCommand(command, command == state);
+    // }
   }
 
   tilePoint(stagePoint: Vector2) {
