@@ -1,4 +1,4 @@
-import {Bar, Brick, Hero, Ladder, None} from './';
+import {Bar, Brick, Hero, Ladder, None, Steel} from './';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
 
@@ -10,6 +10,7 @@ export class Parts {
     Ladder,
     Hero,
     None,
+    Steel,
   ];
 
   // TODO Assert no duplicate chars!
