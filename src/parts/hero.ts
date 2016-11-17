@@ -6,6 +6,8 @@ export class Hero extends Part {
 
   static char = 'R';
 
+  align = new Vector2();
+
   encased() {
     return (
       this.partsAt(0, 0).some(part => part.solid()) ||
@@ -32,6 +34,17 @@ export class Hero extends Part {
     });
   }
 
+  findAlign(edge: Edge, minParts: Array<Part>, maxParts: Array<Part>) {
+    // Find where an opening is, so we can align to that.
+    if (!minParts.some(part => part.solid(edge))) {
+      return -1;
+    }
+    if (!maxParts.some(part => part.solid(edge))) {
+      return 1;
+    }
+    return 0;
+  }
+
   getClimbable(leftParts: Array<Part>, rightParts: Array<Part>) {
     return (
       leftParts.find(part => part.climbable) ||
@@ -50,53 +63,78 @@ export class Hero extends Part {
 
   tick() {
     // TODO Let changed keys override old ones.
+    // TODO Find all actions (and alignments) before moving, for enemies?
     let {control, stage} = this.game;
     let {move, oldPoint, point, workPoint} = this;
     oldPoint.copy(point);
     move.setScalar(0);
-    let alignX = false;
-    let alignY = false;
     let leftParts = this.partsAt(3, -1);
     let rightParts = this.partsAt(4, -1);
-    let surface = this.getSurface(leftParts, rightParts);
-    let inClimbable = this.getClimbable(this.partsAt(3, 0), this.partsAt(4, 0));
+    let support = this.getSurface(leftParts, rightParts);
+    let inClimbable =
+      this.getClimbable(this.partsAt(3, 0), this.partsAt(4, 0)) ||
+      // Allow dangling.
+      this.getClimbable(this.partsAt(3, 7), this.partsAt(4, 7));
     let climbable = this.getClimbable(leftParts, rightParts) || inClimbable;
-    if (!surface) {
-      surface = climbable;
+    if (!support) {
+      support = climbable;
     }
     if (this.encased()) {
       // This could happen if a brick just enclosed on part of us.
       // TODO Die.
-    } else if (surface) {
+    } else if (support) {
       // TODO Remember old move options to allow easier transition?
+      let wallEdge: Edge;
       if (control.left) {
         move.x = -1;
+        wallEdge = Edge.right;
       } else if (control.right) {
         move.x = 1;
+        wallEdge = Edge.left;
       } else if (climbable) {
-        // First see if our alignment will round the wrong way.
-        // TODO Could the same thing happen for x movement ever?
-        let alignedX =
-          Level.tileSize.x * Math.round(point.x / Level.tileSize.x);
-        if (alignedX != climbable.point.x) {
-          move.x = Math.sign(climbable.point.x - point.x);
-        }
+        // // First see if our alignment will round the wrong way.
+        // // TODO Could the same thing happen for x movement ever? Yes.
+        // // TODO Generalize this to allowing alignment only to nearby open side.
+        // // TODO As in, can only go y to the right if far enough right. Etc.
+        // let alignedX =
+        //   Level.tileSize.x * Math.round(point.x / Level.tileSize.x);
+        // if (alignedX != climbable.point.x) {
+        //   move.x = Math.sign(climbable.point.x - point.x);
+        // }
         // Now move up or down.
         if (control.down) {
-          alignX = true;
           move.y = -1;
         } else if (control.up && inClimbable) {
-          alignX = true;
           move.y = 1;
         }
       }
+      let wallDown = this.partsAt(move.x, 3).find(part => part.solid(wallEdge));
+      let wallUp = this.partsAt(move.x, 4).find(part => part.solid(wallEdge));
     } else {
-      alignX = true;
       move.y = -1;
     }
+    // Align non-moving direction.
+    // TODO Except when all on same climbable or none?
+    let align = this.align.setScalar(0);
+    if (move.x < 0) {
+      align.y =
+        this.findAlign(Edge.right, this.partsAt(-1, 4), this.partsAt(-1, 5));
+    } else if (move.x > 0) {
+      align.y =
+        this.findAlign(Edge.left, this.partsAt(8, 4), this.partsAt(8, 5));
+    } else if (move.y < 0) {
+      align.x = this.findAlign(Edge.top, leftParts, rightParts);
+    } else if (move.y > 0) {
+      align.x =
+        this.findAlign(Edge.bottom, this.partsAt(3, 10), this.partsAt(4, 10));
+    }
     // move.multiplyScalar(3);
+    // Change player position.
     point.add(move);
-    if (!alignX) {
+    // See if we need to fix things.
+    // TODO Defer this until first pass of all moving parts so we can resolve
+    // TODO together?
+    if (!align.x) {
       // See if we need to align x for solids.
       // TODO If openings partially above or below, move and align y!
       if (move.x < 0) {
@@ -104,45 +142,49 @@ export class Hero extends Part {
           this.partsAt(0, 0).some(part => part.solid(Edge.right)) ||
           this.partsAt(0, 9).some(part => part.solid(Edge.right))
         ) {
-          alignX = true;
+          align.x = 1;
         }
       } else if (move.x > 0) {
         if (
           this.partsAt(7, 0).some(part => part.solid(Edge.left)) ||
           this.partsAt(7, 9).some(part => part.solid(Edge.left))
         ) {
-          alignX = true;
+          align.x = -1;
         }
       }
     }
-    if (!alignY) {
+    if (!align.y) {
       // See if we need to align y for solids.
       if (move.y < 0) {
-        let newSurface =
+        let newSupport =
           this.getSurface(this.partsAt(3, -1), this.partsAt(4, -1));
-        if (newSurface && !surface) {
+        if (newSupport && !support) {
           // For landing on ladder. TODO Bars.
-          alignY = true;
+          align.y = 1;
         } else if (
           this.partsAt(0, 0).some(part => part.solid(Edge.top)) ||
           this.partsAt(7, 0).some(part => part.solid(Edge.top))
         ) {
-          alignY = true;
+          align.y = 1;
         }
       } else if (move.y > 0) {
         if (
           this.partsAt(0, 9).some(part => part.solid(Edge.bottom)) ||
           this.partsAt(7, 9).some(part => part.solid(Edge.bottom))
         ) {
-          alignY = true;
+          align.y = -1;
         }
       }
     }
-    if (alignX) {
-      point.x = Level.tileSize.x * Math.round(point.x / Level.tileSize.x);
+    if (align.x) {
+      let offset = align.x < 0 ? 3 : 4;
+      point.x =
+        Level.tileSize.x * Math.floor((point.x + offset) / Level.tileSize.x);
     }
-    if (alignY) {
-      point.y = Level.tileSize.y * Math.round(point.y / Level.tileSize.y);
+    if (align.y) {
+      let offset = align.y < 0 ? 4 : 5;
+      point.y =
+        Level.tileSize.y * Math.floor((point.y + offset) / Level.tileSize.y);
     }
     stage.moved(this, oldPoint);
   }
