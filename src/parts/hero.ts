@@ -10,10 +10,10 @@ export class Hero extends Part {
 
   encased() {
     return (
-      this.partsAt(0, 0).some(part => part.solid()) ||
-      this.partsAt(0, 9).some(part => part.solid()) ||
-      this.partsAt(7, 0).some(part => part.solid()) ||
-      this.partsAt(7, 9).some(part => part.solid())
+      this.partsNear(0, 0).some(part => part.solid()) ||
+      this.partsNear(0, 9).some(part => part.solid()) ||
+      this.partsNear(7, 0).some(part => part.solid()) ||
+      this.partsNear(7, 9).some(part => part.solid())
     );
   }
 
@@ -57,8 +57,14 @@ export class Hero extends Part {
       rightParts.find(part => part.surface));
   }
 
-  partsAt(x: number, y: number) {
-    return this.game.stage.partsAt(this.workPoint.set(x, y).add(this.point));    
+  // TODO Switch to using this once we have moving supports (enemies).
+  partAt(x: number, y: number, keep: (part: Part) => boolean) {
+    return (
+      this.game.stage.partAt(this.workPoint.set(x, y).add(this.point), keep));    
+  }
+
+  partsNear(x: number, y: number) {
+    return this.game.stage.partsNear(this.workPoint.set(x, y).add(this.point));    
   }
 
   tick() {
@@ -68,13 +74,13 @@ export class Hero extends Part {
     let {move, oldPoint, point, workPoint} = this;
     oldPoint.copy(point);
     move.setScalar(0);
-    let leftParts = this.partsAt(3, -1);
-    let rightParts = this.partsAt(4, -1);
+    let leftParts = this.partsNear(3, -1);
+    let rightParts = this.partsNear(4, -1);
     let support = this.getSurface(leftParts, rightParts);
     let inClimbable =
-      this.getClimbable(this.partsAt(3, 0), this.partsAt(4, 0)) ||
+      this.getClimbable(this.partsNear(3, 0), this.partsNear(4, 0)) ||
       // Allow dangling.
-      this.getClimbable(this.partsAt(3, 7), this.partsAt(4, 7));
+      this.getClimbable(this.partsNear(3, 7), this.partsNear(4, 7));
     let climbable = this.getClimbable(leftParts, rightParts) || inClimbable;
     if (!support) {
       support = climbable;
@@ -92,15 +98,6 @@ export class Hero extends Part {
         move.x = 1;
         wallEdge = Edge.left;
       } else if (climbable) {
-        // // First see if our alignment will round the wrong way.
-        // // TODO Could the same thing happen for x movement ever? Yes.
-        // // TODO Generalize this to allowing alignment only to nearby open side.
-        // // TODO As in, can only go y to the right if far enough right. Etc.
-        // let alignedX =
-        //   Level.tileSize.x * Math.round(point.x / Level.tileSize.x);
-        // if (alignedX != climbable.point.x) {
-        //   move.x = Math.sign(climbable.point.x - point.x);
-        // }
         // Now move up or down.
         if (control.down) {
           move.y = -1;
@@ -108,8 +105,9 @@ export class Hero extends Part {
           move.y = 1;
         }
       }
-      let wallDown = this.partsAt(move.x, 3).find(part => part.solid(wallEdge));
-      let wallUp = this.partsAt(move.x, 4).find(part => part.solid(wallEdge));
+      let wallDown =
+        this.partsNear(move.x, 3).find(part => part.solid(wallEdge));
+      let wallUp = this.partsNear(move.x, 4).find(part => part.solid(wallEdge));
     } else {
       move.y = -1;
     }
@@ -117,18 +115,20 @@ export class Hero extends Part {
     // TODO Except when all on same climbable or none?
     let align = this.align.setScalar(0);
     if (move.x < 0) {
-      align.y =
-        this.findAlign(Edge.right, this.partsAt(-1, 4), this.partsAt(-1, 5));
+      align.y = this.findAlign(
+        Edge.right, this.partsNear(-1, 4), this.partsNear(-1, 5),
+      );
     } else if (move.x > 0) {
       align.y =
-        this.findAlign(Edge.left, this.partsAt(8, 4), this.partsAt(8, 5));
+        this.findAlign(Edge.left, this.partsNear(8, 4), this.partsNear(8, 5));
     } else if (move.y < 0) {
       align.x = this.findAlign(Edge.top, leftParts, rightParts);
     } else if (move.y > 0) {
-      align.x =
-        this.findAlign(Edge.bottom, this.partsAt(3, 10), this.partsAt(4, 10));
+      align.x = this.findAlign(
+        Edge.bottom, this.partsNear(3, 10), this.partsNear(4, 10),
+      );
     }
-    // move.multiplyScalar(3);
+    // move.multiplyScalar(2);
     // Change player position.
     point.add(move);
     // See if we need to fix things.
@@ -139,15 +139,15 @@ export class Hero extends Part {
       // TODO If openings partially above or below, move and align y!
       if (move.x < 0) {
         if (
-          this.partsAt(0, 0).some(part => part.solid(Edge.right)) ||
-          this.partsAt(0, 9).some(part => part.solid(Edge.right))
+          this.partsNear(0, 0).some(part => part.solid(Edge.right)) ||
+          this.partsNear(0, 9).some(part => part.solid(Edge.right))
         ) {
           align.x = 1;
         }
       } else if (move.x > 0) {
         if (
-          this.partsAt(7, 0).some(part => part.solid(Edge.left)) ||
-          this.partsAt(7, 9).some(part => part.solid(Edge.left))
+          this.partsNear(7, 0).some(part => part.solid(Edge.left)) ||
+          this.partsNear(7, 9).some(part => part.solid(Edge.left))
         ) {
           align.x = -1;
         }
@@ -157,20 +157,20 @@ export class Hero extends Part {
       // See if we need to align y for solids.
       if (move.y < 0) {
         let newSupport =
-          this.getSurface(this.partsAt(3, -1), this.partsAt(4, -1));
+          this.getSurface(this.partsNear(3, -1), this.partsNear(4, -1));
         if (newSupport && !support) {
           // For landing on ladder. TODO Bars.
           align.y = 1;
         } else if (
-          this.partsAt(0, 0).some(part => part.solid(Edge.top)) ||
-          this.partsAt(7, 0).some(part => part.solid(Edge.top))
+          this.partsNear(0, 0).some(part => part.solid(Edge.top)) ||
+          this.partsNear(7, 0).some(part => part.solid(Edge.top))
         ) {
           align.y = 1;
         }
       } else if (move.y > 0) {
         if (
-          this.partsAt(0, 9).some(part => part.solid(Edge.bottom)) ||
-          this.partsAt(7, 9).some(part => part.solid(Edge.bottom))
+          this.partsNear(0, 9).some(part => part.solid(Edge.bottom)) ||
+          this.partsNear(7, 9).some(part => part.solid(Edge.bottom))
         ) {
           align.y = -1;
         }

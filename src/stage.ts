@@ -16,7 +16,20 @@ export class Part {
 
   art: any = undefined;
 
+  // Bars catch heros and enemies, and burned bricks catch enemies (or inside
+  // solid for burned bricks?).
+  catches(part: Part) {
+    return false;
+  }
+
   climbable = false;
+
+  contains(point: Vector2) {
+    let {x, y} = this.point;
+    return (
+      point.x >= x && point.x < x + Level.tileSize.x &&
+      point.y >= y && point.y < y + Level.tileSize.y);
+  }
 
   // For overriding.
   editPlacedAt(tilePoint: Vector2) {}
@@ -25,6 +38,7 @@ export class Part {
 
   point = new Vector2();
 
+  // TODO Inside solid for burned bricks vs enemies, or launchers for all?
   solid(edge?: Edge) {
     return false;
   }
@@ -94,7 +108,11 @@ export class Stage {
   // Of course, we can skip the nones when building for actual play, if we want.
   parts = new Array<Part>(Level.tileCount.x * Level.tileCount.y);
 
-  partsAt(point: Vector2): Array<Part> {
+  partAt(point: Vector2, keep: (part: Part) => boolean) {
+    return this.partsNear(point).find(part => keep(part) && part.contains(point));
+  }
+
+  partsNear(point: Vector2): Array<Part> {
     let {grid, workPoint} = this;
     workPoint.copy(point).divide(Level.tileSize).floor();
     return grid.get(workPoint);
