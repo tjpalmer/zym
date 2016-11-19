@@ -30,7 +30,7 @@ body {
 }
 
 .panel {
-  flex: 0;
+  display: inline-block;
 }
 
 .panel > * {
@@ -39,8 +39,17 @@ body {
   padding: 0.1em;
 }
 
+.panelBox {
+  flex: 0;
+  min-width: 4em;
+}
+
 .playMode .commands, .playMode .toolbox {
   display: none;
+}
+
+.right {
+  text-align: right;
 }
 
 .stage {

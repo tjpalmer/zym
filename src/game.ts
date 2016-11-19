@@ -55,7 +55,7 @@ export class Game {
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
-    this.level.decode(JSON.parse(window.localStorage['zym.level']));
+    this.level.load(window.localStorage['zym.level']);
     // TODO Extract some setup to graphics modes?
     // Renderer.
     let canvas = document.body.querySelector('.stage') as HTMLCanvasElement;

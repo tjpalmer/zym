@@ -58,6 +58,14 @@ export class Level {
     return true;
   }
 
+  load(text: string) {
+    if (text) {
+      this.decode(JSON.parse(text));
+    } else {
+      this.tiles.items.fill(None);
+    }
+  }
+
   tiles: Grid<PartType>;
 
   // For use from the editor.
