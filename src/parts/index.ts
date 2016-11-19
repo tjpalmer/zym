@@ -1,3 +1,7 @@
+// Used by multiple parts.
+export * from './runner';
+
+// Parts themselves.
 export * from './bar';
 export * from './brick';
 export * from './enemy';

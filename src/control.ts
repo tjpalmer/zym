@@ -1,9 +1,31 @@
 import {Game} from './';
 import {Vector2} from 'three';
 
-export class Control {
+export class RunnerAction {
+
+  // TODO Simplify this down to what's possible?
+
+  burnLeft = false;
+
+  burnRight = false;
+
+  down = false;
+
+  // Double-press for these.
+  // TODO fast = false;
+
+  left = false;
+
+  right = false;
+
+  up = false;
+
+}
+
+export class Control extends RunnerAction {
 
   constructor(game: Game) {
+    super();
     this.game = game;
     // TODO Capture below window level?
     window.addEventListener('keydown', event => this.onKey(event, true));
@@ -16,16 +38,7 @@ export class Control {
     });
   }
 
-  burnLeft = false;
-
-  burnRight = false;
-
-  down = false;
-
   enter = false;
-
-  // Double-press for these.
-  // TODO fast = false;
 
   keyFields: {[key: string]: string} = {
     ArrowDown: 'down',
@@ -39,8 +52,6 @@ export class Control {
   };
 
   game: Game;
-
-  left = false;
 
   onChange(fieldName: string) {
     switch (fieldName) {
@@ -74,9 +85,5 @@ export class Control {
   }
 
   pause = false;
-
-  right = false;
-
-  up = false;
 
 }
