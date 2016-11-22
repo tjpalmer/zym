@@ -33,16 +33,12 @@ export class Runner extends Part {
 
   getClimbable(leftParts: Array<Part>, rightParts: Array<Part>) {
     let isClimbable = (part: Part) => part.climbable && part != this;
-    return (
-      leftParts.find(isClimbable) ||
-      rightParts.find(isClimbable));
+    return leftParts.find(isClimbable) || rightParts.find(isClimbable);
   }
 
   getSurface(leftParts: Array<Part>, rightParts: Array<Part>) {
     let isSurface = (part: Part) => part.surface && part != this;
-    return (
-      leftParts.find(isSurface) ||
-      rightParts.find(isSurface));
+    return leftParts.find(isSurface) || rightParts.find(isSurface);
   }
 
   // TODO Switch to using this once we have moving supports (enemies).
