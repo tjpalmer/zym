@@ -7,11 +7,12 @@ export class Runner extends Part {
   align = new Vector2();
 
   encased() {
+    let isSolid = (part: Part) => part.solid(this) && part != this;
     return (
-      this.partsNear(0, 0).some(part => part.solid(this)) ||
-      this.partsNear(0, 9).some(part => part.solid(this)) ||
-      this.partsNear(7, 0).some(part => part.solid(this)) ||
-      this.partsNear(7, 9).some(part => part.solid(this))
+      this.partsNear(0, 0).some(isSolid) ||
+      this.partsNear(0, 9).some(isSolid) ||
+      this.partsNear(7, 0).some(isSolid) ||
+      this.partsNear(7, 9).some(isSolid)
     );
   }
 
@@ -36,6 +37,11 @@ export class Runner extends Part {
     return leftParts.find(isClimbable) || rightParts.find(isClimbable);
   }
 
+  getSolid(edge: Edge, parts1: Array<Part>, parts2: Array<Part>) {
+    let isSolid = (part: Part) => part.solid(this, edge) && part != this;
+    return parts1.find(isSolid) || parts2.find(isSolid);
+  }
+
   getSurface(leftParts: Array<Part>, rightParts: Array<Part>) {
     let isSurface = (part: Part) => part.surface && part != this;
     return leftParts.find(isSurface) || rightParts.find(isSurface);
@@ -48,7 +54,9 @@ export class Runner extends Part {
   }
 
   partsNear(x: number, y: number) {
-    return this.game.stage.partsNear(this.workPoint.set(x, y).add(this.point));    
+    return (
+      this.game.stage.partsNear(this.workPoint.set(x, y).add(this.point)) ||
+      []);    
   }
 
   processAction(action: RunnerAction) {
@@ -89,10 +97,6 @@ export class Runner extends Part {
           move.y = 1;
         }
       }
-      let wallDown =
-        this.partsNear(move.x, 3).find(part => part.solid(this, wallEdge));
-      let wallUp =
-        this.partsNear(move.x, 4).find(part => part.solid(this, wallEdge));
     } else {
       move.y = -1;
     }
@@ -124,15 +128,13 @@ export class Runner extends Part {
       // TODO If openings partially above or below, move and align y!
       if (move.x < 0) {
         if (
-          this.partsNear(0, 0).some(part => part.solid(this, Edge.right)) ||
-          this.partsNear(0, 9).some(part => part.solid(this, Edge.right))
+          this.getSolid(Edge.right, this.partsNear(0, 0), this.partsNear(0, 9))
         ) {
           align.x = 1;
         }
       } else if (move.x > 0) {
         if (
-          this.partsNear(7, 0).some(part => part.solid(this, Edge.left)) ||
-          this.partsNear(7, 9).some(part => part.solid(this, Edge.left))
+          this.getSolid(Edge.left, this.partsNear(7, 0), this.partsNear(7, 9))
         ) {
           align.x = -1;
         }
@@ -147,15 +149,13 @@ export class Runner extends Part {
           // For landing on ladder. TODO Bars.
           align.y = 1;
         } else if (
-          this.partsNear(0, 0).some(part => part.solid(this, Edge.top)) ||
-          this.partsNear(7, 0).some(part => part.solid(this, Edge.top))
+          this.getSolid(Edge.top, this.partsNear(0, 0), this.partsNear(7, 0))
         ) {
           align.y = 1;
         }
       } else if (move.y > 0) {
         if (
-          this.partsNear(0, 9).some(part => part.solid(this, Edge.bottom)) ||
-          this.partsNear(7, 9).some(part => part.solid(this, Edge.bottom))
+          this.getSolid(Edge.bottom, this.partsNear(0, 9), this.partsNear(7, 9))
         ) {
           align.y = -1;
         }

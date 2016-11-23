@@ -7,8 +7,10 @@ export class Enemy extends Runner {
 
   action = new RunnerAction();
 
-  solid(other: Part, edge?: Edge) {
-    return other instanceof Enemy;
+  solid(other: Part, edge?: Edge): boolean {
+    // Enemies block entrance to each other, but not exit from.
+    // Just a touch of safety precaution.
+    return other instanceof Enemy && !!edge;
   }
 
   surface = true;
