@@ -1,11 +1,15 @@
 import {Runner} from './';
-import {Game, RunnerAction} from '../';
+import {Edge, Game, Part, RunnerAction} from '../';
 
 export class Enemy extends Runner {
 
   static char = 'e';
 
   action = new RunnerAction();
+
+  solid(other: Part, edge?: Edge) {
+    return other instanceof Enemy;
+  }
 
   surface = true;
 

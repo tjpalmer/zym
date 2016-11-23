@@ -39,7 +39,7 @@ export class Part {
   point = new Vector2();
 
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?
-  solid(edge?: Edge) {
+  solid(other: Part, edge?: Edge) {
     return false;
   }
 

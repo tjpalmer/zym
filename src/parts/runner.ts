@@ -8,10 +8,10 @@ export class Runner extends Part {
 
   encased() {
     return (
-      this.partsNear(0, 0).some(part => part.solid()) ||
-      this.partsNear(0, 9).some(part => part.solid()) ||
-      this.partsNear(7, 0).some(part => part.solid()) ||
-      this.partsNear(7, 9).some(part => part.solid())
+      this.partsNear(0, 0).some(part => part.solid(this)) ||
+      this.partsNear(0, 9).some(part => part.solid(this)) ||
+      this.partsNear(7, 0).some(part => part.solid(this)) ||
+      this.partsNear(7, 9).some(part => part.solid(this))
     );
   }
 
@@ -22,10 +22,10 @@ export class Runner extends Part {
 
   findAlign(edge: Edge, minParts: Array<Part>, maxParts: Array<Part>) {
     // Find where an opening is, so we can align to that.
-    if (!minParts.some(part => part.solid(edge))) {
+    if (!minParts.some(part => part.solid(this, edge))) {
       return -1;
     }
-    if (!maxParts.some(part => part.solid(edge))) {
+    if (!maxParts.some(part => part.solid(this, edge))) {
       return 1;
     }
     return 0;
@@ -90,8 +90,9 @@ export class Runner extends Part {
         }
       }
       let wallDown =
-        this.partsNear(move.x, 3).find(part => part.solid(wallEdge));
-      let wallUp = this.partsNear(move.x, 4).find(part => part.solid(wallEdge));
+        this.partsNear(move.x, 3).find(part => part.solid(this, wallEdge));
+      let wallUp =
+        this.partsNear(move.x, 4).find(part => part.solid(this, wallEdge));
     } else {
       move.y = -1;
     }
@@ -123,15 +124,15 @@ export class Runner extends Part {
       // TODO If openings partially above or below, move and align y!
       if (move.x < 0) {
         if (
-          this.partsNear(0, 0).some(part => part.solid(Edge.right)) ||
-          this.partsNear(0, 9).some(part => part.solid(Edge.right))
+          this.partsNear(0, 0).some(part => part.solid(this, Edge.right)) ||
+          this.partsNear(0, 9).some(part => part.solid(this, Edge.right))
         ) {
           align.x = 1;
         }
       } else if (move.x > 0) {
         if (
-          this.partsNear(7, 0).some(part => part.solid(Edge.left)) ||
-          this.partsNear(7, 9).some(part => part.solid(Edge.left))
+          this.partsNear(7, 0).some(part => part.solid(this, Edge.left)) ||
+          this.partsNear(7, 9).some(part => part.solid(this, Edge.left))
         ) {
           align.x = -1;
         }
@@ -146,15 +147,15 @@ export class Runner extends Part {
           // For landing on ladder. TODO Bars.
           align.y = 1;
         } else if (
-          this.partsNear(0, 0).some(part => part.solid(Edge.top)) ||
-          this.partsNear(7, 0).some(part => part.solid(Edge.top))
+          this.partsNear(0, 0).some(part => part.solid(this, Edge.top)) ||
+          this.partsNear(7, 0).some(part => part.solid(this, Edge.top))
         ) {
           align.y = 1;
         }
       } else if (move.y > 0) {
         if (
-          this.partsNear(0, 9).some(part => part.solid(Edge.bottom)) ||
-          this.partsNear(7, 9).some(part => part.solid(Edge.bottom))
+          this.partsNear(0, 9).some(part => part.solid(this, Edge.bottom)) ||
+          this.partsNear(7, 9).some(part => part.solid(this, Edge.bottom))
         ) {
           align.y = -1;
         }

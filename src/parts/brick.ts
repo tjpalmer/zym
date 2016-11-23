@@ -6,7 +6,7 @@ export class Brick extends Part {
 
   burnTime: number;
 
-  solid(edge?: Edge) {
+  solid(other: Part, edge?: Edge) {
     return true;
   }
 

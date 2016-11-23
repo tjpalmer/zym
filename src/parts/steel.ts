@@ -4,7 +4,7 @@ export class Steel extends Part {
 
   static char = '#';
 
-  solid(edge?: Edge) {
+  solid(other: Part, edge?: Edge) {
     return true;
   }
 
