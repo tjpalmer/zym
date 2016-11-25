@@ -42,12 +42,12 @@ export class Runner extends Part {
     return parts1.find(isSolid) || parts2.find(isSolid);
   }
 
-  getSurface(leftParts: Array<Part>, rightParts: Array<Part>) {
+  getSurface() {
     let isSurface = (part: Part) => part.surface && part != this;
-    return leftParts.find(isSurface) || rightParts.find(isSurface);
+    return this.partAt(3, -1, isSurface) || this.partAt(4, -1, isSurface);
   }
 
-  // TODO Switch to using this once we have moving supports (enemies).
+  // TODO Switch to using this once we have moving supports (enemies)!!
   partAt(x: number, y: number, keep: (part: Part) => boolean) {
     return (
       this.game.stage.partAt(this.workPoint.set(x, y).add(this.point), keep));    
@@ -68,7 +68,8 @@ export class Runner extends Part {
     move.setScalar(0);
     let leftParts = this.partsNear(3, -1);
     let rightParts = this.partsNear(4, -1);
-    let support = this.getSurface(leftParts, rightParts);
+    // TODO If a support moves, it should move the supported thing, too.
+    let support = this.getSurface();
     let inClimbable =
       this.getClimbable(this.partsNear(3, 0), this.partsNear(4, 0)) ||
       // Allow dangling.
@@ -143,8 +144,7 @@ export class Runner extends Part {
     if (!align.y) {
       // See if we need to align y for solids.
       if (move.y < 0) {
-        let newSupport =
-          this.getSurface(this.partsNear(3, -1), this.partsNear(4, -1));
+        let newSupport = this.getSurface();
         if (newSupport && !support) {
           // For landing on ladder. TODO Bars.
           align.y = 1;
@@ -161,6 +161,7 @@ export class Runner extends Part {
         }
       }
     }
+    // TODO Align to blocker, not grid!
     if (align.x) {
       let offset = align.x < 0 ? 3 : 4;
       point.x =
