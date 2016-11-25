@@ -19,7 +19,7 @@ export class Stage {
     // Add to all overlapping grid lists.
     let {grid, workPoint} = this;
     this.walkGrid(part.point, () => {
-      grid.get(workPoint).push(part);
+      grid.get(workPoint)!.push(part);
     });
   }
 
@@ -56,10 +56,11 @@ export class Stage {
   parts = new Array<Part>(Level.tileCount.x * Level.tileCount.y);
 
   partAt(point: Vector2, keep: (part: Part) => boolean) {
-    return this.partsNear(point).find(part => keep(part) && part.contains(point));
+    let parts = this.partsNear(point);
+    return parts && parts.find(part => keep(part) && part.contains(point));
   }
 
-  partsNear(point: Vector2): Array<Part> {
+  partsNear(point: Vector2): Array<Part> | undefined {
     let {grid, workPoint} = this;
     workPoint.copy(point).divide(Level.tileSize).floor();
     return grid.get(workPoint);
@@ -72,7 +73,7 @@ export class Stage {
     // Remove from overlapping grid lists.
     let {grid, workPoint} = this;
     this.walkGrid(oldPoint, () => {
-      let parts = grid.get(workPoint);
+      let parts = grid.get(workPoint)!;
       let index = parts.indexOf(part);
       if (index >= 0) {
         parts.splice(index, 1);

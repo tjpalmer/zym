@@ -41,7 +41,7 @@ export class Level {
     for (let i = Level.tileCount.y - 1 ; i >= 0; --i) {
       let row: Array<string> = [];
       for (let j = 0; j < Level.tileCount.x; ++j) {
-        let type = this.tiles.get(point.set(j, i));
+        let type = this.tiles.get(point.set(j, i))!;
         row.push(type.char || '?');
       }
       rows.push(row.join(''));

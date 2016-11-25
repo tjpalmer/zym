@@ -11,7 +11,7 @@ export class Grid<Item> {
     return new Grid(this.size, this.items.slice());
   }
 
-  get(point: Vector2): Item { // TODO | undefined ???
+  get(point: Vector2): Item | undefined {
     return this.items[this.index(point)];
   }
 
