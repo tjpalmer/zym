@@ -68,8 +68,11 @@ export class Runner extends Part {
     move.setScalar(0);
     let leftParts = this.partsNear(3, -1);
     let rightParts = this.partsNear(4, -1);
+    // Pixel-specific for surfaces, because enemies are moving surfaces.
     // TODO If a support moves, it should move the supported thing, too.
     let support = this.getSurface();
+    // Unless we get moving climbables (falling ladders?), we can stick to near
+    // (same grid position) for climbables.
     let inClimbable =
       this.getClimbable(this.partsNear(3, 0), this.partsNear(4, 0)) ||
       // Allow dangling.

@@ -1,4 +1,5 @@
 import {Game, Grid, Level, Part} from './';
+import {Steel} from './parts';
 import {Vector2} from 'three';
 
 export class Stage {
@@ -13,6 +14,18 @@ export class Stage {
         this.grid.set(gridPoint, new Array<Part>());
       }
     }
+    // Fake steel at edges to block exit.
+    // Let each steel block have the right point, though we could maybe ignore
+    // position and hack a singleton.
+    let makeSteel = (j: number, i: number) => {
+      let steel = new Steel(game);
+      steel.point.copy(this.workPoint.set(i, j).multiply(Level.tileSize));
+      return [steel];
+    };
+    for (let i = 0; i < Level.tileCount.y; ++i) {
+      this.edgeLeft.push(makeSteel(-1, i));
+      this.edgeRight.push(makeSteel(Level.tileCount.x, i));
+    }
   }
 
   added(part: Part) {
@@ -22,6 +35,10 @@ export class Stage {
       grid.get(workPoint)!.push(part);
     });
   }
+
+  edgeLeft = new Array<Array<Part>>();
+
+  edgeRight = new Array<Array<Part>>();
 
   game: Game;
 
@@ -63,7 +80,18 @@ export class Stage {
   partsNear(point: Vector2): Array<Part> | undefined {
     let {grid, workPoint} = this;
     workPoint.copy(point).divide(Level.tileSize).floor();
-    return grid.get(workPoint);
+    let parts = grid.get(workPoint);
+    if (!parts) {
+      // Give the edges a shot.
+      // We don't have a way to get past edges, so presume we're within one grid
+      // position of the edge horizontally.
+      if (point.x < 0) {
+        parts = this.edgeLeft[workPoint.y];
+      } else if (point.x >= Level.tileCount.x) {
+        parts = this.edgeRight[workPoint.y];
+      }
+    }
+    return parts;
   }
 
   removed(part: Part, oldPoint?: Vector2) {
