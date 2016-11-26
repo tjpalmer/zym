@@ -19,7 +19,7 @@ export class Stage {
     // position and hack a singleton.
     let makeSteel = (j: number, i: number) => {
       let steel = new Steel(game);
-      steel.point.copy(this.workPoint.set(i, j).multiply(Level.tileSize));
+      steel.point.copy(this.workPoint.set(j, i).multiply(Level.tileSize));
       return [steel];
     };
     for (let i = 0; i < Level.tileCount.y; ++i) {

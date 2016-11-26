@@ -37,14 +37,19 @@ export class Runner extends Part {
     return leftParts.find(isClimbable) || rightParts.find(isClimbable);
   }
 
-  getSolid(edge: Edge, parts1: Array<Part>, parts2: Array<Part>) {
+  getSolid(edge: Edge, x: number, y: number) {
     let isSolid = (part: Part) => part.solid(this, edge) && part != this;
-    return parts1.find(isSolid) || parts2.find(isSolid);
+    return this.partAt(x, y, isSolid);
   }
 
   getSurface() {
     let isSurface = (part: Part) => part.surface && part != this;
-    return this.partAt(3, -1, isSurface) || this.partAt(4, -1, isSurface);
+    let part1 = this.partAt(3, -1, isSurface);
+    let part2 = this.partAt(4, -1, isSurface);
+    if (!(part1 && part2)) {
+      return part1 || part2;
+    }
+    return part1.point.y > part2.point.y ? part1 : part2;
   }
 
   // TODO Switch to using this once we have moving supports (enemies)!!
@@ -105,6 +110,7 @@ export class Runner extends Part {
       move.y = -1;
     }
     // Align non-moving direction.
+    // TODO Make this actually change the move. Nix the align var.
     // TODO Except when all on same climbable or none?
     let align = this.align.setScalar(0);
     if (move.x < 0) {
@@ -131,36 +137,51 @@ export class Runner extends Part {
       // See if we need to align x for solids.
       // TODO If openings partially above or below, move and align y!
       if (move.x < 0) {
-        if (
-          this.getSolid(Edge.right, this.partsNear(0, 0), this.partsNear(0, 9))
-        ) {
-          align.x = 1;
+        let blocker1 = this.getSolid(Edge.right, 0, 0);
+        let blocker2 = this.getSolid(Edge.right, 0, 9);
+        let blockX = (blocker?: Part) =>
+          blocker ? blocker.point.x : -Level.tileSize.x;
+        if (blocker1 || blocker2) {
+          let x = Math.max(blockX(blocker1), blockX(blocker2));
+          point.x = x + Level.tileSize.x;
         }
       } else if (move.x > 0) {
-        if (
-          this.getSolid(Edge.left, this.partsNear(7, 0), this.partsNear(7, 9))
-        ) {
-          align.x = -1;
+        let blocker1 = this.getSolid(Edge.left, 7, 0);
+        let blocker2 = this.getSolid(Edge.left, 7, 9);
+        let blockX = (blocker?: Part) =>
+          blocker ? blocker.point.x : Level.pixelCount.x;
+        if (blocker1 || blocker2) {
+          let x = Math.min(blockX(blocker1), blockX(blocker2));
+          point.x = x - Level.tileSize.x;
         }
       }
     }
     if (!align.y) {
       // See if we need to align y for solids.
       if (move.y < 0) {
-        let newSupport = this.getSurface();
-        if (newSupport && !support) {
-          // For landing on ladder. TODO Bars.
-          align.y = 1;
-        } else if (
-          this.getSolid(Edge.top, this.partsNear(0, 0), this.partsNear(7, 0))
-        ) {
-          align.y = 1;
+        // Surface checks halfway, but solid checks ends.
+        // This seems odd, but it usually shouldn't matter, since alignment to
+        // open spaces should make them equivalent.
+        // I'm not sure if there are times when it will matter, but it's hard to
+        // say in those cases what to do anyway.
+        let newSupport = support ? undefined : this.getSurface();
+        let blocker1 = this.getSolid(Edge.top, 0, 0);
+        let blocker2 = this.getSolid(Edge.top, 7, 0);
+        let blockY = (blocker?: Part) =>
+          blocker ? blocker.point.y : -Level.tileSize.y;
+        if (newSupport || blocker1 || blocker2) {
+          let y =
+            Math.max(blockY(newSupport), blockY(blocker1), blockY(blocker2));
+          point.y = y + Level.tileSize.y;
         }
       } else if (move.y > 0) {
-        if (
-          this.getSolid(Edge.bottom, this.partsNear(0, 9), this.partsNear(7, 9))
-        ) {
-          align.y = -1;
+        let blocker1 = this.getSolid(Edge.bottom, 0, 9);
+        let blocker2 = this.getSolid(Edge.bottom, 7, 9);
+        let blockY = (blocker?: Part) =>
+          blocker ? blocker.point.y : Level.pixelCount.y;
+        if (blocker1 || blocker2) {
+          let y = Math.min(blockY(blocker1), blockY(blocker2));
+          point.y = y - Level.tileSize.y;
         }
       }
     }
