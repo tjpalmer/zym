@@ -40,12 +40,15 @@ export class Control extends RunnerAction {
 
   enter = false;
 
+  escape = false;
+
   keyFields: {[key: string]: string} = {
     ArrowDown: 'down',
     ArrowLeft: 'left',
     ArrowRight: 'right',
     ArrowUp: 'up',
     Enter: 'enter',
+    Escape: 'escape',
     ' ': 'pause',
     X: 'burnRight',
     Z: 'burnLeft',
@@ -58,6 +61,12 @@ export class Control extends RunnerAction {
       case 'enter': {
         if (this.enter) {
           this.game.edit.play();
+        }
+        break;
+      }
+      case 'escape': {
+        if (this.escape) {
+          this.game.hideDialog();
         }
         break;
       }

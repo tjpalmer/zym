@@ -17,7 +17,10 @@ body {
   display: none;
 }
 
-.commands .play, .commands .redo, .status .pause  {
+.commands .play,
+.commands .redo,
+.commands .showLevels,
+.status .pause  {
   margin-bottom: 0.5em;
 }
 
@@ -27,6 +30,17 @@ body {
 
 .editMode .status {
   display: none;
+}
+
+.pane {
+  background: black;
+  bottom: 0;
+  display: none;
+  left: 0;
+  opacity: 0.75;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .panel {

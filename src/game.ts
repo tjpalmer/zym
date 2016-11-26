@@ -1,4 +1,4 @@
-import {Control, EditMode, Level, PlayMode, Stage, Theme} from './';
+import {Control, EditMode, Level, PlayMode, Stage, Theme, World} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -82,9 +82,6 @@ export class Game {
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
     window.addEventListener('mousemove', event => this.mouseMove(event));
     window.addEventListener('mouseup', event => this.mouseUp(event));
-    // // Render.
-    // this.render();
-    // requestAnimationFrame(() => this.render());
   }
 
   body: HTMLElement;
@@ -94,6 +91,10 @@ export class Game {
   control: Control;
 
   edit: EditMode;
+
+  hideDialog() {
+    (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';
+  }
 
   level = new Level();
 
@@ -187,10 +188,17 @@ export class Game {
     return point;
   }
 
+  showDialog(dialog: any) {
+    (this.body.querySelector('.pane') as HTMLElement).style.display = 'block';
+    console.log(dialog);
+  }
+
   stage = new Stage(this);
 
   scene: Scene;
 
   theme: Theme;
+
+  world = new World();
 
 }

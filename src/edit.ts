@@ -1,4 +1,5 @@
 import {Level, Mode, Part, PartType, PointEvent, Game, Toolbox} from './';
+import {Levels} from './ui';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
@@ -19,6 +20,7 @@ export class EditMode extends Mode {
       body.querySelector('.panel.commands') as HTMLElement;
     this.onClick('play', () => this.play());
     this.onClick('redo', () => this.redo());
+    this.onClick('showLevels', () => this.showLevels());
     this.onClick('undo', () => this.undo());
     // Initial history entry.
     this.pushHistory(true);
@@ -210,6 +212,10 @@ export class EditMode extends Mode {
   showingCommand(command: string) {
     let element = this.getButton(command);
     return element.style.display != 'none';
+  }
+
+  showLevels() {
+    this.game.showDialog(new Levels());
   }
 
   showSaveState(state: 'changing' | 'none' | 'saved') {

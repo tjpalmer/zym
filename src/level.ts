@@ -2,6 +2,14 @@ import {Grid, Part, PartType, Game} from './';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
+export class World {
+
+  levels = new Array<Level>();
+
+  // TODO name = '';
+
+}
+
 export class Level {
 
   static tileCount = new Vector2(40, 20);
@@ -35,7 +43,7 @@ export class Level {
     });
   }
 
-  encode() {
+  encode(): EncodedLevel {
     let point = new Vector2();
     let rows: Array<string> = [];
     for (let i = Level.tileCount.y - 1 ; i >= 0; --i) {
