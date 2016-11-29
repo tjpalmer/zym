@@ -155,7 +155,7 @@ export class Game {
     this.renderer.setSize(1, 1);
     window.setTimeout(() => {
       // Now take the available space.
-      let view = document.body.querySelector('.view');
+      let view = document.body.querySelector('.view')!;
       let viewSize = new Vector2(view.clientWidth, view.clientHeight);
       let viewRatio = viewSize.x / viewSize.y;
       let pixelRatio = Level.pixelCount.x / Level.pixelCount.y;
@@ -189,7 +189,12 @@ export class Game {
   }
 
   showDialog(dialog: any) {
-    (this.body.querySelector('.pane') as HTMLElement).style.display = 'block';
+    let pane = this.body.querySelector('.pane') as HTMLElement;
+    while (pane.lastChild) {
+      pane.removeChild(pane.lastChild);
+    }
+    pane.appendChild(dialog.content);
+    pane.style.display = 'block';
     console.log(dialog);
   }
 

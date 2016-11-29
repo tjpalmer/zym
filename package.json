@@ -27,7 +27,7 @@
     "watch": "webpack-dev-server --color -d --port 2017"
   },
   "dependencies": {
-    "font-awesome": "^4.6.3",
+    "font-awesome": "^4.7.0",
     "three": "^0.80.1"
   }
 }

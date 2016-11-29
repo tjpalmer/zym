@@ -24,6 +24,14 @@ body {
   margin-bottom: 0.5em;
 }
 
+.dialog {
+  border: 0.1em solid white;
+  border-radius: 0.2em;
+  display: inline-block;
+  padding: 0.5em;
+  text-align: left;
+}
+
 .disabled {
   opacity: 0.4;
 }
@@ -36,10 +44,12 @@ body {
   background: black;
   bottom: 0;
   display: none;
+  font-size: 2em;
   left: 0;
   opacity: 0.75;
   position: absolute;
   right: 0;
+  text-align: center;
   top: 0;
 }
 

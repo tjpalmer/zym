@@ -66,7 +66,15 @@ export class Control extends RunnerAction {
       }
       case 'escape': {
         if (this.escape) {
-          this.game.hideDialog();
+          // TODO Some convenience on this.
+          let pane = this.game.body.querySelector('.pane') as HTMLElement;
+          let style = window.getComputedStyle(pane);
+          if (style.display == 'none') {
+            // TODO Generalize to whatever context dialog makes most sense.
+            this.game.edit.showLevels();
+          } else {
+            this.game.hideDialog();
+          }
         }
         break;
       }

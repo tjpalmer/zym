@@ -33,7 +33,7 @@ export class Toolbox {
   }
 
   markSelected() {
-    let selected = this.container.querySelector('input:checked');
+    let selected = this.container.querySelector('input:checked')!;
     let label = selected.closest('label') as HTMLElement;
     label.classList.add('selected');
     // Get the class name that's not selected.
