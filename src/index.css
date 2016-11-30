@@ -28,8 +28,20 @@ body {
   border: 0.1em solid white;
   border-radius: 0.2em;
   display: inline-block;
+  min-width: 50%;
   padding: 0.5em;
+  position: relative;
   text-align: left;
+}
+
+.dialog .content {
+  margin-top: 0.5em;
+}
+
+.dialog .title {
+  border-bottom: 0.1em solid white;
+  font-size: 110%;
+  padding-bottom: 0.4em;
 }
 
 .disabled {
@@ -40,17 +52,26 @@ body {
   display: none;
 }
 
-.pane {
-  background: black;
+.fill {
   bottom: 0;
-  display: none;
-  font-size: 2em;
   left: 0;
-  opacity: 0.75;
   position: absolute;
   right: 0;
-  text-align: center;
   top: 0;
+}
+
+.fill.relative {
+  position: relative;
+}
+
+.pane {
+  display: none;
+}
+
+.pane .dialogBox {
+  font-size: 2em;
+  padding: 0.5em;
+  text-align: center;
 }
 
 .panel {
@@ -74,6 +95,12 @@ body {
 
 .right {
   text-align: right;
+}
+
+.shade {
+  background: black;
+  /* Only to own content -> filter: blur(3px);*/
+  opacity: 0.65;
 }
 
 .stage {

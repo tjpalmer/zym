@@ -190,12 +190,12 @@ export class Game {
 
   showDialog(dialog: any) {
     let pane = this.body.querySelector('.pane') as HTMLElement;
-    while (pane.lastChild) {
-      pane.removeChild(pane.lastChild);
+    let dialogBox = pane.querySelector('.dialogBox') as HTMLElement;
+    while (dialogBox.lastChild) {
+      dialogBox.removeChild(dialogBox.lastChild);
     }
-    pane.appendChild(dialog.content);
+    dialogBox.appendChild(dialog.content);
     pane.style.display = 'block';
-    console.log(dialog);
   }
 
   stage = new Stage(this);
