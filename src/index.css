@@ -25,22 +25,41 @@ body {
 }
 
 .dialog {
+  bottom: 0.5em;
   border: 0.1em solid white;
   border-radius: 0.2em;
   display: inline-block;
+  left: 25%;
   min-width: 50%;
   padding: 0.5em;
-  position: relative;
+  position: absolute;
+  right: 25%;
   text-align: left;
+  top: 0.5em;
 }
 
 .dialog .content {
+  counter-reset: dialogContentCounter;
   margin-top: 0.5em;
+}
+
+.dialog .content .item {
+  padding: 0.1em 0.2em;
+}
+
+.dialog .content .item:before {
+  content: counter(dialogContentCounter);
+  counter-increment: dialogContentCounter;
+  padding-right: 0.2em;
+}
+
+.dialog .content .item:hover {
+  background: #222;
 }
 
 .dialog .title {
   border-bottom: 0.1em solid white;
-  font-size: 110%;
+  /*font-size: 110%;*/
   padding-bottom: 0.4em;
 }
 
