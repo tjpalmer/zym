@@ -83,11 +83,13 @@ body {
 }
 
 .dialog .fa {
-  margin-left: 1em;
+  margin-left: 0.8em;
   margin-top: 0.08em;
 }
 
-.dialog .fa.redo {
+.dialog .fa.paste,
+.dialog .fa.redo,
+.dialog .fa.zap {
   margin-left: 0.4em;
 }
 
