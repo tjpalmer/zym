@@ -4,6 +4,7 @@ body {
   background: #111;
   bottom: 0;
   color: white;
+  cursor: default;
   display: flex;
   font-family: sans-serif;
   left: 0;
@@ -44,7 +45,9 @@ body {
 }
 
 .dialog .content .item {
+  display: flex;
   padding: 0.1em 0.2em;
+  position: relative;
 }
 
 .dialog .content .item:before {
@@ -53,14 +56,49 @@ body {
   padding-right: 0.2em;
 }
 
-.dialog .content .item:hover {
-  background: #222;
+.dialog .content .item .fa {
+  display: none;
+}
+
+.dialog .content .item .highlight {
+  background: #FFF;
+  display: none;
+  opacity: 0.2;
+}
+
+.dialog .content .item:hover .highlight {
+  display: block;
+}
+
+.dialog .content .item:hover .fa {
+  display: inline;
+}
+
+.dialog .content .item .name {
+  flex: 1;
+  margin-left: 0.3em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog .fa {
+  margin-left: 1em;
+  margin-top: 0.08em;
+}
+
+.dialog .fa.redo {
+  margin-left: 0.4em;
 }
 
 .dialog .title {
   border-bottom: 0.1em solid white;
-  /*font-size: 110%;*/
+  display: flex;
   padding-bottom: 0.4em;
+}
+
+.dialog .title .name {
+  flex: 1;
 }
 
 .disabled {
