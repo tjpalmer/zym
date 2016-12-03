@@ -57,6 +57,10 @@ body {
   padding-right: 0.2em;
 }
 
+.dialog .content .item .edit {
+  margin-right: 0.1em;
+}
+
 .dialog .content .item .fa {
   display: none;
 }
@@ -84,6 +88,11 @@ body {
   white-space: nowrap;
 }
 
+.dialog .contentBox {
+  flex: 1;
+  position: relative;
+}
+
 .dialog .fa {
   margin-left: 0.8em;
   margin-top: 0.08em;
@@ -98,11 +107,18 @@ body {
 .dialog .title {
   border-bottom: 0.1em solid white;
   display: flex;
+  flex: 0;
   padding-bottom: 0.4em;
 }
 
 .dialog .title .name {
   flex: 1;
+}
+
+.dialogInner {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5em;
 }
 
 .disabled {
