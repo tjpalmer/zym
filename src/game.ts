@@ -7,6 +7,10 @@ import {
   Vector3, WebGLRenderer,
 } from 'three';
 
+export interface Dialog {
+  content: HTMLElement;  
+}
+
 export interface PointEvent {
   point: Vector2;
 }
@@ -55,6 +59,7 @@ export class Game {
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
+    this.level = this.world.levels[0];
     this.level.load(window.localStorage['zym.level']);
     // TODO Extract some setup to graphics modes?
     // Renderer.
@@ -96,7 +101,7 @@ export class Game {
     (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';
   }
 
-  level = new Level();
+  level: Level;
 
   mode: Mode;
 
@@ -188,7 +193,7 @@ export class Game {
     return point;
   }
 
-  showDialog(dialog: any) {
+  showDialog(dialog: Dialog) {
     let pane = this.body.querySelector('.pane') as HTMLElement;
     let dialogBox = pane.querySelector('.dialogBox') as HTMLElement;
     while (dialogBox.lastChild) {

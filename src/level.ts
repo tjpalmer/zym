@@ -4,6 +4,10 @@ import {Vector2} from 'three';
 
 export class World {
 
+  constructor() {
+    this.levels.push(new Level());
+  }
+
   levels = new Array<Level>();
 
   // TODO name = '';
@@ -43,6 +47,8 @@ export class Level {
     });
   }
 
+  disabled = false;
+
   encode(): EncodedLevel {
     let point = new Vector2();
     let rows: Array<string> = [];
@@ -73,6 +79,8 @@ export class Level {
       this.tiles.items.fill(None);
     }
   }
+
+  name = 'Level';
 
   tiles: Grid<PartType>;
 

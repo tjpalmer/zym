@@ -215,7 +215,7 @@ export class EditMode extends Mode {
   }
 
   showLevels() {
-    this.game.showDialog(new Levels());
+    this.game.showDialog(new Levels(this.game));
   }
 
   showSaveState(state: 'changing' | 'none' | 'saved') {

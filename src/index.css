@@ -42,6 +42,7 @@ body {
 .dialog .content {
   counter-reset: dialogContentCounter;
   margin-top: 0.5em;
+  overflow: auto;
 }
 
 .dialog .content .item {
@@ -64,6 +65,7 @@ body {
   background: #FFF;
   display: none;
   opacity: 0.2;
+  pointer-events: none;
 }
 
 .dialog .content .item:hover .highlight {
