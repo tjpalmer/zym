@@ -18,7 +18,8 @@ export class Levels implements Dialog {
     let item = this.itemTemplate.cloneNode(true) as HTMLElement;
     let nameElement = item.querySelector('.name') as HTMLElement;
     nameElement.innerText = level.name;
-    nameElement.addEventListener('click', () => {
+    let nameBox = item.querySelector('.nameBox') as HTMLElement;
+    nameBox.addEventListener('click', () => {
       // TODO Select level.
       console.log('Select level.');
     });

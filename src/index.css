@@ -47,22 +47,16 @@ body {
 
 .dialog .content .item {
   display: flex;
-  padding: 0.1em 0.2em;
   position: relative;
 }
 
-.dialog .content .item:before {
-  content: counter(dialogContentCounter);
-  counter-increment: dialogContentCounter;
-  padding-right: 0.2em;
-}
-
 .dialog .content .item .edit {
-  margin-right: 0.1em;
+  margin-right: 0.3em;
 }
 
 .dialog .content .item .fa {
   display: none;
+  padding: 0.1em 0;
 }
 
 .dialog .content .item .highlight {
@@ -81,11 +75,21 @@ body {
 }
 
 .dialog .content .item .name {
-  flex: 1;
   margin-left: 0.3em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.dialog .content .item .nameBox {
+  flex: 1;
+  padding: 0.1em 0.2em;
+}
+
+.dialog .content .number::before {
+  content: counter(dialogContentCounter);
+  counter-increment: dialogContentCounter;
+  padding-right: 0.2em;
 }
 
 .dialog .contentBox {
