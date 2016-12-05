@@ -10,24 +10,34 @@ export class Levels implements Dialog {
     this.list = this.itemTemplate.parentNode as HTMLElement;
     this.list.removeChild(this.itemTemplate);
     this.game = game;
+    this.selectedLevel = game.level;
     game.world.levels.forEach(level => this.addItem(level));
     this.content = dialogElement;
   }
 
   addItem(level: Level) {
     let item = this.itemTemplate.cloneNode(true) as HTMLElement;
+    item.addEventListener('mouseenter', () => {
+      this.hoverLevel = level;
+      this.showLevel(level);
+    });
+    item.addEventListener('mouseleave', () => {
+      if (level == this.hoverLevel) {
+        this.hoverLevel = undefined;
+        // TODO Timeout before this to avoid flicker?
+        this.showLevel(this.selectedLevel);
+      }
+    });
     let nameElement = item.querySelector('.name') as HTMLElement;
     nameElement.innerText = level.name;
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
     nameBox.addEventListener('click', () => {
-      // TODO Select level.
-      console.log('Select level.');
+      this.selectLevel(level);
     });
     let edit = item.querySelector('.edit') as HTMLElement;
     edit.addEventListener('click', () => {
-      // TODO Select level.
-      // TODO Close dialog.
-      console.log('Edit level.');
+      this.selectLevel(level);
+      this.game.hideDialog();
     });
     this.list.appendChild(item);
   }
@@ -50,9 +60,23 @@ export class Levels implements Dialog {
 
   game: Game;
 
+  selectLevel(level: Level) {
+    this.showLevel(level);
+    this.selectedLevel = level;
+  }
+
+  showLevel(level: Level) {
+    this.game.level = level;
+    level.updateStage(this.game, true);
+  }
+
+  private hoverLevel: Level | undefined = undefined;
+
   private itemTemplate: HTMLElement;
 
   private list: HTMLElement;
+
+  private selectedLevel: Level;
 
   private titleBar: HTMLElement;
 

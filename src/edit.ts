@@ -167,6 +167,7 @@ export class EditMode extends Mode {
   saveNeeded = false;
 
   saveLevel() {
+    return;
     // TODO Level and world naming conventions. UUIDs with index object?
     let encoded = this.game.level.encode();
     window.localStorage['zym.level'] = JSON.stringify(encoded);
@@ -175,12 +176,12 @@ export class EditMode extends Mode {
     // TODO Replace all this with onbeforeunload to handle potential problems.
     // TODO Could possibly wait out even longer than 3 seconds if we do that.
     // TODO Besides, in Electron we might have more control, anyway.
-    this.showSaveState('saved');
-    window.setTimeout(() => {
-      if (this.showingCommand('saved')) {
-        this.showSaveState('none');
-      }
-    }, 1e3);
+    // this.showSaveState('saved');
+    // window.setTimeout(() => {
+    //   if (this.showingCommand('saved')) {
+    //     this.showSaveState('none');
+    //   }
+    // }, 1e3);
   }
 
   saveLevelMaybe() {
