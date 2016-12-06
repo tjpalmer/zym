@@ -28,3 +28,11 @@ export class Grid<Item> {
   size: Vector2;
 
 }
+
+export type Id = string;
+
+export function createId(byteSize = 16): Id {
+  let array = new Uint8Array(byteSize);
+  window.crypto.getRandomValues(array);
+  return Array.from(array).map(i => i.toString(16)).join('');
+}

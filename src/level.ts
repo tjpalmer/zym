@@ -1,12 +1,15 @@
-import {Grid, Part, PartType, Game} from './';
+import {Game, Grid, Id, Part, PartType, createId} from './';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
 
 export class World {
 
   constructor() {
+    this.id = createId();
     this.levels.push(new Level());
   }
+
+  id: Id;
 
   levels = new Array<Level>();
 
@@ -22,7 +25,8 @@ export class Level {
 
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
-  constructor({tiles}: {tiles?: Grid<PartType>} = {}) {
+  constructor({id, tiles}: {id?: Id, tiles?: Grid<PartType>} = {}) {
+    this.id = id || createId();
     if (tiles) {
       this.tiles = tiles;
     } else {
@@ -32,10 +36,15 @@ export class Level {
   }
 
   copy() {
-    return new Level({tiles: this.tiles.copy()});
+    return new Level({id: this.id, tiles: this.tiles.copy()});
   }
 
   decode(encoded: EncodedLevel) {
+    // Id. Might be missing for old saved levels.
+    if (encoded.id) {
+      this.id = encoded.id;
+    }
+    // Tiles.
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
     rows.forEach((row, i) => {
@@ -60,7 +69,7 @@ export class Level {
       }
       rows.push(row.join(''));
     }
-    return {tiles: rows.join('\n')};
+    return {id: this.id, tiles: rows.join('\n')};
   }
 
   equals(other: Level): boolean {
@@ -71,6 +80,8 @@ export class Level {
     }
     return true;
   }
+
+  id: Id;
 
   load(text: string) {
     if (text) {
@@ -114,6 +125,16 @@ export class Level {
 
 export interface EncodedLevel {
 
+  id: Id;
+
   tiles: string;
+
+}
+
+export interface EncodedWorld {
+
+  id: Id;
+
+  levels: Array<string>;
 
 }
