@@ -9,11 +9,33 @@ export class World {
     this.levels.push(new Level());
   }
 
+  decode(encoded: EncodedWorld) {
+    this.id = encoded.id;
+    this.levels = encoded.levels.map(levelId => {
+      let levelString = window.localStorage[`zym.objects.${levelId}`];
+      if (levelString) {
+        return new Level().decode(levelString);
+      }
+    }).filter(level => level) as Array<Level>;
+    this.name = encoded.name;
+    return this;
+  }
+
+  encode(): EncodedWorld {
+    // This presumes that all individual levels have already been saved.
+    return {
+      id: this.id,
+      levels: this.levels.map(level => level.id),
+      name: this.name,
+      type: 'World',
+    }
+  }
+
   id: Id;
 
   levels = new Array<Level>();
 
-  // TODO name = '';
+  name = 'World';
 
 }
 
@@ -54,6 +76,7 @@ export class Level {
         this.tiles.set(point.set(j, i), type || None);
       }
     });
+    return this;
   }
 
   disabled = false;
@@ -69,7 +92,9 @@ export class Level {
       }
       rows.push(row.join(''));
     }
-    return {id: this.id, tiles: rows.join('\n')};
+    return {
+      id: this.id, name: this.name, tiles: rows.join('\n'), type: 'Level'
+    };
   }
 
   equals(other: Level): boolean {
@@ -89,6 +114,8 @@ export class Level {
     } else {
       this.tiles.items.fill(None);
     }
+    // For convenience.
+    return this;
   }
 
   name = 'Level';
@@ -127,7 +154,11 @@ export interface EncodedLevel {
 
   id: Id;
 
+  name: string;
+
   tiles: string;
+
+  type: 'Level';
 
 }
 
@@ -135,6 +166,10 @@ export interface EncodedWorld {
 
   id: Id;
 
-  levels: Array<string>;
+  levels: Array<Id>;
+
+  name: string;
+
+  type: 'World';
 
 }

@@ -59,8 +59,8 @@ export class Game {
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
-    this.level = this.world.levels[0];
-    this.level.load(window.localStorage['zym.level']);
+    this.world = loadWorld();
+    this.level = loadLevel(this.world);
     // TODO Extract some setup to graphics modes?
     // Renderer.
     let canvas = document.body.querySelector('.stage') as HTMLCanvasElement;
@@ -209,6 +209,60 @@ export class Game {
 
   theme: Theme;
 
-  world = new World();
+  world: World;
 
+}
+
+function loadLevel(world: World) {
+  let level: Level | undefined = undefined;
+  // Check for direct content, for backward compatibility with early testing.
+  // TODO Remove old "level" logic once all is done?
+  let levelString = window.localStorage['zym.level'];
+  if (levelString) {
+    level = new Level().load(levelString);
+    // TODO Save the world and the level correctly?
+  } else {
+    let levelId = window.localStorage['zym.levelId'];
+    if (levelId) {
+      // Should already be loaded in the world.
+      level = world.levels.find(level => level.id == levelId);
+    }
+    if (!level) {
+      // Safety net, in case it's unlisted in the world.
+      levelString = window.localStorage[`zym.objects.${levelId}`];
+      if (levelString) {
+        level = new Level().load(levelString);
+        world.levels.push(level);
+        // TODO Save the world?
+      }
+    }
+    if (!level) {
+      // Another safety net, or just for kick off.
+      level = world.levels[0];
+      // TODO Save the level and world?
+    }
+  }
+  return level;
+}
+
+function loadWorld() {
+  let world = new World();
+  let worldId = window.localStorage['zym.worldId'];
+  if (worldId) {
+    let worldString = window.localStorage[`zym.objects.${worldId}`];
+    if (worldString) {
+      let encodedWorld = JSON.parse(worldString);
+      world.decode(encodedWorld);
+    } else {
+      // Save the world for next time.
+      window.localStorage[`zym.objects.${world.id}`] =
+        JSON.stringify(world.encode());
+    }
+  } else {
+    // Save the world for next time.
+    window.localStorage[`zym.objects.${world.id}`] =
+      JSON.stringify(world.encode());
+    window.localStorage[`zym.worldId`] = world.id;
+  }
+  return world;
 }
