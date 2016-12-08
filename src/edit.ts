@@ -66,9 +66,32 @@ export class EditMode extends Mode {
 
   erasing = false;
 
-  history = new Array<Level>();
+  // TODO Histories by level id.
+  histories: {[levelId: string]: Array<Level>} = {};
 
-  historyIndex = -1;
+  get history() {
+    let id = this.game.level.id;
+    let history = this.histories[id];
+    if (!history) {
+      this.histories[id] = history = [];
+    }
+    return history;
+  }
+
+  get historyIndex() {
+    let id = this.game.level.id;
+    let historyIndex = this.historyIndices[id];
+    if (historyIndex == undefined) {
+      this.historyIndices[id] = historyIndex = -1;
+    }
+    return historyIndex;
+  }
+
+  set historyIndex(value: number) {
+    this.historyIndices[this.game.level.id] = value;
+  }
+
+  historyIndices: {[levelId: string]: number} = {};
 
   lastChangeTime = 0;
 

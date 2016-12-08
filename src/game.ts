@@ -78,7 +78,7 @@ export class Game {
     canvas.style.display = 'block';
     // Scene.
     this.scene = new Scene();
-    // Modes.
+    // Modes. After we have a level for them to reference.
     this.edit = new EditMode(this);
     this.play = new PlayMode(this);
     this.mode = this.edit;
@@ -213,6 +213,7 @@ export class Game {
 
 }
 
+// TODO Move to World.
 function loadLevel(world: World) {
   let level: Level | undefined = undefined;
   // Check for direct content, for backward compatibility with early testing.
@@ -220,6 +221,7 @@ function loadLevel(world: World) {
   let levelString = window.localStorage['zym.level'];
   if (levelString) {
     level = new Level().load(levelString);
+    world.levels.push(level);
     // TODO Save the world and the level correctly?
   } else {
     let levelId = window.localStorage['zym.levelId'];
@@ -229,6 +231,7 @@ function loadLevel(world: World) {
     }
     if (!level) {
       // Safety net, in case it's unlisted in the world.
+      // TODO Helper function on objects id key.
       levelString = window.localStorage[`zym.objects.${levelId}`];
       if (levelString) {
         level = new Level().load(levelString);
@@ -245,6 +248,7 @@ function loadLevel(world: World) {
   return level;
 }
 
+// Move to static in World.
 function loadWorld() {
   let world = new World();
   let worldId = window.localStorage['zym.worldId'];

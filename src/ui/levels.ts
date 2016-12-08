@@ -40,6 +40,7 @@ export class Levels implements Dialog {
       this.game.hideDialog();
     });
     this.list.appendChild(item);
+    // TODO Save world.
   }
 
   addLevel() {
@@ -66,7 +67,12 @@ export class Levels implements Dialog {
   }
 
   showLevel(level: Level) {
+    // TODO Extract all this into a setLevel on game or something.
     this.game.level = level;
+    if (!this.game.edit.history.length) {
+      // Make sure we have at least one history item.
+      this.game.edit.pushHistory();
+    }
     level.updateStage(this.game, true);
   }
 
