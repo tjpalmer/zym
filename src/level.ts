@@ -58,7 +58,14 @@ export class Level {
   }
 
   copy() {
+    // TODO Include disabled?
     return new Level({id: this.id, tiles: this.tiles.copy()});
+  }
+
+  copyFrom(level: Level) {
+    // TODO Include disabled?
+    this.name = level.name;
+    this.tiles = level.tiles.copy();
   }
 
   decode(encoded: EncodedLevel) {

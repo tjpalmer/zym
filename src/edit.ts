@@ -127,7 +127,6 @@ export class EditMode extends Mode {
   mouseUp(event: PointEvent) {
     // console.log('mouseUp', event);
     this.active = false;
-    // TODO Push history only when changes when any click, up, or down anywhere?
     this.pushHistory();
   }
 
@@ -179,7 +178,7 @@ export class EditMode extends Mode {
   redo() {
     if (this.historyIndex < this.history.length - 1) {
       this.historyIndex += 1;
-      this.game.level = this.history[this.historyIndex].copy();
+      this.game.level.copyFrom(this.history[this.historyIndex]);
       this.game.level.updateStage(this.game);
       this.trackChange();
     }
@@ -281,7 +280,7 @@ export class EditMode extends Mode {
   undo() {
     if (this.historyIndex > 0) {
       this.historyIndex -= 1;
-      this.game.level = this.history[this.historyIndex].copy();
+      this.game.level.copyFrom(this.history[this.historyIndex]);
       this.game.level.updateStage(this.game);
       this.trackChange();
     }

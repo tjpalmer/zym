@@ -71,8 +71,9 @@ export class Levels implements Dialog {
     this.game.level = level;
     if (!this.game.edit.history.length) {
       // Make sure we have at least one history item.
-      this.game.edit.pushHistory();
+      this.game.edit.pushHistory(true);
     }
+    this.game.edit.trackChange();
     level.updateStage(this.game, true);
   }
 
