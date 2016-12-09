@@ -222,6 +222,9 @@ function loadLevel(world: World) {
   if (levelString) {
     level = new Level().load(levelString);
     world.levels.push(level);
+    window.localStorage['zym.levelId'] = level.id;
+    window.localStorage.removeItem('zym.level');
+    world.save();
     // TODO Save the world and the level correctly?
   } else {
     let levelId = window.localStorage['zym.levelId'];
@@ -242,7 +245,7 @@ function loadLevel(world: World) {
     if (!level) {
       // Another safety net, or just for kick off.
       level = world.levels[0];
-      // TODO Save the level and world?
+      window.localStorage['zym.levelId'] = level.id;
     }
   }
   return level;
@@ -259,13 +262,11 @@ function loadWorld() {
       world.decode(encodedWorld);
     } else {
       // Save the world for next time.
-      window.localStorage[`zym.objects.${world.id}`] =
-        JSON.stringify(world.encode());
+      world.save();
     }
   } else {
     // Save the world for next time.
-    window.localStorage[`zym.objects.${world.id}`] =
-      JSON.stringify(world.encode());
+    world.save();
     window.localStorage[`zym.worldId`] = world.id;
   }
   return world;

@@ -46,7 +46,7 @@ export class Levels implements Dialog {
   addLevel() {
     let level = new Level();
     this.game.world.levels.push(level);
-    // TODO Save the new level for the world.
+    this.game.world.save();
     this.addItem(level);
   }
 
@@ -64,6 +64,7 @@ export class Levels implements Dialog {
   selectLevel(level: Level) {
     this.showLevel(level);
     this.selectedLevel = level;
+    window.localStorage['zym.levelId'] = level.id;
   }
 
   showLevel(level: Level) {

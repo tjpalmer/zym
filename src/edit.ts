@@ -189,10 +189,8 @@ export class EditMode extends Mode {
   saveNeeded = false;
 
   saveLevel() {
-    return;
     // TODO Level and world naming conventions. UUIDs with index object?
-    let encoded = this.game.level.encode();
-    window.localStorage['zym.level'] = JSON.stringify(encoded);
+    this.game.level.save();
     this.saveNeeded = false;
     // Show saved long enough to let people notice.
     // TODO Replace all this with onbeforeunload to handle potential problems.

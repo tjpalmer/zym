@@ -14,7 +14,7 @@ export class World {
     this.levels = encoded.levels.map(levelId => {
       let levelString = window.localStorage[`zym.objects.${levelId}`];
       if (levelString) {
-        return new Level().decode(levelString);
+        return new Level().decode(JSON.parse(levelString));
       }
     }).filter(level => level) as Array<Level>;
     this.name = encoded.name;
@@ -36,6 +36,11 @@ export class World {
   levels = new Array<Level>();
 
   name = 'World';
+
+  save() {
+    window.localStorage[`zym.objects.${this.id}`] =
+      JSON.stringify(this.encode());
+  }
 
 }
 
@@ -72,6 +77,9 @@ export class Level {
     // Id. Might be missing for old saved levels.
     if (encoded.id) {
       this.id = encoded.id;
+    }
+    if (encoded.name) {
+      this.name = encoded.name;
     }
     // Tiles.
     let point = new Vector2();
@@ -126,6 +134,11 @@ export class Level {
   }
 
   name = 'Level';
+
+  save() {
+    window.localStorage[`zym.objects.${this.id}`] =
+      JSON.stringify(this.encode());
+  }
 
   tiles: Grid<PartType>;
 
