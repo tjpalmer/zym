@@ -32,6 +32,27 @@ export class Runner extends Part {
     return 0;
   }
 
+  getCatcher(exact = true) {
+    let catches = (part: Part) => part.catches(this);
+    let check = (x: number, y: number) => {
+      let catcher = this.partAt(3, 9, catches);
+      if (catcher) {
+        if (exact && this.point.y != catcher.point.y) {
+          catcher = undefined;
+        }
+        return catcher;
+      }
+    }
+    // In exact mode, no need to see which is higher, but we're not always
+    // exact.
+    let part1 = check(3, 9);
+    let part2 = check(4, 9);
+    if (!(part1 && part2)) {
+      return part1 || part2;
+    }
+    return part1.point.y > part2.point.y ? part1 : part2;
+  }
+
   getClimbable(leftParts: Array<Part>, rightParts: Array<Part>) {
     let isClimbable = (part: Part) => part.climbable && part != this;
     return leftParts.find(isClimbable) || rightParts.find(isClimbable);
@@ -40,6 +61,11 @@ export class Runner extends Part {
   getSolid(edge: Edge, x: number, y: number) {
     let isSolid = (part: Part) => part.solid(this, edge) && part != this;
     return this.partAt(x, y, isSolid);
+  }
+
+  getSupport(exact?: boolean) {
+    // TODO Check which is higher!
+    return this.getSurface() || this.getCatcher(exact);
   }
 
   getSurface() {
@@ -75,7 +101,7 @@ export class Runner extends Part {
     let rightParts = this.partsNear(4, -1);
     // Pixel-specific for surfaces, because enemies are moving surfaces.
     // TODO If a support moves, it should move the supported thing, too.
-    let support = this.getSurface();
+    let support = this.getSupport();
     // Unless we get moving climbables (falling ladders?), we can stick to near
     // (same grid position) for climbables.
     let inClimbable =
@@ -98,7 +124,7 @@ export class Runner extends Part {
       } else if (action.right) {
         move.x = 1;
         wallEdge = Edge.left;
-      } else if (climbable) {
+      } else if (climbable || !support.surface) {
         // Now move up or down.
         if (action.down) {
           move.y = -1;
