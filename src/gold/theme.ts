@@ -1,8 +1,8 @@
 import {Parts} from './';
 import {Level, Part, PartType, Game, Theme} from '../';
 import {
-  BufferAttribute, BufferGeometry, Mesh, MeshBasicMaterial, NearestFilter,
-  PlaneBufferGeometry, ShaderMaterial, Texture, Vector2,
+  BufferAttribute, BufferGeometry, Mesh, NearestFilter, ShaderMaterial, Texture,
+  Vector2,
 } from 'three';
 
 export enum Layer {
@@ -109,17 +109,6 @@ export class GoldTheme implements Theme {
   image: HTMLImageElement;
 
   initTilePlanes(game: Game) {
-    if (false) {
-      // Background test.
-      let plane =
-        new PlaneBufferGeometry(Level.pixelCount.x, Level.pixelCount.y, 1, 1);
-      let planeMaterial = new MeshBasicMaterial({
-        map: this.texture,
-      });
-      let mesh = new Mesh(plane, planeMaterial);
-      mesh.position.set(Level.pixelCount.x / 2, Level.pixelCount.y / 2, 0);
-      game.scene.add(mesh);
-    }
     // Panels.
     this.preparePanels(game);
     // Tiles.

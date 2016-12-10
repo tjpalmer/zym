@@ -3,7 +3,7 @@ import {Dialog, Game, Level} from '../';
 export class Levels implements Dialog {
 
   constructor(game: Game) {
-    let dialogElement = load('./levels.html');
+    let dialogElement = load(require('./levels.html'));
     this.titleBar = dialogElement.querySelector('.title') as HTMLElement;
     this.buildTitleBar();
     this.itemTemplate = dialogElement.querySelector('.item') as HTMLElement;
@@ -91,8 +91,7 @@ export class Levels implements Dialog {
 
 }
 
-function load(path: string) {
-  let html = require(path);
+function load(html: string) {
   let div = window.document.createElement('div');
   div.innerHTML = html;
   return div.firstElementChild as HTMLElement;
