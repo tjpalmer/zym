@@ -13,6 +13,11 @@ export class Enemy extends Runner {
     return other instanceof Enemy && !!edge;
   }
 
+  // TODO They still get stuck when clumped in hordes after making this
+  // TODO non-integer.
+  // TODO Fix this sometime.
+  speed = 0.8;
+
   surface = true;
 
   tick() {

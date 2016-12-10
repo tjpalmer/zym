@@ -77,6 +77,11 @@ export class Stage {
     return parts && parts.find(part => keep(part) && part.contains(point));
   }
 
+  partsAt(point: Vector2) {
+    let parts = this.partsNear(point) || [];
+    return parts.filter(part => part.contains(point));
+  }
+
   partsNear(point: Vector2): Array<Part> | undefined {
     let {grid, workPoint} = this;
     workPoint.copy(point).divide(Level.tileSize).floor();

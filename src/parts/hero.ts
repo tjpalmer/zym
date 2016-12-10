@@ -18,6 +18,8 @@ export class Hero extends Runner {
     });
   }
 
+  speed = 1;
+
   tick() {
     // TODO Let changed keys override old ones.
     this.processAction(this.game.control);
