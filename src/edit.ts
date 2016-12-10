@@ -9,28 +9,24 @@ export class EditMode extends Mode {
     super(game);
     let {body} = document;
     this.toolbox = new Toolbox(body, this);
-    window.addEventListener('beforeunload', () => {
-      // Always save on exit.
-      if (this.saveNeeded) {
-        this.saveLevel();
-      }
-    });
+    // Always save on exit.
+    window.addEventListener('beforeunload', () => this.saveAll());
     // Buttons.
     this.commandsContainer =
       body.querySelector('.panel.commands') as HTMLElement;
     this.onClick('play', () => this.play());
-    this.onClick('redo', () => this.redo());
+    this.onClick('redo', () => this.editState.redo());
     this.onClick('showLevels', () => this.showLevels());
-    this.onClick('undo', () => this.undo());
+    this.onClick('undo', () => this.editState.undo());
     // Initial history entry.
-    this.pushHistory(true);
+    this.editState.pushHistory(true);
   }
 
   active = false;
 
   apply(tilePoint: Vector2) {
     // Even if we don't make changes, the user seems active, so push off save.
-    this.updateChangeTime();
+    this.editState.updateChangeTime();
     let {level} = this.game;
     let tool = this.tool;
     if (this.erasing) {
@@ -55,6 +51,18 @@ export class EditMode extends Mode {
 
   commandsContainer: HTMLElement;
 
+  // TODO Histories by level id.
+  editStates: {[levelId: string]: EditState} = {};
+
+  get editState() {
+    let id = this.game.level.id;
+    let editState = this.editStates[id];
+    if (!editState) {
+      this.editStates[id] = editState = new EditState(this);
+    }
+    return editState;
+  }
+
   enable(command: string, enabled: boolean) {
     let classes = this.getButton(command).classList;
     if (enabled) {
@@ -65,35 +73,6 @@ export class EditMode extends Mode {
   }
 
   erasing = false;
-
-  // TODO Histories by level id.
-  histories: {[levelId: string]: Array<Level>} = {};
-
-  get history() {
-    let id = this.game.level.id;
-    let history = this.histories[id];
-    if (!history) {
-      this.histories[id] = history = [];
-    }
-    return history;
-  }
-
-  get historyIndex() {
-    let id = this.game.level.id;
-    let historyIndex = this.historyIndices[id];
-    if (historyIndex == undefined) {
-      this.historyIndices[id] = historyIndex = -1;
-    }
-    return historyIndex;
-  }
-
-  set historyIndex(value: number) {
-    this.historyIndices[this.game.level.id] = value;
-  }
-
-  historyIndices: {[levelId: string]: number} = {};
-
-  lastChangeTime = 0;
 
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
@@ -127,7 +106,7 @@ export class EditMode extends Mode {
   mouseUp(event: PointEvent) {
     // console.log('mouseUp', event);
     this.active = false;
-    this.pushHistory();
+    this.editState.pushHistory();
   }
 
   namedTools = new Map(Parts.inventory.map(type => [
@@ -153,67 +132,16 @@ export class EditMode extends Mode {
     });
   }
 
-  pushHistory(initial = false) {
-    // TODO Check for actual changes here? Or record as changes happen?
-    if (
-      this.history.length &&
-      this.game.level.equals(this.history[this.historyIndex])
-    ) {
-      // Nothing changed. Stay put.
-      return;
-    }
-    // Delete anything after our current position.
-    this.history.splice(this.historyIndex + 1, this.history.length);
-    // Add the new.
-    this.history.push(this.game.level.copy());
-    this.historyIndex += 1;
-    // Clear out super old, though it's hard to believe we'll blow out ram.
-    if (this.history.length > 100) {
-      this.history.shift();
-      this.historyIndex -= 1;
-    }
-    this.trackChange(initial);
-  }
-
-  redo() {
-    if (this.historyIndex < this.history.length - 1) {
-      this.historyIndex += 1;
-      this.game.level.copyFrom(this.history[this.historyIndex]);
-      this.game.level.updateStage(this.game);
-      this.trackChange();
+  saveAll() {
+    for (let key in this.editStates) {
+      let editState = this.editStates[key];
+      if (editState.saveNeeded) {
+        editState.saveLevel();
+      }
     }
   }
 
   saveDelay = 10e3;
-
-  saveNeeded = false;
-
-  saveLevel() {
-    // TODO Level and world naming conventions. UUIDs with index object?
-    this.game.level.save();
-    this.saveNeeded = false;
-    // Show saved long enough to let people notice.
-    // TODO Replace all this with onbeforeunload to handle potential problems.
-    // TODO Could possibly wait out even longer than 3 seconds if we do that.
-    // TODO Besides, in Electron we might have more control, anyway.
-    // this.showSaveState('saved');
-    // window.setTimeout(() => {
-    //   if (this.showingCommand('saved')) {
-    //     this.showSaveState('none');
-    //   }
-    // }, 1e3);
-  }
-
-  saveLevelMaybe() {
-    if (this.saveNeeded) {
-      if (window.performance.now() - this.lastChangeTime > this.saveDelay) {
-        // console.log(`Saving at ${window.performance.now()}`)
-        this.saveLevel();
-      } else {
-        // console.log(`Waiting to save at ${window.performance.now()}`)
-      }
-    }
-  }
 
   setToolFromName(name: string) {
     let tool = this.namedTools.get(name);
@@ -264,6 +192,92 @@ export class EditMode extends Mode {
 
   toolbox: Toolbox;
 
+}
+
+class EditState {
+
+  constructor(edit: EditMode) {
+    this.edit = edit;
+    // Remember the current level.
+    this.level = this.game.level;
+  }
+
+  edit: EditMode;
+
+  get game() {
+    return this.edit.game;
+  }
+
+  history: Array<Level> = [];
+
+  historyIndex = -1;
+
+  lastChangeTime = 0;
+
+  level: Level;
+
+  pushHistory(initial = false) {
+    // TODO Check for actual changes here? Or record as changes happen?
+    if (
+      this.history.length &&
+      this.level.equals(this.history[this.historyIndex])
+    ) {
+      // Nothing changed. Stay put.
+      return;
+    }
+    // Delete anything after our current position.
+    this.history.splice(this.historyIndex + 1, this.history.length);
+    // Add the new.
+    this.history.push(this.level.copy());
+    this.historyIndex += 1;
+    // Clear out super old, though it's hard to believe we'll blow out ram.
+    if (this.history.length > 100) {
+      this.history.shift();
+      this.historyIndex -= 1;
+    }
+    this.trackChange(initial);
+  }
+
+  redo() {
+    if (this.historyIndex < this.history.length - 1) {
+      this.historyIndex += 1;
+      this.level.copyFrom(this.history[this.historyIndex]);
+      this.level.updateStage(this.game);
+      this.trackChange();
+    }
+  }
+
+  saveLevel() {
+    this.level.save();
+    this.saveNeeded = false;
+    // Show saved long enough to let people notice.
+    // TODO Replace all this with onbeforeunload to handle potential problems.
+    // TODO Could possibly wait out even longer than 3 seconds if we do that.
+    // TODO Besides, in Electron we might have more control, anyway.
+    // this.showSaveState('saved');
+    // window.setTimeout(() => {
+    //   if (this.showingCommand('saved')) {
+    //     this.showSaveState('none');
+    //   }
+    // }, 1e3);
+  }
+
+  saveLevelMaybe() {
+    if (this.saveNeeded) {
+      if (
+        window.performance.now() - this.lastChangeTime > this.edit.saveDelay
+      ) {
+        // console.log(`Saving at ${window.performance.now()}`)
+        // Remember the level that we need to save.
+        this.saveLevel();
+      } else {
+        // console.log(`Waiting to save at ${window.performance.now()}`)
+      }
+    }
+  }
+
+  saveNeeded = false;
+
   trackChange(initial = false) {
     if (!initial) {
       // Track time for saving.
@@ -271,15 +285,15 @@ export class EditMode extends Mode {
       this.updateChangeTime();
     }
     // Enable or disable undo/redo.
-    this.enable('redo', this.historyIndex < this.history.length - 1);
-    this.enable('undo', this.historyIndex > 0);
+    this.edit.enable('redo', this.historyIndex < this.history.length - 1);
+    this.edit.enable('undo', this.historyIndex > 0);
   }
 
   undo() {
     if (this.historyIndex > 0) {
       this.historyIndex -= 1;
-      this.game.level.copyFrom(this.history[this.historyIndex]);
-      this.game.level.updateStage(this.game);
+      this.level.copyFrom(this.history[this.historyIndex]);
+      this.level.updateStage(this.game);
       this.trackChange();
     }
   }
@@ -287,11 +301,13 @@ export class EditMode extends Mode {
   updateChangeTime() {
     this.lastChangeTime = window.performance.now();
     // Change/save indicators aren't really commands, but eh.
-    this.showSaveState('changing');
+    this.edit.showSaveState('changing');
     if (this.saveNeeded) {
       // Make sure we have some event out past save time.
       // console.log(`Setting timeout for save at ${window.performance.now()}`);
-      window.setTimeout(() => this.saveLevelMaybe(), this.saveDelay + 0.5);
+      window.setTimeout(
+        () => this.saveLevelMaybe(), this.edit.saveDelay + 0.5
+      );
     }
   }
 
