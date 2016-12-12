@@ -1,5 +1,5 @@
 import {Game, Grid, Level, Part} from './';
-import {Steel} from './parts';
+import {Hero, Steel} from './parts';
 import {Vector2} from 'three';
 
 export class Stage {
@@ -44,6 +44,8 @@ export class Stage {
 
   // Collision grid.
   grid = new Grid<Array<Part>>(Level.tileCount);
+
+  hero: Hero | undefined = undefined;
 
   moved(part: Part, oldPoint: Vector2) {
     // First see if it's still in the same place.

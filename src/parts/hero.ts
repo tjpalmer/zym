@@ -9,6 +9,7 @@ export class Hero extends Runner {
   editPlacedAt(tilePoint: Vector2) {
     let game = this.game;
     let placedIndex = game.level.tiles.index(tilePoint);
+    // TODO Cache hero position for level?
     game.level.tiles.items.forEach((type, index) => {
       if (type == Hero && index != placedIndex) {
         let editState = game.edit.editState;

@@ -25,7 +25,15 @@ export class Enemy extends Runner {
     let {action} = this;
     action.left = action.right = action.up = action.down = false;
     // Make a decision.
-    action.right = true;
+    let {hero} = this.game.stage;
+    if (hero) {
+      if (hero.point.x < this.point.x) {
+        action.left = true;
+      } else if (hero.point.x > this.point.x) {
+        action.right = true;
+      }
+    }
+    // TODO Make physics a different step after action!
     this.processAction(action);
   }
 

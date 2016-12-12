@@ -1,5 +1,5 @@
 import {Game, Grid, Id, Part, PartType, createId} from './';
-import {None, Parts} from './parts';
+import {Hero, None, Parts} from './parts';
 import {Vector2} from 'three';
 
 export class World {
@@ -146,15 +146,17 @@ export class Level {
   updateStage(game: Game, reset = false) {
     let stage = game.stage;
     let theme = game.theme;
+    stage.hero = undefined;
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
         let tile = this.tiles.items[k];
         let oldPart = stage.parts[k];
+        let part: Part;
         // If it's the same type as what we already had, presume it's already in
         // the right place.
         if (reset || !(oldPart instanceof tile)) {
           // Needs to be a new part.
-          let part = new tile(game);
+          part = new tile(game);
           theme.buildArt(part);
           part.point.set(j, i).multiply(Level.tileSize);
           stage.parts[k] = part;
@@ -162,6 +164,11 @@ export class Level {
             stage.removed(oldPart);
           }
           stage.added(part);
+        } else {
+          part = oldPart;
+        }
+        if (part instanceof Hero) {
+          stage.hero = part;
         }
       }
     }
