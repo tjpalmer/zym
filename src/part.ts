@@ -16,6 +16,8 @@ export class Part {
 
   art: any = undefined;
 
+  carried = false;
+
   // Bars catch heros and enemies, and burned bricks catch enemies (or inside
   // solid for burned bricks?).
   catches(part: Part) {

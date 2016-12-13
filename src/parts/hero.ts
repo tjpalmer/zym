@@ -6,6 +6,8 @@ export class Hero extends Runner {
 
   static char = 'R';
 
+  carried = true;
+
   choose() {
     this.processAction(this.game.control);
   }

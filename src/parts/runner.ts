@@ -209,11 +209,13 @@ export class Runner extends Part {
         // TODO Reassess how to handle this?
         move.y = support.move.y;
       }
-      // Allow being carried.
-      // TODO This includes attempted but constrained move.
-      // TODO How to know final move?
-      // TODO Intermediate constraints???
-      move.x += support.move.x;
+      if (this.carried) {
+        // Allow being carried.
+        // TODO This includes attempted but constrained move.
+        // TODO How to know final move?
+        // TODO Intermediate constraints???
+        move.x += support.move.x;
+      }
     }
     point.add(move);
     // See if we need to fix things.
