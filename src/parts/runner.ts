@@ -58,6 +58,21 @@ export class Runner extends Part {
     return leftParts.find(isClimbable) || rightParts.find(isClimbable);
   }
 
+  getClimbableDown() {
+    let isClimbable = (part: Part) => part.climbable && part != this;
+    let climbableAt = (x: number, y: number) => this.partAt(x, y, isClimbable);
+    return climbableAt(midLeft, -1) || climbableAt(midRight, -1);
+  }
+
+  getClimbableUp() {
+    let isClimbable = (part: Part) => part.climbable && part != this;
+    let climbableAt = (x: number, y: number) => this.partAt(x, y, isClimbable);
+    return (
+      climbableAt(midLeft, 0) || climbableAt(midRight, 0) ||
+      // Allow dangling.
+      climbableAt(midLeft, top) || climbableAt(midRight, top));
+  }
+
   getSolid(edge: Edge, x: number, y: number) {
     let isSolid = (part: Part) => part.solid(this, edge) && part != this;
     return this.partAt(x, y, isSolid);
@@ -68,8 +83,12 @@ export class Runner extends Part {
     return this.getSurface() || this.getCatcher(exact);
   }
 
-  getSurface() {
-    let isSurface = (part: Part) => part.surface && part != this;
+  getSurface(condition?: (part: Part) => boolean) {
+    if (!condition) {
+      condition = part => true;
+    }
+    let isSurface = (part: Part) =>
+      part.surface && part != this && condition!(part);
     let part1 = this.partAt(3, -1, isSurface);
     let part2 = this.partAt(midRight, -1, isSurface);
     if (!(part1 && part2)) {
@@ -124,20 +143,24 @@ export class Runner extends Part {
       // This could happen if a brick just enclosed on part of us.
       // TODO Die.
     } else if (support) {
-      // TODO Remember old move options to allow easier transition?
       let wallEdge: Edge;
-      if (action.left) {
-        move.x = -1;
-        wallEdge = Edge.right;
-      } else if (action.right) {
-        move.x = 1;
-        wallEdge = Edge.left;
-      } else if (climbable || !support.surface) {
+      // Prioritize vertical for enemy ai reasons, also because rarer options.
+      // TODO Remember old move options to allow easier transition?
+      if (climbable || !support.surface) {
         // Now move up or down.
         if (action.down) {
           move.y = -1;
         } else if (action.up && inClimbable) {
           move.y = 1;
+        }
+      }
+      if (!move.y) {
+        if (action.left) {
+          move.x = -1;
+          wallEdge = Edge.right;
+        } else if (action.right) {
+          move.x = 1;
+          wallEdge = Edge.left;
         }
       }
     } else {
@@ -147,15 +170,8 @@ export class Runner extends Part {
     // TODO Make this actually change the move. Nix the align var.
     // TODO Except when all on same climbable or none?
     let align = this.align.setScalar(0);
-    if (move.x < 0) {
-      align.y = this.findAlign(
-        Edge.right, this.partsNear(-1, 4), this.partsNear(-1, midTop),
-      );
-    } else if (move.x > 0) {
-      align.y = this.findAlign(
-        Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
-      );
-    } else if (move.y) {
+    // Prioritize y because y move options are rarer.
+    if (move.y) {
       if (climbable) {
         // Generalize alignment to whatever provides passage.
         align.x = Math.sign(climbable.point.x - point.x);
@@ -166,6 +182,14 @@ export class Runner extends Part {
           Edge.bottom, this.partsNear(3, 10), this.partsNear(midRight, 10),
         );
       }
+    } else if (move.x < 0) {
+      align.y = this.findAlign(
+        Edge.right, this.partsNear(-1, 4), this.partsNear(-1, midTop),
+      );
+    } else if (move.x > 0) {
+      align.y = this.findAlign(
+        Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
+      );
     }
     move.multiplyScalar(this.speed);
     // Change player position.
@@ -253,7 +277,16 @@ export class Runner extends Part {
 }
 
 let epsilon = 1e-2;
-let midRight = 5 - epsilon;
-let midTop = 6 - epsilon;
-let right = 8 - epsilon;
-let top = 10 - epsilon;
+
+export const TilePos = {
+  bottom: epsilon,
+  left: epsilon,
+  midBottom: 4 + epsilon,
+  midLeft: 3 + epsilon,
+  midRight: 5 - epsilon,
+  midTop: 6 - epsilon,
+  right: 8 - epsilon,
+  top: 10 - epsilon,
+}
+
+let {midBottom, midLeft, midRight, midTop, right, top} = TilePos;
