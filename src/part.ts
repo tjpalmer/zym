@@ -22,6 +22,8 @@ export class Part {
     return false;
   }
 
+  choose() {}
+
   climbable = false;
 
   contains(point: Vector2) {
@@ -36,6 +38,8 @@ export class Part {
 
   game: Game;
 
+  move = new Vector2();
+
   point = new Vector2();
 
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?
@@ -45,7 +49,7 @@ export class Part {
 
   surface = false;
 
-  tick() {}
+  update() {}
 
 }
 

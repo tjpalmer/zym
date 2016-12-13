@@ -16,8 +16,7 @@ export class Runner extends Part {
     );
   }
 
-  // For reuse during animation.
-  move = new Vector2();
+  oldCatcher: Part | undefined = undefined;
 
   oldPoint = new Vector2();
 
@@ -119,7 +118,7 @@ export class Runner extends Part {
     // TODO Let changed keys override old ones.
     // TODO Find all actions (and alignments) before moving, for enemies?
     let {stage} = this.game;
-    let {move, oldPoint, point, workPoint} = this;
+    let {align, move, oldPoint, point, workPoint} = this;
     oldPoint.copy(point);
     move.setScalar(0);
     let epsilon = 1e-2;
@@ -169,7 +168,7 @@ export class Runner extends Part {
     // Align non-moving direction.
     // TODO Make this actually change the move. Nix the align var.
     // TODO Except when all on same climbable or none?
-    let align = this.align.setScalar(0);
+    align.setScalar(0);
     // Prioritize y because y move options are rarer.
     if (move.y) {
       if (climbable) {
@@ -192,7 +191,30 @@ export class Runner extends Part {
       );
     }
     move.multiplyScalar(this.speed);
+    this.oldCatcher = oldCatcher;
+    this.support = support;
+  }
+
+  speed: number;
+
+  support: Part | undefined = undefined;
+
+  update() {
     // Change player position.
+    let {align, move, oldCatcher, oldPoint, point, support} = this;
+    if (support) {
+      if (support.move.y < 0) {
+        // Speeds could be different, but for now this helps to fall with
+        // a support.
+        // TODO Reassess how to handle this?
+        move.y = support.move.y;
+      }
+      // Allow being carried.
+      // TODO This includes attempted but constrained move.
+      // TODO How to know final move?
+      // TODO Intermediate constraints???
+      move.x += support.move.x;
+    }
     point.add(move);
     // See if we need to fix things.
     // TODO Align only when forced or to enable movement, not just for grid.
@@ -267,10 +289,8 @@ export class Runner extends Part {
       point.y =
         Level.tileSize.y * Math.floor((point.y + offset) / Level.tileSize.y);
     }
-    stage.moved(this, oldPoint);
+    this.game.stage.moved(this, oldPoint);
   }
-
-  speed: number;
 
   workPoint = new Vector2();
 

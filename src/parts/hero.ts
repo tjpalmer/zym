@@ -6,6 +6,10 @@ export class Hero extends Runner {
 
   static char = 'R';
 
+  choose() {
+    this.processAction(this.game.control);
+  }
+
   editPlacedAt(tilePoint: Vector2) {
     let game = this.game;
     let placedIndex = game.level.tiles.index(tilePoint);
@@ -20,10 +24,5 @@ export class Hero extends Runner {
   }
 
   speed = 1;
-
-  tick() {
-    // TODO Let changed keys override old ones.
-    this.processAction(this.game.control);
-  }
 
 }

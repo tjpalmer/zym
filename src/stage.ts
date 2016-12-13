@@ -119,9 +119,15 @@ export class Stage {
   tick() {
     // TODO Move all updates to worker thread, and just receive state each
     // TODO frame?
+    // Choose based on current state.
     for (let part of this.parts) {
-      part.tick();
+      part.choose();
     }
+    // Update after choices.
+    for (let part of this.parts) {
+      part.update();
+    }
+    // TODO Maybe separate constrain step?
   }
 
   walkGrid(point: Vector2, handle: () => void) {

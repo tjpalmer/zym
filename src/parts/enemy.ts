@@ -8,25 +8,7 @@ export class Enemy extends Runner {
 
   action = new RunnerAction();
 
-  getOther(x: number, y: number) {
-    let isEnemy = (part: Part) => part instanceof Enemy && part != this;
-    return this.partAt(x, y, isEnemy);
-  }
-
-  solid(other: Part, edge?: Edge): boolean {
-    // Enemies block entrance to each other, but not exit from.
-    // Just a touch of safety precaution.
-    return other instanceof Enemy && !!edge;
-  }
-
-  // TODO They still get stuck when clumped in hordes after making this
-  // TODO non-integer.
-  // TODO Fix this sometime.
-  speed = 0.7;
-
-  surface = true;
-
-  tick() {
+  choose() {
     // Reset action.
     let {action} = this;
     action.left = action.right = action.up = action.down = false;
@@ -37,6 +19,7 @@ export class Enemy extends Runner {
       if (Math.abs(diff.y) > close) {
         // Because y moves are prioritized, just turn them on for control when
         // applicable.
+        // TODO Keep y spacing like for x, too.
         if (diff.y < 0) {
           // TODO Watch about if over pits.
           let solidSurface =
@@ -67,9 +50,26 @@ export class Enemy extends Runner {
         }
       }
     }
-    // TODO Make physics a different step after action!
     this.processAction(action);
   }
+
+  getOther(x: number, y: number) {
+    let isEnemy = (part: Part) => part instanceof Enemy && part != this;
+    return this.partAt(x, y, isEnemy);
+  }
+
+  solid(other: Part, edge?: Edge): boolean {
+    // Enemies block entrance to each other, but not exit from.
+    // Just a touch of safety precaution.
+    return other instanceof Enemy && !!edge;
+  }
+
+  // TODO They still get stuck when clumped in hordes after making this
+  // TODO non-integer.
+  // TODO Fix this sometime.
+  speed = 0.7;
+
+  surface = true;
 
   workPoint2 = new Vector2();
 
