@@ -22,12 +22,12 @@ export enum Layer {
 
 export interface Art {
 
-  editTile: Vector2;
-
   // Layer is usually (always?) constant by part type, but it's not a big deal
   // just to replicate.
   // TODO Will layers also exist on 3D, or will it all be z-ordered?
   layer: Layer;
+
+  tile: Vector2;
 
 }
 
@@ -56,7 +56,7 @@ export class GoldTheme implements Theme {
       throw new Error(`No art for part type ${part.constructor.name}`);
     }
     // Mark art non-optional so this would catch the error?
-    part.art = makeArt();
+    part.art = makeArt(part);
   }
 
   buildDone(game: Game) {
@@ -87,7 +87,7 @@ export class GoldTheme implements Theme {
           // That's the end of this layer.
           break;
         }
-        let currentTileIndices = (part.art as Art).editTile;
+        let currentTileIndices = (part.art as Art).tile;
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(part.point.x, part.point.y, 0);
         for (let k = 0; k < tileIndices.length; k += 2) {
@@ -190,7 +190,7 @@ export class GoldTheme implements Theme {
       let part = new type(game);
       this.buildArt(part);
       // Now calculate the pixel point.
-      let point = (part.art as Art).editTile.clone();
+      let point = (part.art as Art).tile.clone();
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
       // Now make a canvas to draw to.

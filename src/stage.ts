@@ -127,6 +127,13 @@ export class Stage {
     for (let part of this.parts) {
       part.update();
     }
+    // Count time.
+    // TODO Actual time.
+    this.time += 1/60;
+    if (this.time > 1e6) {
+      // Reset instead of getting out of sane-precision land.
+      this.time = 0;
+    }
     // TODO Maybe separate constrain step?
   }
 
@@ -158,6 +165,9 @@ export class Stage {
   // Cached for use.
   workPoint = new Vector2();
   workPoint2 = new Vector2();
+
+  // A way to know that a frame has passed.
+  time = 0;
 
 }
 

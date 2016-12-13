@@ -6,6 +6,8 @@ export class Runner extends Part {
 
   align = new Vector2();
 
+  climbing = false;
+
   encased() {
     let isSolid = (part: Part) => part.solid(this) && part != this;
     return (
@@ -96,6 +98,8 @@ export class Runner extends Part {
     return part1.point.y > part2.point.y ? part1 : part2;
   }
 
+  moved = new Vector2();
+
   // TODO Switch to using this once we have moving supports (enemies)!!
   partAt(x: number, y: number, keep: (part: Part) => boolean) {
     return (
@@ -119,6 +123,7 @@ export class Runner extends Part {
     // TODO Find all actions (and alignments) before moving, for enemies?
     let {stage} = this.game;
     let {align, move, oldPoint, point, workPoint} = this;
+    this.climbing = false;
     oldPoint.copy(point);
     move.setScalar(0);
     let epsilon = 1e-2;
@@ -149,8 +154,10 @@ export class Runner extends Part {
         // Now move up or down.
         if (action.down) {
           move.y = -1;
+          this.climbing = !!climbable;
         } else if (action.up && inClimbable) {
           move.y = 1;
+          this.climbing = true;
         }
       }
       if (!move.y) {
@@ -291,6 +298,8 @@ export class Runner extends Part {
       point.y =
         Level.tileSize.y * Math.floor((point.y + offset) / Level.tileSize.y);
     }
+    // Update moved to the actual move, and update the stage.
+    this.moved.copy(this.point).sub(oldPoint);
     this.game.stage.moved(this, oldPoint);
   }
 
