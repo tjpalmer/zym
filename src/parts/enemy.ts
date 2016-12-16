@@ -1,4 +1,4 @@
-import {Runner} from './';
+import {Brick, Runner} from './';
 import {Edge, Game, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -7,6 +7,8 @@ export class Enemy extends Runner {
   static char = 'e';
 
   action = new RunnerAction();
+
+  caught = false;
 
   choose() {
     // Reset action.
@@ -34,10 +36,11 @@ export class Enemy extends Runner {
       if (Math.abs(diff.x) > close) {
         // TODO Watch for not running over pits.
         // Keep some spacing between enemies when possible.
-        // See if all surfaces are enemies.
-        let comradeSurface = this.getSurface(part => part instanceof Enemy);
-        let noncomradeSurface =
-          this.getSurface(part => !(part instanceof Enemy));
+        // See if all surfaces are enemies who are actually mobile.
+        // TODO An enemy stuck in an ordinary hole should also count as caught!
+        let isComrade = (part: Part) => part instanceof Enemy && !part.caught;
+        let comradeSurface = this.getSurface(isComrade);
+        let noncomradeSurface = this.getSurface(part => !isComrade(part));
         let surface = comradeSurface && !noncomradeSurface;
         if (diff.x < 0) {
           if (!(this.getOther(-8, 4) || surface)) {
@@ -70,6 +73,16 @@ export class Enemy extends Runner {
   speed = 0.7;
 
   surface = true;
+
+  update() {
+    let catcher = this.getCatcher();
+    if (catcher instanceof Brick) {
+      // No moving in bricks.
+      this.move.setScalar(0);
+      this.caught = true;
+    }
+    super.update();
+  }
 
   workPoint2 = new Vector2();
 

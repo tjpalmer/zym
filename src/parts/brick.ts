@@ -11,7 +11,7 @@ export class Brick extends Part {
   burnTime: number;
 
   catches(part: Part) {
-    return part instanceof Enemy;
+    return this.burned && part instanceof Enemy;
   }
 
   checkBurner(direction: number) {
@@ -22,7 +22,9 @@ export class Brick extends Part {
     let {workPoint} = this;
     workPoint.copy(this.point);
     // Be somewhat near the base of the guy.
-    workPoint.x += 4 + 8 * direction;
+    // A little off to the side, though when pixel-aligned, 8 * dir is good
+    // enough.
+    workPoint.x += 4 + 9 * direction;
     workPoint.y += 12;
     if (hero.contains(workPoint)) {
       if (Math.abs(hero.point.y - 10 - this.point.y) < 4) {

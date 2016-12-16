@@ -11,6 +11,8 @@ export class RunnerArt implements Art {
 
   base: Vector2;
 
+  facing = 1;
+
   frame = 0;
 
   lastTime = 0;
@@ -26,6 +28,11 @@ export class RunnerArt implements Art {
     let {mode} = this;
     let {climbing, game, move, moved, speed, support} = this.runner;
     let {stage} = game;
+    // Update facing.
+    if (move.x) {
+      // Facing is always left or right.
+      this.facing = Math.sign(move.x);
+    }
     // Figure out what frame and mode.
     if (game.mode == game.edit) {
       this.frame = 0;
@@ -36,15 +43,19 @@ export class RunnerArt implements Art {
       if (support) {
         let swinging = support.catches(this.runner);
         if (climbing) {
-          this.mode = Mode.climb;
-        } else if (movedX) {
-          if (moved.x < 0) {
-            this.mode = swinging ? Mode.swingLeft : Mode.left;
-          } else {
-            this.mode = swinging ? Mode.swingRight : Mode.right;
+          let under = this.runner.getSupport();
+          if (under && !under.climbable) {
+            climbing = false;
           }
-        } else if (swinging) {
-          this.mode = this.mode == Mode.left ? Mode.swingLeft : Mode.swingRight;
+        }
+        if (climbing) {
+          this.mode = Mode.climb;
+        } else {
+          if (swinging) {
+            this.mode = this.facing < 0 ? Mode.swingLeft : Mode.swingRight;
+          } else {
+            this.mode = this.facing < 0 ? Mode.left : Mode.right;
+          }
         }
         // Frame.
         let didMove = !!(moved.x || moved.y);
@@ -56,11 +67,8 @@ export class RunnerArt implements Art {
           this.frame = (this.frame + 1) % 5;
         }
       } else {
-        // TODO Hands up to fall!
-        // if (movedX) {
-        //   if ()
-        // }
-        // if (mode == Mode.swingLeft || mode == Mode.swingRight)
+        // Hands up to fall.
+        this.mode = this.facing < 0 ? Mode.swingLeft : Mode.swingRight;
       }
     }
     // Answer based on that.

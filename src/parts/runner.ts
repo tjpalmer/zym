@@ -90,6 +90,7 @@ export class Runner extends Part {
     }
     let isSurface = (part: Part) =>
       part.surface && part != this && condition!(part);
+    // TODO Replace all -1 with -epsilon?
     let part1 = this.partAt(3, -1, isSurface);
     let part2 = this.partAt(midRight, -1, isSurface);
     if (!(part1 && part2)) {
@@ -139,6 +140,7 @@ export class Runner extends Part {
       this.getClimbable(this.partsNear(3, 0), this.partsNear(midRight, 0)) ||
       // Allow dangling.
       this.getClimbable(this.partsNear(3, top), this.partsNear(midRight, top));
+    this.climbing = !!inClimbable;
     let climbable = this.getClimbable(leftParts, rightParts) || inClimbable;
     if (!support) {
       support = climbable;
@@ -154,10 +156,8 @@ export class Runner extends Part {
         // Now move up or down.
         if (action.down) {
           move.y = -1;
-          this.climbing = !!climbable;
         } else if (action.up && inClimbable) {
           move.y = 1;
-          this.climbing = true;
         }
       }
       if (!move.y) {
