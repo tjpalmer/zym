@@ -8,7 +8,15 @@ export class Brick extends Part {
 
   burned = false;
 
-  burnTime: number;
+  get burnTime() {
+    return this.game.stage.time - this.burnTimeStart;
+  }
+
+  get burnTimeLeft() {
+    return totalGoneTime - this.burnTime;
+  }
+
+  burnTimeStart: number;
 
   catches(part: Part) {
     return this.burned && part instanceof Enemy;
@@ -29,7 +37,7 @@ export class Brick extends Part {
     if (hero.contains(workPoint)) {
       if (Math.abs(hero.point.y - 10 - this.point.y) < 4) {
         this.burned = true;
-        this.burnTime = this.game.stage.time;
+        this.burnTimeStart = this.game.stage.time;
       }
     }
   }
@@ -42,7 +50,7 @@ export class Brick extends Part {
     if (control.burnRight) {
       this.checkBurner(-1);
     }
-    if (this.game.stage.time > this.burnTime + 5) {
+    if (this.burnTimeLeft <= 0) {
       this.burned = false;
     }
   }
@@ -62,3 +70,5 @@ export class Brick extends Part {
   workPoint = new Vector2();
 
 }
+
+let totalGoneTime = 5;
