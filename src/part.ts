@@ -42,6 +42,24 @@ export class Part {
 
   move = new Vector2();
 
+  // TODO Switch to using this once we have moving supports (enemies)!!
+  partAt(x: number, y: number, keep: (part: Part) => boolean) {
+    return (
+      this.game.stage.partAt(this.workPoint.set(x, y).add(this.point), keep));    
+  }
+
+  // TODO Switch to using this once we have moving supports (enemies)!!
+  partsAt(x: number, y: number) {
+    return (
+      this.game.stage.partsAt(this.workPoint.set(x, y).add(this.point)));    
+  }
+
+  partsNear(x: number, y: number) {
+    return (
+      this.game.stage.partsNear(this.workPoint.set(x, y).add(this.point)) ||
+      []);    
+  }
+
   point = new Vector2();
 
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?
@@ -52,6 +70,8 @@ export class Part {
   surface = false;
 
   update() {}
+
+  workPoint = new Vector2();
 
 }
 

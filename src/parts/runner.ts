@@ -101,24 +101,6 @@ export class Runner extends Part {
 
   moved = new Vector2();
 
-  // TODO Switch to using this once we have moving supports (enemies)!!
-  partAt(x: number, y: number, keep: (part: Part) => boolean) {
-    return (
-      this.game.stage.partAt(this.workPoint.set(x, y).add(this.point), keep));    
-  }
-
-  // TODO Switch to using this once we have moving supports (enemies)!!
-  partsAt(x: number, y: number) {
-    return (
-      this.game.stage.partsAt(this.workPoint.set(x, y).add(this.point)));    
-  }
-
-  partsNear(x: number, y: number) {
-    return (
-      this.game.stage.partsNear(this.workPoint.set(x, y).add(this.point)) ||
-      []);    
-  }
-
   processAction(action: RunnerAction) {
     // TODO Let changed keys override old ones.
     // TODO Find all actions (and alignments) before moving, for enemies?
@@ -302,8 +284,6 @@ export class Runner extends Part {
     this.moved.copy(this.point).sub(oldPoint);
     this.game.stage.moved(this, oldPoint);
   }
-
-  workPoint = new Vector2();
 
 }
 

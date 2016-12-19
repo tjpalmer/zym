@@ -9,6 +9,7 @@ export enum Layer {
   // Normally I go alphabetical, but instead put this in back to front order.
   // Back is all for static items that people go in front of.
   back,
+  treasure,
   hero,
   // All enemies appear above player to be aggressive.
   // Biggies go behind other enemies because they are bigger.

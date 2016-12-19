@@ -12,13 +12,11 @@ export class BrickArt implements Art {
 
   layer = Layer.front;
 
-  mainTile = new Vector2(2, 18);
-
   get tile() {
     let {burned, burnTime, burnTimeLeft} = this.brick;
     if (burned) {
       let {workPoint} = this;
-      workPoint.copy(this.mainTile);
+      workPoint.copy(mainTile);
       let frame = 10;
       if (burnTime < animTime) {
         frame = Math.floor((burnTime / animTime) * animCount);
@@ -29,7 +27,7 @@ export class BrickArt implements Art {
       workPoint.y -= frame;
       return workPoint;
     } else {
-      return this.mainTile;
+      return mainTile;
     }
   }
 
@@ -39,3 +37,5 @@ export class BrickArt implements Art {
 
 let animCount = 10;
 let animTime = 0.25;
+
+let mainTile = new Vector2(2, 18);

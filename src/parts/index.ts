@@ -9,6 +9,7 @@ export * from './hero';
 export * from './ladder';
 export * from './none';
 export * from './steel';
+export * from './treasure';
 
 // After individual parts above.
 export * from './parts';

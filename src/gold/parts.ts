@@ -1,5 +1,7 @@
-import {Art, BrickArt, Layer, RunnerArt} from './';
-import {Bar, Brick, Enemy, Hero, Ladder, None, Runner, Steel} from '../parts/';
+import {Art, BrickArt, Layer, RunnerArt, TreasureArt} from './';
+import {
+  Bar, Brick, Enemy, Hero, Ladder, None, Runner, Steel, Treasure
+} from '../parts/';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
 
@@ -21,6 +23,7 @@ export class Parts {
     [Ladder, part => arts.Ladder], 
     [None, part => arts.None],
     [Steel, part => arts.Steel],
+    [Treasure, part => new TreasureArt(part as Treasure)],
   ]);
 
 }
