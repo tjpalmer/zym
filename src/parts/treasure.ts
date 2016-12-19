@@ -13,8 +13,7 @@ export class Treasure extends Part {
     } else {
       let runner =
         this.partAt(4, 5, part => part instanceof Runner) as Runner | undefined;
-      if (runner) {
-        // TODO Add a "canCarry" to Runner types.
+      if (runner && runner.take(this)) {
         this.owner = runner;
       }
     }

@@ -1,4 +1,4 @@
-import {None} from './';
+import {None, Treasure} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -187,6 +187,11 @@ export class Runner extends Part {
   speed: number;
 
   support: Part | undefined = undefined;
+
+  take(treasure: Treasure) {
+    // For overriding.
+    return false;
+  }
 
   update() {
     // Change player position.

@@ -1,4 +1,4 @@
-import {Brick, Runner} from './';
+import {Brick, Runner, Treasure} from './';
 import {Edge, Game, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -73,6 +73,17 @@ export class Enemy extends Runner {
   speed = 0.7;
 
   surface = true;
+
+  take(treasure: Treasure) {
+    if (this.treasure) {
+      return false;
+    } else {
+      this.treasure = treasure;
+      return true;
+    }
+  }
+
+  treasure?: Treasure = undefined;
 
   update() {
     let catcher = this.getCatcher();

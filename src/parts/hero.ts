@@ -1,4 +1,4 @@
-import {None, Runner} from './';
+import {None, Runner, Treasure} from './';
 import {Edge, Level, Part, Game} from '../';
 import {Vector2} from 'three';
 
@@ -26,5 +26,12 @@ export class Hero extends Runner {
   }
 
   speed = 1;
+
+  treasureCount = 0;
+
+  take(treasure: Treasure) {
+    this.treasureCount += 1;
+    return true;
+  }
 
 }
