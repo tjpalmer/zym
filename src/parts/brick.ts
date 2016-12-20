@@ -1,5 +1,5 @@
 import {Edge, Part} from '../';
-import {Enemy} from '../parts';
+import {Enemy, Treasure} from '../parts';
 import {Vector2} from 'three';
 
 export class Brick extends Part {
@@ -27,6 +27,12 @@ export class Brick extends Part {
     if (this.burned || !hero) {
       return;
     }
+    // See if there's a treasure above.
+    // If so, disallow burning, so we can't get multiple in the same spot.
+    // See if some visual or tutorial helps to convey the rule.
+    // Uses workPoint.
+    let treasureAbove = this.partAt(4, 11, part => part instanceof Treasure);
+    // Now use workPoint manually.
     let {workPoint} = this;
     workPoint.copy(this.point);
     // Be somewhat near the base of the guy.
@@ -34,7 +40,7 @@ export class Brick extends Part {
     // enough.
     workPoint.x += 4 + 9 * direction;
     workPoint.y += 12;
-    if (hero.contains(workPoint)) {
+    if (hero.contains(workPoint) && !treasureAbove) {
       if (Math.abs(hero.point.y - 10 - this.point.y) < 4) {
         this.burned = true;
         this.burnTimeStart = this.game.stage.time;
@@ -66,8 +72,6 @@ export class Brick extends Part {
   set surface(value: boolean) {
     // Ignore the setting of the default value.
   }
-
-  workPoint = new Vector2();
 
 }
 

@@ -91,6 +91,15 @@ export class Enemy extends Runner {
       // No moving in bricks.
       this.move.setScalar(0);
       this.caught = true;
+      // Lose treasure if we have one.
+      let {treasure} = this;
+      if (treasure) {
+        this.treasure = undefined;
+        treasure.owner = undefined;
+        treasure.point.copy(this.point);
+        // Place it above.
+        treasure.point.y += 10;
+      }
     }
     super.update();
   }
