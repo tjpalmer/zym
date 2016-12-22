@@ -1,5 +1,5 @@
 import {Art, Layer} from './';
-import {Runner} from '../parts';
+import {Enemy, Runner} from '../parts';
 import {Vector2} from 'three';
 
 export class RunnerArt implements Art {
@@ -26,7 +26,7 @@ export class RunnerArt implements Art {
 
   get tile(): Vector2 {
     let {mode} = this;
-    let {climbing, game, move, moved, speed, support} = this.runner;
+    let {climbing, game, move, moved, point, speed, support} = this.runner;
     let {stage} = game;
     // Update facing.
     if (move.x) {
@@ -36,7 +36,13 @@ export class RunnerArt implements Art {
     // Figure out what frame and mode.
     if (game.mode == game.edit) {
       this.frame = 0;
-      this.mode = Mode.right;
+      // TODO Subclass RunnerArt for enemies?
+      if (this.runner instanceof Enemy) {
+        let {hero} = game.stage;
+        this.mode = hero && hero.point.x < point.x ? Mode.left : Mode.right;
+      } else {
+        this.mode = Mode.right;
+      }
     } else {
       let movedX = Math.abs(moved.x) > 1e-1;
       // Mode.
