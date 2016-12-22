@@ -9,12 +9,23 @@ export class Toolbox {
     this.edit = edit;
     this.markSelected();
     let container = this.container;
-    for (let input of container.querySelectorAll('input')) {
+    for (let input of container.querySelectorAll('input[name="tool"]')) {
       input.addEventListener('click', () => {
         for (let other of this.getToolButtons()) {
           other.classList.remove('selected');
         }
         this.markSelected();
+      });
+    }
+    for (let input of container.querySelectorAll('input[type="checkbox"]')) {
+      input.addEventListener('change', ({target}) => {
+        let input = target as HTMLInputElement;
+        let label = input.closest('label') as HTMLElement;
+        if (input.checked) {
+          label.classList.add('selected');
+        } else {
+          label.classList.remove('selected');
+        }
       });
     }
     // TODO Other panels.
@@ -24,21 +35,26 @@ export class Toolbox {
 
   edit: EditMode;
 
-  getToolButtons(): Array<HTMLElement> {
+  getButtons(): Array<HTMLElement> {
     return [...this.container.querySelectorAll('label')];
   }
 
-  getToolName(button: HTMLElement) {
+  getName(button: HTMLElement) {
     return [...button.classList].filter(name => name != 'selected')[0];
   }
 
+  getToolButtons(): Array<HTMLElement> {
+    return [...this.container.querySelectorAll('input[name="tool"]')].map(
+      input => input.closest('label') as HTMLElement);
+  }
+
   markSelected() {
-    let selected = this.container.querySelector('input:checked')!;
+    let selected = this.container.querySelector('input[name="tool"]:checked')!;
     let label = selected.closest('label') as HTMLElement;
     label.classList.add('selected');
     // Get the class name that's not selected.
     // TODO Instead put name on the input?
-    let name = this.getToolName(label);
+    let name = this.getName(label);
     this.edit.setToolFromName(name);
   }
 

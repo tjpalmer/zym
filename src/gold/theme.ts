@@ -176,15 +176,15 @@ export class GoldTheme implements Theme {
     // size implies what looks reasonable for ui elements.
     let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
     let buttonHeight = `${scale * Level.tileSize.y}px`;
-    for (let button of toolbox.getToolButtons()) {
+    for (let button of toolbox.getButtons()) {
       // Get the art for this tool. TODO Simplify this process?
-      let name = toolbox.getToolName(button);
-      if (name == 'none') {
+      let name = toolbox.getName(button);
+      let type = game.edit.namedTools.get(name);
+      if (!type || name == 'none') {
         // We don't draw a standard tile for this one.
         button.style.height = buttonHeight;
         continue;
       }
-      let type = game.edit.namedTools.get(name);
       if (!type) {
         throw new Error(`Unknown type: ${name}`);
       }

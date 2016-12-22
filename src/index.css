@@ -21,7 +21,8 @@ body {
 .commands .play,
 .commands .redo,
 .commands .showLevels,
-.status .pause  {
+.status .pause,
+.toolbox .none  {
   margin-bottom: 0.5em;
 }
 
@@ -209,11 +210,11 @@ body {
   margin-bottom: -0.1em;
 }
 
-.toolbox label.none {
+.toolbox label.ender {
   margin-bottom: 0;
 }
 
-.toolbox .none i {
+.toolbox i {
   display: block;
   position: relative;
   text-align: center;
@@ -221,7 +222,7 @@ body {
   transform: translateY(-50%);
 }
 
-.toolbox .none i * {
+.toolbox i * {
   display: block;
 }
 
