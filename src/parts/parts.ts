@@ -22,3 +22,28 @@ export class Parts {
   ));
 
 }
+
+Parts.inventory.filter(
+  part => part != Hero && part != None
+).forEach(part => {
+  // Auto-pick chars in the extended latin range, for convenience.
+  // They won't look pretty.
+  // 1D4D0-1D4E9 caps, 1D4EA-1D503 lower, others, for pretty?
+  let char = part.char.codePointAt(0) + 0x80;
+  if (char == 0xAD) {
+    // Because 0xAD isn't visible, and they're nice to see, at least.
+    char = 0xFF;
+  }
+  // Creat the class.
+  class Ender extends part {
+    static get base() {
+      return part;
+    }
+    static char = String.fromCodePoint(char);
+    static ender = true;
+  }
+  // Add it to things.
+  Parts.inventory.push(Ender);
+  Parts.charParts.set(Ender.char, Ender);
+  console.log(part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name);
+});

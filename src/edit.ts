@@ -109,7 +109,7 @@ export class EditMode extends Mode {
     this.editState.pushHistory();
   }
 
-  namedTools = new Map(Parts.inventory.map(type => [
+  namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(type => [
     type.name.toLowerCase(), type
   ] as [string, PartType]));
 

@@ -51,7 +51,7 @@ export class GoldTheme implements Theme {
   }
 
   buildArt(part: Part) {
-    let makeArt = Parts.tileArts.get(part.constructor as PartType);
+    let makeArt = Parts.tileArts.get((part.constructor as PartType).base);
     if (!makeArt) {
       // This makes it easier to deal with problems up front.
       throw new Error(`No art for part type ${part.constructor.name}`);

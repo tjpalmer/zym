@@ -10,6 +10,12 @@ export enum Edge {
 
 export class Part {
 
+  static get base(): PartType {
+    return this as PartType;
+  }
+
+  static ender = false;
+
   constructor(game: Game) {
     this.game = game;
   }
@@ -37,6 +43,10 @@ export class Part {
 
   // For overriding.
   editPlacedAt(tilePoint: Vector2) {}
+
+  get ender() {
+    return (this.constructor as PartType).ender;
+  }
 
   game: Game;
 
@@ -77,5 +87,7 @@ export class Part {
 
 export interface PartType {
   new (game: Game): Part;
+  base: PartType;
   char: string;
+  ender: boolean;
 }
