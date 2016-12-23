@@ -12,6 +12,10 @@ export class BrickArt implements Art {
 
   layer = Layer.front;
 
+  get part() {
+    return this.brick;
+  }
+
   get tile() {
     let {burned, burnTime, burnTimeLeft} = this.brick;
     if (burned) {

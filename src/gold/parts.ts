@@ -16,14 +16,20 @@ export let arts = {
 export class Parts {
 
   static tileArts = new Map<PartType, (part: Part) => Art>([
-    [Bar, part => arts.Bar],
+    [Bar, artMaker(arts.Bar)],
     [Brick, part => new BrickArt(part as Brick)],
     [Enemy, part => new RunnerArt(part as Runner, new Vector2(15, 14))],
     [Hero, part => new RunnerArt(part as Runner, new Vector2(9, 14))],
-    [Ladder, part => arts.Ladder], 
-    [None, part => arts.None],
-    [Steel, part => arts.Steel],
+    [Ladder, artMaker(arts.Ladder)], 
+    [None, artMaker(arts.None)],
+    [Steel, artMaker(arts.Steel)],
     [Treasure, part => new TreasureArt(part as Treasure)],
   ]);
 
+}
+
+function artMaker(base: {layer: Layer, tile: Vector2}) {
+  return (part: Part): Art => {
+    return {layer: base.layer, part, tile: base.tile};
+  }
 }

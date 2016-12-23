@@ -21,12 +21,15 @@ export enum Layer {
   length,
 }
 
+// TODO Change this to a class, and define part and ender access?
 export interface Art {
 
   // Layer is usually (always?) constant by part type, but it's not a big deal
   // just to replicate.
   // TODO Will layers also exist on 3D, or will it all be z-ordered?
   layer: Layer;
+
+  part: Part;
 
   tile: Vector2;
 

@@ -10,6 +10,10 @@ export class TreasureArt implements Art {
 
   layer = Layer.treasure;
 
+  get part() {
+    return this.treasure;
+  }
+
   get tile() {
     return this.treasure.owner ? goneTile : mainTile;
   }

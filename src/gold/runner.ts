@@ -22,6 +22,10 @@ export class RunnerArt implements Art {
 
   mode = Mode.right;
 
+  get part() {
+    return this.runner;
+  }
+
   runner: Runner;
 
   get tile(): Vector2 {
