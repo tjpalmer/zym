@@ -78,8 +78,9 @@ export class GoldTheme implements Theme {
     if (!this.tilePlanes) {
       this.initTilePlanes(game);
     }
-    // TODO(tjp): Attribute (and uniform??) for graying enders or not.
+    // TODO(tjp): Attribute) for graying enders or not.
     let ender = game.mode == game.edit && game.edit.ender;
+    this.uniforms.state.value = +ender;
     let tileIndices = this.tileIndices;
     let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
@@ -124,9 +125,11 @@ export class GoldTheme implements Theme {
       transparent: true,
       uniforms: {
         map: {value: this.texture},
+        state: {value: 1},
       },
       vertexShader: tileVertexShader,
     });
+    this.uniforms = tileMaterial.uniforms as any as Uniforms;
     // Prototypical tile.
     this.tilePlane = new BufferGeometry();
     let tilePlane = this.tilePlane;
@@ -228,14 +231,30 @@ export class GoldTheme implements Theme {
 
   tilesMesh?: Mesh;
 
+  uniforms: Uniforms;
+
+}
+
+interface Uniforms {
+  state: {value: number};
 }
 
 declare function require(name: string): any;
 
 let tileFragmentShader = `
   uniform sampler2D map;
+  uniform int state;
   varying vec2 vTile;
   varying vec2 vUv;
+
+  void grayify(inout vec3 rgb) {
+    // TODO Better gray?
+    float mean = (rgb.x + rgb.y + rgb.z) / 3.0;
+    rgb = vec3(mean);
+    // Paler to make even gray things look different.
+    rgb += 0.5 * (1.0 - rgb);
+  }
+
   void main() {
     vec2 coord = (
       (vUv + vTile) * vec2(8, 10) + vec2(0, 56)
@@ -243,9 +262,14 @@ let tileFragmentShader = `
     gl_FragColor = texture2D(map, coord);
     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
     if (gl_FragColor.w > 0.0) {
+      // TODO Break state into bits.
+      if (state != 0) {
+        grayify(gl_FragColor.xyz);
+      }
       gl_FragColor.w = 1.0;
     }
   }
+
 `;
 
 let tileVertexShader = `
