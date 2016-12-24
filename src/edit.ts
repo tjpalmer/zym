@@ -114,7 +114,7 @@ export class EditMode extends Mode {
   }
 
   namedEnderTools = new Map(Parts.inventory.filter(type => type.ender).map(
-    type => [type.name.toLowerCase(), type] as [string, PartType])
+    type => [type.base.name.toLowerCase(), type] as [string, PartType])
   );
 
   namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
@@ -152,9 +152,13 @@ export class EditMode extends Mode {
   saveDelay = 10e3;
 
   setToolFromName(name: string) {
-    // TODO If 'ender' active, choose the ender version.
-    console.log('ender', this.ender);
     let tool = this.namedTools.get(name);
+    if (this.ender) {
+      let enderTool = this.namedEnderTools.get(name);
+      if (enderTool) {
+        tool = enderTool;
+      }
+    }
     if (!tool) {
       console.warn(`No such part: ${name}`);
       tool = None;
@@ -201,6 +205,11 @@ export class EditMode extends Mode {
   tool: PartType;
 
   toolbox: Toolbox;
+
+  updateTool() {
+    // TODO For left vs right, base is probably wrong.
+    this.setToolFromName(this.tool.base.name.toLowerCase());
+  }
 
 }
 

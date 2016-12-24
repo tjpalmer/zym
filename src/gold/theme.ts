@@ -78,10 +78,11 @@ export class GoldTheme implements Theme {
     if (!this.tilePlanes) {
       this.initTilePlanes(game);
     }
-    // TODO(tjp): Attribute) for graying enders or not.
+    // TODO Only gray enders, not mains. So maybe no uniform on that.
+    // TODO Except energy blocks might look too much like steel???
     let ender = game.mode == game.edit && game.edit.ender;
     this.uniforms.state.value = +ender;
-    let tileIndices = this.tileIndices;
+    let {tileIndices, tileModes} = this;
     let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
     // Duplicate prototype, translated and tile indexed.
@@ -101,6 +102,10 @@ export class GoldTheme implements Theme {
           tileIndices[k + 0] = currentTileIndices.x;
           tileIndices[k + 1] = currentTileIndices.y;
         }
+        for (let n = 0; n < tileModes.length; ++n) {
+          // Break state into bits.
+          tileModes[n] = +part.type.ender;
+        }
         tilePlanes.merge(tilePlane, 6 * partIndex);
         tilePlane.translate(-part.point.x, -part.point.y, 0);
         ++partIndex;
@@ -109,6 +114,7 @@ export class GoldTheme implements Theme {
     // TODO What if the amount varies? Need to back fill with nones?
     // For some reason, needsUpdate is missing on attributes, so go any here.
     let attributes: any = tilePlanes.attributes;
+    attributes.mode.needsUpdate = true;
     attributes.position.needsUpdate = true;
     attributes.tile.needsUpdate = true;
   }
@@ -140,6 +146,7 @@ export class GoldTheme implements Theme {
       8, 0, 0, 8, 10, 0, 0, 10, 0,
     ]), 3));
     // Tile map offsets, repeated.
+    tilePlane.addAttribute('mode', new BufferAttribute(this.tileModes, 1));
     tilePlane.addAttribute('tile', new BufferAttribute(this.tileIndices, 2));
     tilePlane.addAttribute('uv', new BufferAttribute(new Float32Array([
       // Uv are 2D.
@@ -182,6 +189,7 @@ export class GoldTheme implements Theme {
     // Fit about 20 tiles at vertically, but use integer scaling for kindness.
     // Base this on screen size rather than window size, presuming that screen
     // size implies what looks reasonable for ui elements.
+    // TODO Grayed versions, too! Go through GL so we get the same shaders?
     let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
     let buttonHeight = `${scale * Level.tileSize.y}px`;
     for (let button of toolbox.getButtons()) {
@@ -225,6 +233,8 @@ export class GoldTheme implements Theme {
 
   tileIndices = new Uint8Array(2 * 6);
 
+  tileModes = new Uint8Array(6);
+
   tilePlane?: BufferGeometry;
 
   tilePlanes?: BufferGeometry;
@@ -244,15 +254,16 @@ declare function require(name: string): any;
 let tileFragmentShader = `
   uniform sampler2D map;
   uniform int state;
+  varying float vMode;
   varying vec2 vTile;
   varying vec2 vUv;
 
   void grayify(inout vec3 rgb) {
     // TODO Better gray?
     float mean = (rgb.x + rgb.y + rgb.z) / 3.0;
-    rgb = vec3(mean);
+    rgb = 0.5 * (rgb + vec3(mean));
     // Paler to make even gray things look different.
-    rgb += 0.5 * (1.0 - rgb);
+    rgb += 0.6 * (1.0 - rgb);
   }
 
   void main() {
@@ -262,8 +273,8 @@ let tileFragmentShader = `
     gl_FragColor = texture2D(map, coord);
     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
     if (gl_FragColor.w > 0.0) {
-      // TODO Break state into bits.
-      if (state != 0) {
+      // TODO Break mode (in vert shader?) and state into bits.
+      if (vMode != 0.0) {
         grayify(gl_FragColor.xyz);
       }
       gl_FragColor.w = 1.0;
@@ -273,11 +284,14 @@ let tileFragmentShader = `
 `;
 
 let tileVertexShader = `
+  attribute float mode;
   attribute vec2 tile;
+  varying float vMode;
   varying vec2 vTile;
   varying vec2 vUv;
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vMode = mode;
     vUv = uv;
     vTile = tile;
   }

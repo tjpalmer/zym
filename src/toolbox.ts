@@ -58,9 +58,8 @@ export class Toolbox {
 
   handleChangedCheckbox(checkbox: HTMLInputElement) {
     let name = this.getName(checkbox.closest('label') as HTMLElement);
-    console.log('changed', name, checkbox.checked);
     if (name == 'ender') {
-      console.log('handler ender change');
+      this.edit.updateTool();
     }
   }
 
