@@ -21,12 +21,14 @@ export class Toolbox {
       input.addEventListener('change', ({target}) => {
         let input = target as HTMLInputElement;
         let label = input.closest('label') as HTMLElement;
-        if (input.checked) {
-          label.classList.add('selected');
-        } else {
-          label.classList.remove('selected');
+        if (!label.classList.contains('disabled')) {
+          if (input.checked) {
+            label.classList.add('selected');
+          } else {
+            label.classList.remove('selected');
+          }
+          this.handleChangedCheckbox(input);
         }
-        this.handleChangedCheckbox(input);
       });
     }
     // TODO Other panels.
