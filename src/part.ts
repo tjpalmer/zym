@@ -16,6 +16,10 @@ export class Part {
 
   static ender = false;
 
+  static make(game: Game) {
+    return new this(game);
+  }
+
   constructor(game: Game) {
     this.game = game;
   }
@@ -43,10 +47,6 @@ export class Part {
 
   // For overriding.
   editPlacedAt(tilePoint: Vector2) {}
-
-  get ender() {
-    return (this.constructor as PartType).ender;
-  }
 
   game: Game;
 
@@ -79,6 +79,10 @@ export class Part {
 
   surface = false;
 
+  get type() {
+    return this.constructor as PartType;
+  }
+
   update() {}
 
   workPoint = new Vector2();
@@ -86,8 +90,18 @@ export class Part {
 }
 
 export interface PartType {
-  new (game: Game): Part;
+
   base: PartType;
+
   char: string;
+
   ender: boolean;
+
+  // Use instead of new, so we can return base types.
+  make(game: Game): Part;
+
+  name: string;
+
+  // Don't use new. Use make. It just helps TypeScript know we're a class.
+  new (game: Game): Part;
 }

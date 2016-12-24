@@ -43,8 +43,7 @@ export class EditMode extends Mode {
     }
     level.tiles.set(tilePoint, tool);
     if (tool) {
-      // TODO Some static interface to avoid construction?
-      new tool(this.game).editPlacedAt(tilePoint);
+      tool.make(this.game).editPlacedAt(tilePoint);
     }
     level.updateStage(this.game);
   }
@@ -70,6 +69,11 @@ export class EditMode extends Mode {
     } else {
       classes.add('disabled');
     }
+  }
+
+  get ender() {
+    // Check toolbox existence because this gets called on construction, too.
+    return !!this.toolbox && this.toolbox.getState('ender');
   }
 
   erasing = false;
@@ -109,9 +113,13 @@ export class EditMode extends Mode {
     this.editState.pushHistory();
   }
 
-  namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(type => [
-    type.name.toLowerCase(), type
-  ] as [string, PartType]));
+  namedEnderTools = new Map(Parts.inventory.filter(type => type.ender).map(
+    type => [type.name.toLowerCase(), type] as [string, PartType])
+  );
+
+  namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
+    type => [type.name.toLowerCase(), type] as [string, PartType])
+  );
 
   play() {
     this.game.mode = this.game.mode == this.game.play ?
@@ -144,6 +152,8 @@ export class EditMode extends Mode {
   saveDelay = 10e3;
 
   setToolFromName(name: string) {
+    // TODO If 'ender' active, choose the ender version.
+    console.log('ender', this.ender);
     let tool = this.namedTools.get(name);
     if (!tool) {
       console.warn(`No such part: ${name}`);

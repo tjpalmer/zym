@@ -40,10 +40,15 @@ Parts.inventory.filter(
       return part;
     }
     static char = String.fromCodePoint(char);
+    // TODO `make` that attends to edit or play mode for ender or base?
+    // TODO Or just reference game dynamically in parts?
     static ender = true;
   }
   // Add it to things.
   Parts.inventory.push(Ender);
   Parts.charParts.set(Ender.char, Ender);
-  console.log(part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name);
+  // TODO Comment out log.
+  console.log(
+    part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name
+  );
 });

@@ -156,7 +156,7 @@ export class Level {
         // the right place.
         if (reset || !(oldPart instanceof tile)) {
           // Needs to be a new part.
-          part = new tile(game);
+          part = tile.make(game);
           theme.buildArt(part);
           part.point.set(j, i).multiply(Level.tileSize);
           stage.parts[k] = part;

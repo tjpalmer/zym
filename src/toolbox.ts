@@ -26,6 +26,7 @@ export class Toolbox {
         } else {
           label.classList.remove('selected');
         }
+        this.handleChangedCheckbox(input);
       });
     }
     // TODO Other panels.
@@ -43,9 +44,24 @@ export class Toolbox {
     return [...button.classList].filter(name => name != 'selected')[0];
   }
 
+  getState(name: string) {
+    return (
+      this.container.querySelector(`.${name} input`) as HTMLInputElement
+    ).checked;
+  }
+
   getToolButtons(): Array<HTMLElement> {
     return [...this.container.querySelectorAll('input[name="tool"]')].map(
-      input => input.closest('label') as HTMLElement);
+      input => input.closest('label') as HTMLElement
+    );
+  }
+
+  handleChangedCheckbox(checkbox: HTMLInputElement) {
+    let name = this.getName(checkbox.closest('label') as HTMLElement);
+    console.log('changed', name, checkbox.checked);
+    if (name == 'ender') {
+      console.log('handler ender change');
+    }
   }
 
   markSelected() {

@@ -54,10 +54,10 @@ export class GoldTheme implements Theme {
   }
 
   buildArt(part: Part) {
-    let makeArt = Parts.tileArts.get((part.constructor as PartType).base);
+    let makeArt = Parts.tileArts.get(part.type.base);
     if (!makeArt) {
       // This makes it easier to deal with problems up front.
-      throw new Error(`No art for part type ${part.constructor.name}`);
+      throw new Error(`No art for part type ${part.type.name}`);
     }
     // Mark art non-optional so this would catch the error?
     part.art = makeArt(part);
@@ -78,6 +78,8 @@ export class GoldTheme implements Theme {
     if (!this.tilePlanes) {
       this.initTilePlanes(game);
     }
+    // TODO(tjp): Attribute (and uniform??) for graying enders or not.
+    let ender = game.mode == game.edit && game.edit.ender;
     let tileIndices = this.tileIndices;
     let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
@@ -191,7 +193,7 @@ export class GoldTheme implements Theme {
       if (!type) {
         throw new Error(`Unknown type: ${name}`);
       }
-      let part = new type(game);
+      let part = type.make(game);
       this.buildArt(part);
       // Now calculate the pixel point.
       let point = (part.art as Art).tile.clone();
