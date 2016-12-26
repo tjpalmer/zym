@@ -17,6 +17,10 @@ export class World {
         return new Level().decode(JSON.parse(levelString));
       }
     }).filter(level => level) as Array<Level>;
+    if (!this.levels.length) {
+      // Always keep one level.
+      this.levels.push(new Level());
+    }
     this.name = encoded.name;
     return this;
   }
