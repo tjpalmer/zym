@@ -69,12 +69,12 @@ export class RunnerArt implements Art {
         }
         // Frame.
         let didMove = !!(moved.x || moved.y);
-        let stepTime = 1/12 / speed;
+        let stepTime = 1/15 / speed;
         let nextTime =
-          stage.time > this.lastTime + 1/10 || stage.time < this.lastTime;
+          stage.time > this.lastTime + stepTime || stage.time < this.lastTime;
         if (nextTime && didMove) {
           this.lastTime = stage.time;
-          this.frame = (this.frame + 1) % 5;
+          this.frame = (this.frame + 1) % frames.length;
         }
       } else {
         // Hands up to fall.
@@ -85,7 +85,7 @@ export class RunnerArt implements Art {
     let {workPoint} = this;
     workPoint.copy(this.base);
     workPoint.x += this.mode;
-    workPoint.y -= this.frame;
+    workPoint.y -= frames[this.frame];
     return workPoint;
   }
 
@@ -100,3 +100,6 @@ enum Mode {
   swingLeft = 3,
   swingRight = 2,
 }
+
+// The actual frames from the source image require back and forth.
+let frames = [0, 1, 2, 1, 0, 3, 4, 3];
