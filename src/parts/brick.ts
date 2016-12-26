@@ -31,7 +31,9 @@ export class Brick extends Part {
     // If so, disallow burning, so we can't get multiple in the same spot.
     // See if some visual or tutorial helps to convey the rule.
     // Uses workPoint.
-    let treasureAbove = this.partAt(4, 11, part => part instanceof Treasure);
+    let treasureAbove = this.partAt(
+      4, 11, part => part instanceof Treasure || part.solid(hero!)
+    );
     // Now use workPoint manually.
     let {workPoint} = this;
     workPoint.copy(this.point);
