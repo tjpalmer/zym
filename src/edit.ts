@@ -153,18 +153,12 @@ export class EditMode extends Mode {
   saveDelay = 10e3;
 
   setToolFromName(name: string) {
-    let tool = this.namedTools.get(name);
-    if (this.ender) {
-      let enderTool = this.namedEnderTools.get(name);
-      if (enderTool) {
-        tool = enderTool;
-      }
-    }
+    let tool = this.toolFromName(name);
     if (!tool) {
       console.warn(`No such part: ${name}`);
-      tool = None;
+      this.tool = None;
     }
-    this.tool = tool;
+    this.tool = tool!;
   }
 
   showCommand(command: string, shown: boolean) {
@@ -204,6 +198,17 @@ export class EditMode extends Mode {
 
   // Default gets set from HTML settings.
   tool: PartType;
+
+  toolFromName(name: string) {
+    let tool = this.namedTools.get(name);
+    if (this.ender) {
+      let enderTool = this.namedEnderTools.get(name);
+      if (enderTool) {
+        tool = enderTool;
+      }
+    }
+    return tool;
+  }
 
   toolbox: Toolbox;
 

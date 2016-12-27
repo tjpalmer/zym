@@ -169,7 +169,7 @@ export class Level {
         let part: Part;
         // If it's the same type as what we already had, presume it's already in
         // the right place.
-        if (reset || !(oldPart instanceof tile)) {
+        if (reset || !oldPart || oldPart.type != tile) {
           // Needs to be a new part.
           part = tile.make(game);
           theme.buildArt(part);

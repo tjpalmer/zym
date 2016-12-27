@@ -9,13 +9,13 @@ window.onload = main;
 declare function require(name: string): any;
 
 function main() {
-  let theme = new GoldTheme();
   let game = new Game(window.document.body);
+  let theme = new GoldTheme(game);
   game.theme = theme;
   // Fill in even empty/none parts before the first drawing, so uv and such get
   // in there.
   game.level.updateStage(game);
-  theme.handle(game);
+  theme.handle();
   // Now kick off the display.
   game.render();
 }

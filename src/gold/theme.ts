@@ -1,8 +1,9 @@
 import {Parts} from './';
 import {Level, Part, PartType, Game, Theme} from '../';
+import {None} from '../parts';
 import {
-  BufferAttribute, BufferGeometry, Mesh, NearestFilter, ShaderMaterial, Texture,
-  Vector2,
+  BufferAttribute, BufferGeometry, Mesh, NearestFilter, PlaneBufferGeometry,
+  Scene, ShaderMaterial, Texture, Vector2, WebGLRenderTarget,
 } from 'three';
 
 export enum Layer {
@@ -37,7 +38,8 @@ export interface Art {
 
 export class GoldTheme implements Theme {
 
-  constructor() {
+  constructor(game: Game) {
+    this.game = game;
     let image = new Image();
     image.src = require('./blocks.png');
     this.image = image;
@@ -74,9 +76,20 @@ export class GoldTheme implements Theme {
     });
   }
 
-  handle(game: Game) {
+  ender = false;
+
+  enderImage: HTMLCanvasElement;
+
+  game: Game;
+
+  handle() {
+    let {game} = this;
+    if (game.edit.ender != this.ender) {
+      this.ender = game.edit.ender;
+      this.paintPanels();
+    }
     if (!this.tilePlanes) {
-      this.initTilePlanes(game);
+      this.initTilePlanes();
     }
     // TODO Only gray enders, not mains. So maybe no uniform on that.
     // TODO Except energy blocks might look too much like steel???
@@ -121,9 +134,10 @@ export class GoldTheme implements Theme {
 
   image: HTMLImageElement;
 
-  initTilePlanes(game: Game) {
+  initTilePlanes() {
+    let {game} = this;
     // Panels.
-    this.preparePanels(game);
+    this.preparePanels();
     // Tiles.
     let tileMaterial = new ShaderMaterial({
       depthTest: false,
@@ -165,12 +179,43 @@ export class GoldTheme implements Theme {
     // Add to stage.
     this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
     game.scene.add(this.tilesMesh);
-    game.redraw = () => this.handle(game);
+    game.redraw = () => this.handle();
   }
 
   layers = new Array<Array<Part | undefined>>();
 
   level = new Level();
+
+  paintPanels() {
+    let {game} = this;
+    let {toolbox} = game.edit;
+    for (let button of toolbox.getButtons()) {
+      // Get the art for this tool. TODO Simplify this process?
+      let name = toolbox.getName(button);
+      let type = game.edit.toolFromName(name);
+      if (!type || type == None) {
+        // We don't draw a standard tile for this one.
+        continue;
+      }
+      if (!type) {
+        throw new Error(`Unknown type: ${name}`);
+      }
+      let part = type.make(game);
+      this.buildArt(part);
+      // Now calculate the pixel point.
+      let point = (part.art as Art).tile.clone();
+      point.y = Level.tileCount.y - point.y - 1;
+      point.multiply(Level.tileSize);
+      // Now draw to our canvas and to the button background.
+      let canvas = button.querySelector('canvas')!;
+      let context = canvas.getContext('2d')!;
+      let image = type.ender ? this.enderImage : this.image;
+      context.drawImage(
+        image, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
+        0, 0, canvas.width, canvas.height,
+      );
+    }
+  }
 
   prepareImage(image: HTMLImageElement) {
     // Make the image POT (power-of-two) sized.
@@ -183,7 +228,8 @@ export class GoldTheme implements Theme {
     return canvas;
   }
 
-  preparePanels(game: Game) {
+  preparePanels() {
+    let {game} = this;
     let {toolbox} = game.edit;
     // let buttonHeight = '1em';
     // Fit about 20 tiles at vertically, but use integer scaling for kindness.
@@ -193,23 +239,13 @@ export class GoldTheme implements Theme {
     let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
     let buttonHeight = `${scale * Level.tileSize.y}px`;
     for (let button of toolbox.getButtons()) {
-      // Get the art for this tool. TODO Simplify this process?
       let name = toolbox.getName(button);
       let type = game.edit.namedTools.get(name);
-      if (!type || name == 'none') {
+      if (!type || type == None) {
         // We don't draw a standard tile for this one.
         button.style.height = buttonHeight;
         continue;
       }
-      if (!type) {
-        throw new Error(`Unknown type: ${name}`);
-      }
-      let part = type.make(game);
-      this.buildArt(part);
-      // Now calculate the pixel point.
-      let point = (part.art as Art).tile.clone();
-      point.y = Level.tileCount.y - point.y - 1;
-      point.multiply(Level.tileSize);
       // Now make a canvas to draw to.
       let canvas = document.createElement('canvas');
       canvas.width = Level.tileSize.x;
@@ -219,13 +255,59 @@ export class GoldTheme implements Theme {
       (canvas.style as any).imageRendering = 'pixelated';
       canvas.style.margin = 'auto';
       canvas.style.height = buttonHeight;
-      let context = canvas.getContext('2d')!;
-      // Now draw to our canvas and to the button background.
-      context.drawImage(
-        this.image, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
-        0, 0, canvas.width, canvas.height,
-      );
       button.appendChild(canvas);
+    }
+    this.prepareVariations();
+    this.paintPanels();
+  }
+
+  prepareVariations() {
+    let {game} = this;
+    // TODO Abstract some render target -> canvas?
+    let scaled = this.texture.image as HTMLImageElement;
+    let material: ShaderMaterial | undefined = undefined;
+    let target = new WebGLRenderTarget(scaled.width, scaled.height);
+    try {
+      let scene = new Scene();
+      material = new ShaderMaterial({
+        fragmentShader: enderFragmentShader,
+        uniforms: {map: {value: this.texture}},
+        vertexShader: tileVertexShader,
+      });
+      let plane = new PlaneBufferGeometry(this.image.width, this.image.height);
+      plane.translate(this.image.width / 2, this.image.height / 2, 0);
+      scene.add(new Mesh(plane, material));
+      this.texture.flipY = false;
+      try {
+        game.renderer.render(scene, game.camera, target);
+      } finally {
+        this.texture.flipY = true;
+        this.texture.needsUpdate = true;
+        plane.dispose();
+      }
+      let enderImage = document.createElement('canvas');
+      enderImage.width = this.image.width;
+      enderImage.height = this.image.height;
+      let context = enderImage.getContext('2d')!;
+      let data = new Uint8Array(4 * enderImage.width * enderImage.height);
+      game.renderer.readRenderTargetPixels(
+        target, 0, 0, this.image.width, this.image.height, data
+      );
+      let imageData =
+        context.createImageData(enderImage.width, enderImage.height);
+      imageData.data.set(data as any);
+      context.putImageData(imageData, 0, 0);
+      // {  // Show the ender image for debugging.
+      //   enderImage.style.position = 'absolute';
+      //   enderImage.style.zIndex = '100';
+      //   window.document.body.appendChild(enderImage);
+      // }
+      this.enderImage = enderImage;
+    } finally {
+      if (material) {
+        material.dispose()
+      }
+      target.dispose();
     }
   }
 
@@ -251,13 +333,7 @@ interface Uniforms {
 
 declare function require(name: string): any;
 
-let tileFragmentShader = `
-  uniform sampler2D map;
-  uniform int state;
-  varying float vMode;
-  varying vec2 vTile;
-  varying vec2 vUv;
-
+let grayify = `
   void grayify(inout vec3 rgb) {
     // TODO Better gray?
     float mean = (rgb.x + rgb.y + rgb.z) / 3.0;
@@ -265,6 +341,32 @@ let tileFragmentShader = `
     // Paler to make even gray things look different.
     rgb += 0.6 * (1.0 - rgb);
   }
+`;
+
+let enderFragmentShader = `
+  uniform sampler2D map;
+  varying vec2 vUv;
+
+  ${grayify}
+
+  void main() {
+    gl_FragColor = texture2D(map, vUv);
+    gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
+    if (gl_FragColor.w > 0.0) {
+      grayify(gl_FragColor.xyz);
+      gl_FragColor.w = 1.0;
+    }
+  }
+`;
+
+let tileFragmentShader = `
+  uniform sampler2D map;
+  uniform int state;
+  varying float vMode;
+  varying vec2 vTile;
+  varying vec2 vUv;
+
+  ${grayify}
 
   void main() {
     vec2 coord = (
@@ -280,7 +382,6 @@ let tileFragmentShader = `
       gl_FragColor.w = 1.0;
     }
   }
-
 `;
 
 let tileVertexShader = `
