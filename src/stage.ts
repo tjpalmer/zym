@@ -1,5 +1,5 @@
 import {Game, Grid, Level, Part} from './';
-import {Hero, Steel} from './parts';
+import {Hero, Steel, Treasure} from './parts';
 import {Vector2} from 'three';
 
 export class Stage {
@@ -39,6 +39,8 @@ export class Stage {
   edgeLeft = new Array<Array<Part>>();
 
   edgeRight = new Array<Array<Part>>();
+
+  ending = false;
 
   game: Game;
 
@@ -136,6 +138,8 @@ export class Stage {
     }
     // TODO Maybe separate constrain step?
   }
+
+  treasureCount = 0;
 
   walkGrid(point: Vector2, handle: () => void) {
     let {workPoint} = this;

@@ -124,10 +124,11 @@ export class EditMode extends Mode {
   play() {
     this.game.mode = this.game.mode == this.game.play ?
       this.game.edit : this.game.play;
+    this.game.level.updateStage(this.game, true);
     let isEdit = this.game.mode == this.game.edit;
     if (isEdit) {
-      // Reset on stop.
-      this.game.level.updateStage(this.game, true);
+      // Unpause on stop, so the characters can react.
+      // TODO Is this doing the right thing?
       if (this.game.play.paused) {
         // TODO Activate function on modes for general handling?
         this.game.play.togglePause();

@@ -1,5 +1,5 @@
 import {Game, Grid, Id, Part, PartType, createId} from './';
-import {Hero, None, Parts} from './parts';
+import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
 
 export class World {
@@ -148,12 +148,23 @@ export class Level {
 
   // For use from the editor.
   updateStage(game: Game, reset = false) {
+    let play = game.mode == game.play;
     let stage = game.stage;
     let theme = game.theme;
+    if (reset) {
+      stage.ending = false;
+    }
     stage.hero = undefined;
+    stage.treasureCount = 0;
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
         let tile = this.tiles.items[k];
+        // Handle enders for play mode.
+        if (play && tile.ender) {
+          // TODO Need a time for transition animation?
+          tile = stage.ending ? tile.base : None;
+        }
+        // Build a new part if needed.
         let oldPart = stage.parts[k];
         let part: Part;
         // If it's the same type as what we already had, presume it's already in
@@ -173,6 +184,8 @@ export class Level {
         }
         if (part instanceof Hero) {
           stage.hero = part;
+        } else if (part instanceof Treasure) {
+          ++stage.treasureCount;
         }
       }
     }

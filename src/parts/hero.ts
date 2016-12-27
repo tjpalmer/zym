@@ -31,6 +31,10 @@ export class Hero extends Runner {
 
   take(treasure: Treasure) {
     this.treasureCount += 1;
+    if (this.treasureCount == this.game.stage.treasureCount) {
+      this.game.stage.ending = true;
+      this.game.level.updateStage(this.game);
+    }
     return true;
   }
 
