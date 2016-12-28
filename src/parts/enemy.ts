@@ -195,6 +195,13 @@ export class Enemy extends Runner {
         treasure.point.y += 10;
       }
     }
+    let hero = this.game.stage.hero;
+    if (hero) {
+      this.workPoint.copy(this.point).add(this.workPoint2.set(4, 5));
+      if (hero.contains(this.workPoint)) {
+        hero.dead = true;
+      }
+    }
     super.update();
   }
 

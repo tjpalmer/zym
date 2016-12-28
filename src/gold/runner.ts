@@ -5,6 +5,9 @@ import {Vector2} from 'three';
 export class RunnerArt implements Art {
 
   constructor(runner: Runner, tile: Vector2) {
+    if (runner.type == Enemy) {
+      this.layer = Layer.enemy;
+    }
     this.runner = runner;
     this.base = tile;
   }

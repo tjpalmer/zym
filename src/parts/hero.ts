@@ -9,8 +9,14 @@ export class Hero extends Runner {
   carried = true;
 
   choose() {
-    this.processAction(this.game.control);
+    let {control: action} = this.game;
+    if (this.dead) {
+      action.left = action.right = action.up = action.down = false;
+    }
+    this.processAction(action);
   }
+
+  dead = false;
 
   editPlacedAt(tilePoint: Vector2) {
     let game = this.game;
