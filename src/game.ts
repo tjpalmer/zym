@@ -138,6 +138,8 @@ export class Game {
   render() {
     // Prep next frame first for best fps.
     requestAnimationFrame(() => this.render());
+    // Handle input.
+    this.control.update();
     // Render stage.
     this.mode.tick();
     if (this.redraw) {

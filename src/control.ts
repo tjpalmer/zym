@@ -110,6 +110,45 @@ export class Control extends RunnerAction {
     }
   }
 
+  readPad(pad: Gamepad) {
+    let {axes, buttons} = pad;
+    this.burnLeft =
+      buttons[0].pressed || buttons[2].pressed || buttons[4].pressed ||
+      buttons[6].pressed;
+    this.burnRight =
+      buttons[1].pressed || buttons[3].pressed || buttons[5].pressed ||
+      buttons[7].pressed;
+    this.down =
+      axes[1] > axisEdge || axes[3] > axisEdge || buttons[13].pressed;
+    this.left =
+      axes[0] < -axisEdge || axes[2] < -axisEdge || buttons[14].pressed;
+    this.right =
+      axes[0] > axisEdge || axes[2] > axisEdge || buttons[15].pressed;
+    this.up =
+      // Up is negative.
+      axes[1] < -axisEdge || axes[3] < -axisEdge || buttons[12].pressed;
+    // Change trackers.
+    let enter = buttons[8].pressed;
+    if (enter != this.enter) {
+      this.enter = enter;
+      this.onChange('enter');
+    }
+    let pause = buttons[9].pressed;
+    if (pause != this.pause) {
+      this.pause = pause;
+      this.onChange('pause');
+    }
+  }
+
   pause = false;
 
+  update() {
+    let pads = window.navigator.getGamepads();
+    if (pads && pads.length > 0 && pads[0] && pads[0].mapping == 'standard') {
+      this.readPad(pads[0]);
+    }
+  }
+
 }
+
+let axisEdge = 0.5;
