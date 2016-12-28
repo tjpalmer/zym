@@ -204,11 +204,12 @@ export class Runner extends Part {
         move.y = support.move.y;
       }
       if (this.carried) {
-        // Allow being carried.
+        // TODO Allow being carried.
         // TODO This includes attempted but constrained move.
-        // TODO How to know final move?
+        // TODO How to know final move? Could try a part.moved ...
         // TODO Intermediate constraints???
-        move.x += support.move.x;
+        // TODO When this was active, a guy could walk toward me in pit.
+        // TODO move.x += support.move.x;
       }
     }
     point.add(move);
