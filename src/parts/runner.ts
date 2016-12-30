@@ -8,6 +8,10 @@ export class Runner extends Part {
 
   climbing = false;
 
+  die() {
+    // For overriding.
+  }
+
   encased() {
     let isSolid = (part: Part) => part.solid(this) && part != this;
     return (
@@ -129,7 +133,7 @@ export class Runner extends Part {
     }
     if (this.encased()) {
       // This could happen if a brick just enclosed on part of us.
-      // TODO Die.
+      this.die();
     } else if (support) {
       let wallEdge: Edge;
       // Prioritize vertical for enemy ai reasons, also because rarer options.

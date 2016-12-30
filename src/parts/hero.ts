@@ -10,7 +10,7 @@ export class Hero extends Runner {
 
   choose() {
     let {control: action} = this.game;
-    if (this.dead) {
+    if (this.game.stage.ended) {
       action.left = action.right = action.up = action.down = false;
     }
     this.processAction(action);
@@ -21,6 +21,7 @@ export class Hero extends Runner {
   die() {
     if (!this.dead) {
       this.dead = true;
+      this.game.stage.ended = true;
       this.game.play.showReport('Maybe next time.');
     }
   }
@@ -49,6 +50,22 @@ export class Hero extends Runner {
       this.game.level.updateStage(this.game);
     }
     return true;
+  }
+
+  update() {
+    // Update everything.
+    super.update();
+    if (!this.game.stage.ended) {
+      // See if we won or lost.
+      let {point: {y}} = this;
+      if (y <= -10) {
+        this.die();
+      }
+      if (this.game.stage.ending && y >= Level.pixelCount.y) {
+        this.game.stage.ended = true;
+        this.game.play.showReport('Level complete!');
+      }
+    }
   }
 
 }

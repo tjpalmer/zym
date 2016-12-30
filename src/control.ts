@@ -69,13 +69,28 @@ export class Control extends RunnerAction {
 
   onDown(fieldName: string) {
     switch (fieldName) {
+      case 'burnLeft':
+      case 'burnRight': {
+        // TODO Better mode management for input handling.
+        if (this.game.stage.ended) {
+          if (this.game.mode == this.game.play) {
+            this.game.edit.togglePlay();
+          }
+          this.game.hideDialog();
+        }
+        // TODO Start on burn buttons, too? Just don't want it to actually burn!
+        break;
+      }
       case 'enter': {
-        this.game.edit.play();
+        this.game.edit.togglePlay();
         this.game.hideDialog();
         break;
       }
       case 'escape': {
         // TODO Some convenience on this.
+        if (this.game.mode == this.game.play) {
+          this.game.edit.togglePlay();
+        }
         let pane = this.game.body.querySelector('.pane') as HTMLElement;
         let style = window.getComputedStyle(pane);
         if (style.display == 'none') {
@@ -93,22 +108,27 @@ export class Control extends RunnerAction {
     }
   }
 
+  onField(field: string, down: boolean) {
+    let old = (this as any)[field];
+    if (old != down) {
+      (this as any)[field] = down;
+      if ((this as any)[field] != null) {
+        (this as any)[field] = down;
+      }
+      if (down) {
+        this.onDown(field);
+      }
+      // console.log(`Set ${field} to ${down}`);
+    }
+  }
+
   onKey(event: KeyboardEvent, down: boolean) {
     // console.log(event.key);
     let field = this.keyFields[event.key];
     if (field) {
-      let old = (this as any)[field];
-      if (old != down) {
-        (this as any)[field] = down;
-        if ((this.keyAction as any)[field] != null) {
-          (this.keyAction as any)[field] = down;
-        }
-        if (down) {
-          this.onDown(field);
-        }
-      }
+      (this.keyAction as any)[field] = down;
+      this.onField(field, down);
       event.preventDefault();
-      // console.log(`Set ${field} to ${down}`);
     }
   }
 
@@ -133,27 +153,15 @@ export class Control extends RunnerAction {
       // Up is negative.
       axes[1] < -axisEdge || axes[3] < -axisEdge || buttons[12].pressed;
     // Apply either/or.
-    this.burnLeft = this.keyAction.burnLeft || action.burnLeft;
-    this.burnRight = this.keyAction.burnRight || action.burnRight;
+    this.onField('burnLeft', this.keyAction.burnLeft || action.burnLeft);
+    this.onField('burnRight', this.keyAction.burnRight || action.burnRight);
     this.down = this.keyAction.down || action.down;
     this.left = this.keyAction.left || action.left;
     this.right = this.keyAction.right || action.right;
     this.up = this.keyAction.up || action.up;
     // Change trackers.
-    let enter = buttons[8].pressed;
-    if (enter != this.enter) {
-      this.enter = enter;
-      if (enter) {
-        this.onDown('enter');
-      }
-    }
-    let pause = buttons[9].pressed;
-    if (pause != this.pause) {
-      this.pause = pause;
-      if (pause) {
-        this.onDown('pause');
-      }
-    }
+    this.onField('enter', buttons[8].pressed);
+    this.onField('pause', buttons[9].pressed);
   }
 
   pause = false;

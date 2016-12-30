@@ -7,7 +7,7 @@ export class PlayMode extends Mode {
     super(game);
     this.onClick('pause', () => this.togglePause());
     // TODO Different handling (and visual display) of stop when really playing? 
-    this.onClick('stop', () => this.game.edit.play());
+    this.onClick('stop', () => this.game.edit.togglePlay());
   }
 
   paused = false;

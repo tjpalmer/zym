@@ -40,6 +40,8 @@ export class Stage {
 
   edgeRight = new Array<Array<Part>>();
 
+  ended = false;
+
   ending = false;
 
   game: Game;

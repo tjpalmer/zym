@@ -152,6 +152,7 @@ export class Level {
     let stage = game.stage;
     let theme = game.theme;
     if (reset) {
+      stage.ended = false;
       stage.ending = false;
       stage.time = 0;
     }
@@ -188,6 +189,13 @@ export class Level {
         } else if (part instanceof Treasure) {
           ++stage.treasureCount;
         }
+      }
+    }
+    if (reset) {
+      if (!stage.treasureCount) {
+        // Already got them all!
+        stage.ending = true;
+        this.updateStage(game);
       }
     }
     theme.buildDone(game);

@@ -14,7 +14,7 @@ export class EditMode extends Mode {
     // Buttons.
     this.commandsContainer =
       body.querySelector('.panel.commands') as HTMLElement;
-    this.onClick('play', () => this.play());
+    this.onClick('play', () => this.togglePlay());
     this.onClick('redo', () => this.editState.redo());
     this.onClick('showLevels', () => this.showLevels());
     this.onClick('undo', () => this.editState.undo());
@@ -121,26 +121,6 @@ export class EditMode extends Mode {
     type => [type.name.toLowerCase(), type] as [string, PartType])
   );
 
-  play() {
-    this.game.mode = this.game.mode == this.game.play ?
-      this.game.edit : this.game.play;
-    this.game.level.updateStage(this.game, true);
-    let isEdit = this.game.mode == this.game.edit;
-    if (isEdit) {
-      // Unpause on stop, so the characters can react.
-      // TODO Is this doing the right thing?
-      if (this.game.play.paused) {
-        // TODO Activate function on modes for general handling?
-        this.game.play.togglePause();
-      }
-    }
-    this.toggleClasses({
-      element: this.game.body,
-      falseClass: 'playMode', trueClass: 'editMode',
-      value: isEdit,
-    });
-  }
-
   saveAll() {
     for (let key in this.editStates) {
       let editState = this.editStates[key];
@@ -194,6 +174,26 @@ export class EditMode extends Mode {
       return;
     }
     return point;
+  }
+
+  togglePlay() {
+    this.game.mode = this.game.mode == this.game.play ?
+      this.game.edit : this.game.play;
+    this.game.level.updateStage(this.game, true);
+    let isEdit = this.game.mode == this.game.edit;
+    if (isEdit) {
+      // Unpause on stop, so the characters can react.
+      // TODO Is this doing the right thing?
+      if (this.game.play.paused) {
+        // TODO Activate function on modes for general handling?
+        this.game.play.togglePause();
+      }
+    }
+    this.toggleClasses({
+      element: this.game.body,
+      falseClass: 'playMode', trueClass: 'editMode',
+      value: isEdit,
+    });
   }
 
   // Default gets set from HTML settings.
