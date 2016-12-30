@@ -103,8 +103,6 @@ export class Runner extends Part {
     return part1.point.y > part2.point.y ? part1 : part2;
   }
 
-  moved = new Vector2();
-
   processAction(action: RunnerAction) {
     // TODO Let changed keys override old ones.
     // TODO Find all actions (and alignments) before moving, for enemies?

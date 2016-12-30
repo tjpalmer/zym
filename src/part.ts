@@ -52,6 +52,8 @@ export class Part {
 
   move = new Vector2();
 
+  moved = new Vector2();
+
   // TODO Switch to using this once we have moving supports (enemies)!!
   partAt(x: number, y: number, keep: (part: Part) => boolean) {
     return (

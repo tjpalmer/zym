@@ -19,7 +19,7 @@ export class Hero extends Runner {
   dead = false;
 
   die() {
-    if (!this.dead) {
+    if (!this.game.stage.ended) {
       this.dead = true;
       this.game.stage.ended = true;
       this.game.play.showReport('Maybe next time.');

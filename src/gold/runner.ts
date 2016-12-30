@@ -72,7 +72,7 @@ export class RunnerArt implements Art {
         }
         // Frame.
         let didMove = !!(moved.x || moved.y);
-        let stepTime = 1/15 / speed;
+        let stepTime = 1/20 / speed;
         let nextTime =
           stage.time > this.lastTime + stepTime || stage.time < this.lastTime;
         if (nextTime && didMove) {
