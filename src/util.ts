@@ -36,3 +36,34 @@ export function createId(byteSize = 16): Id {
   window.crypto.getRandomValues(array);
   return Array.from(array).map(i => i.toString(16)).join('');
 }
+
+export function formatTime(seconds: number) {
+  let sign = Math.sign(seconds) < 0 ? '-' : '';
+  seconds = Math.abs(seconds);
+  // Millis.
+  let millis = seconds - Math.floor(seconds);
+  millis = Math.floor(millis * 1000);
+  // Minutes, because we shouldn't ever get to hours.
+  seconds = Math.floor(seconds);
+  let minutes = Math.floor(seconds / 60);
+  // Seconds.
+  seconds = seconds % 60;
+  // All together.
+  return `${sign}${minutes}:${padZero(seconds, 2)}.${padZero(millis, 3)}`;
+}
+
+export function load(html: string) {
+  let div = window.document.createElement('div');
+  div.innerHTML = html;
+  return div.firstElementChild as HTMLElement;
+}
+
+export function padZero(integer: number, size: number) {
+  let result = '' + integer;
+  if (result.length < size) {
+    // Sloppy overkill.
+    result = `00000000000000000000000${result}`;
+    result = result.slice(-size);
+  }
+  return result;
+}

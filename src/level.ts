@@ -153,6 +153,7 @@ export class Level {
     let theme = game.theme;
     if (reset) {
       stage.ending = false;
+      stage.time = 0;
     }
     stage.hero = undefined;
     stage.treasureCount = 0;

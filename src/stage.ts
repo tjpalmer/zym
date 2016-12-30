@@ -130,7 +130,7 @@ export class Stage {
       part.update();
     }
     // Count time.
-    // TODO Actual time.
+    // TODO Actual time once we do that.
     this.time += 1/60;
     if (this.time > 1e6) {
       // Reset instead of getting out of sane-precision land.
@@ -138,6 +138,9 @@ export class Stage {
     }
     // TODO Maybe separate constrain step?
   }
+
+  // Time in seconds since play start.
+  time = 0;
 
   treasureCount = 0;
 
@@ -169,9 +172,6 @@ export class Stage {
   // Cached for use.
   workPoint = new Vector2();
   workPoint2 = new Vector2();
-
-  // A way to know that a frame has passed.
-  time = 0;
 
 }
 

@@ -1,4 +1,4 @@
-import {Dialog, Game, Level} from '../';
+import {Dialog, Game, Level, load} from '../';
 
 export class Levels implements Dialog {
 
@@ -89,12 +89,6 @@ export class Levels implements Dialog {
 
   private titleBar: HTMLElement;
 
-}
-
-function load(html: string) {
-  let div = window.document.createElement('div');
-  div.innerHTML = html;
-  return div.firstElementChild as HTMLElement;
 }
 
 declare function require(path: string): any;

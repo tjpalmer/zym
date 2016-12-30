@@ -199,7 +199,7 @@ export class Enemy extends Runner {
     if (hero) {
       this.workPoint.copy(this.point).add(this.workPoint2.set(4, 5));
       if (hero.contains(this.workPoint)) {
-        hero.dead = true;
+        hero.die();
       }
     }
     super.update();

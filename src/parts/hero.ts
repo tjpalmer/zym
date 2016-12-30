@@ -18,6 +18,13 @@ export class Hero extends Runner {
 
   dead = false;
 
+  die() {
+    if (!this.dead) {
+      this.dead = true;
+      this.game.play.showReport('Maybe next time.');
+    }
+  }
+
   editPlacedAt(tilePoint: Vector2) {
     let game = this.game;
     let placedIndex = game.level.tiles.index(tilePoint);

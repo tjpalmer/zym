@@ -67,32 +67,27 @@ export class Control extends RunnerAction {
 
   keyAction = new RunnerAction();
 
-  onChange(fieldName: string) {
+  onDown(fieldName: string) {
     switch (fieldName) {
       case 'enter': {
-        if (this.enter) {
-          this.game.edit.play();
-        }
+        this.game.edit.play();
+        this.game.hideDialog();
         break;
       }
       case 'escape': {
-        if (this.escape) {
-          // TODO Some convenience on this.
-          let pane = this.game.body.querySelector('.pane') as HTMLElement;
-          let style = window.getComputedStyle(pane);
-          if (style.display == 'none') {
-            // TODO Generalize to whatever context dialog makes most sense.
-            this.game.edit.showLevels();
-          } else {
-            this.game.hideDialog();
-          }
+        // TODO Some convenience on this.
+        let pane = this.game.body.querySelector('.pane') as HTMLElement;
+        let style = window.getComputedStyle(pane);
+        if (style.display == 'none') {
+          // TODO Generalize to whatever context dialog makes most sense.
+          this.game.edit.showLevels();
+        } else {
+          this.game.hideDialog();
         }
         break;
       }
       case 'pause': {
-        if (this.pause) {
-          this.game.play.togglePause();
-        }
+        this.game.play.togglePause();
         break;
       }
     }
@@ -108,7 +103,9 @@ export class Control extends RunnerAction {
         if ((this.keyAction as any)[field] != null) {
           (this.keyAction as any)[field] = down;
         }
-        this.onChange(field);
+        if (down) {
+          this.onDown(field);
+        }
       }
       event.preventDefault();
       // console.log(`Set ${field} to ${down}`);
@@ -146,12 +143,16 @@ export class Control extends RunnerAction {
     let enter = buttons[8].pressed;
     if (enter != this.enter) {
       this.enter = enter;
-      this.onChange('enter');
+      if (enter) {
+        this.onDown('enter');
+      }
     }
     let pause = buttons[9].pressed;
     if (pause != this.pause) {
       this.pause = pause;
-      this.onChange('pause');
+      if (pause) {
+        this.onDown('pause');
+      }
     }
   }
 

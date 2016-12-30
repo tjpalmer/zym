@@ -1,4 +1,5 @@
 import {Game, Mode} from './';
+import {Report} from './ui';
 
 export class PlayMode extends Mode {
 
@@ -7,11 +8,13 @@ export class PlayMode extends Mode {
     this.onClick('pause', () => this.togglePause());
     // TODO Different handling (and visual display) of stop when really playing? 
     this.onClick('stop', () => this.game.edit.play());
-    // Timer.
-    this.timeElement = game.body.querySelector('.time') as HTMLElement;
   }
 
   paused = false;
+
+  showReport(message: string) {
+    this.game.showDialog(new Report(this.game, message));
+  }
 
   tick() {
     if (this.paused) {
