@@ -139,6 +139,12 @@ export class EditMode extends Mode {
       falseClass: 'playMode', trueClass: 'editMode',
       value: isEdit,
     });
+    if (!isEdit) {
+      // Fix the rotated width.
+      let {timeElement} = this.game.play;
+      timeElement.style.width =
+        `${timeElement.getBoundingClientRect().width}px`;
+    }
   }
 
   saveAll() {

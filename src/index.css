@@ -22,6 +22,7 @@ body {
 .commands .redo,
 .commands .showLevels,
 .status .pause,
+.status .stop,
 .toolbox .none  {
   margin-bottom: 0.5em;
 }
@@ -198,6 +199,14 @@ body {
 
 .status.other {
   visibility: hidden;
+}
+
+.time {
+  transform: rotate(90deg);
+}
+
+.timeBox {
+  display: inline-block;
 }
 
 .toolbox input {
