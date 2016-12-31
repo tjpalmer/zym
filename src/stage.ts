@@ -36,6 +36,10 @@ export class Stage {
     });
   }
 
+  clearGrid() {
+    this.grid.items.forEach(items => items.length = 0);
+  }
+
   edgeLeft = new Array<Array<Part>>();
 
   edgeRight = new Array<Array<Part>>();

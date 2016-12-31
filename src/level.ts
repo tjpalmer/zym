@@ -152,6 +152,8 @@ export class Level {
     let stage = game.stage;
     let theme = game.theme;
     if (reset) {
+      // Had some phantoms on a level. Clear the grid helps?
+      stage.clearGrid();
       stage.ended = false;
       stage.ending = false;
       stage.time = 0;
