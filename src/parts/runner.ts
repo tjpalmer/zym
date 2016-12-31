@@ -8,8 +8,10 @@ export class Runner extends Part {
 
   climbing = false;
 
+  dead = false;
+
   die() {
-    // For overriding.
+    this.dead = true;
   }
 
   encased() {
@@ -59,18 +61,18 @@ export class Runner extends Part {
   }
 
   getClimbable(leftParts: Array<Part>, rightParts: Array<Part>) {
-    let isClimbable = (part: Part) => part.climbable && part != this;
+    let isClimbable = (part: Part) => part.climbable(this) && part != this;
     return leftParts.find(isClimbable) || rightParts.find(isClimbable);
   }
 
   getClimbableDown() {
-    let isClimbable = (part: Part) => part.climbable && part != this;
+    let isClimbable = (part: Part) => part.climbable(this) && part != this;
     let climbableAt = (x: number, y: number) => this.partAt(x, y, isClimbable);
     return climbableAt(midLeft, -1) || climbableAt(midRight, -1);
   }
 
   getClimbableUp() {
-    let isClimbable = (part: Part) => part.climbable && part != this;
+    let isClimbable = (part: Part) => part.climbable(this) && part != this;
     let climbableAt = (x: number, y: number) => this.partAt(x, y, isClimbable);
     return (
       climbableAt(midLeft, 0) || climbableAt(midRight, 0) ||

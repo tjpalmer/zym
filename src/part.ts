@@ -36,7 +36,9 @@ export class Part {
 
   choose() {}
 
-  climbable = false;
+  climbable(other: Part) {
+    return false;
+  }
 
   contains(point: Vector2) {
     let {x, y} = this.point;

@@ -57,7 +57,7 @@ export class RunnerArt implements Art {
         let swinging = support.catches(this.runner);
         if (climbing) {
           let under = this.runner.getSupport();
-          if (under && !under.climbable) {
+          if (under && !under.climbable(this.runner)) {
             climbing = false;
           }
         }

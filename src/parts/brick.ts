@@ -63,6 +63,16 @@ export class Brick extends Part {
     }
   }
 
+  climbable(other: Part) {
+    if (this.burned && other instanceof Enemy) {
+      // Check dazed, so we don't look like we're trying to climb.
+      if (other.catcher == this && !(other.dazed || other.dead)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   solid(other: Part, edge?: Edge) {
     return !this.burned;
   }

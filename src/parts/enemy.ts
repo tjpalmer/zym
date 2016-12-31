@@ -41,10 +41,15 @@ export class Enemy extends Runner {
     return true;
   }
 
-  caught = false;
+  catcher: Part | undefined = undefined;
+
+  caughtTime = 0;
 
   chase() {
-    let {action, moved, state, waitTime} = this;
+    // Using last intended move was for cases of falling not looking like going
+    // down, but it interfered with coming up off ladder then going right into
+    // ladder needing to go up.
+    let {action, moved: lastMove, state, waitTime} = this;
     let {hero, time} = this.game.stage;
     if (hero) {
       let diff = this.workPoint2.copy(hero.point).sub(this.point);
@@ -53,7 +58,7 @@ export class Enemy extends Runner {
       // TODO Unify x and y commonality.
       switch (state.y) {
         case State.chase: {
-          if (Math.sign(diff.y) == -Math.sign(moved.y)) {
+          if (Math.sign(diff.y) == -Math.sign(lastMove.y)) {
             this.state.y = State.wait;
             waitTime.y = time + closeTime;
           } else if (diff.y) {
@@ -69,8 +74,8 @@ export class Enemy extends Runner {
                 // between solids.
                 // TODO Reusing calculations from action processing or physics
                 // TODO could be nice.
-                let climbable =
-                  (x: number) => this.partAt(x, -1, part => part.climbable);
+                let climbable = (x: number) =>
+                  this.partAt(x, -1, part => part.climbable(this));
                 if (climbable(TilePos.midLeft) || climbable(TilePos.midRight)) {
                   // Let climbable trump.
                   solidSurface = undefined;
@@ -100,7 +105,7 @@ export class Enemy extends Runner {
       }
       switch (state.x) {
         case State.chase: {
-          if (Math.sign(diff.x) == -Math.sign(moved.x)) {
+          if (Math.sign(diff.x) == -Math.sign(lastMove.x)) {
             this.state.x = State.wait;
             waitTime.x = time + closeTime;
           } else if (diff.x) {
@@ -110,7 +115,7 @@ export class Enemy extends Runner {
             // TODO An enemy stuck in an ordinary hole should also count as
             // TODO caught!
             let isComrade =
-              (part: Part) => part instanceof Enemy && !part.caught;
+              (part: Part) => part instanceof Enemy && !part.catcher;
             let comradeSurface = this.getSurface(isComrade);
             let noncomradeSurface = this.getSurface(part => !isComrade(part));
             let surface = comradeSurface && !noncomradeSurface;
@@ -138,11 +143,21 @@ export class Enemy extends Runner {
 
   choose() {
     this.clearAction();
-    if (!this.caught) {
+    if (!(this.dazed || this.dead)) {
       this.chase();
+      if (this.catcher) {
+        // Don't go down, and if still caught, go up.
+        this.action.down = false;
+        if (this.feetInCatcher()) {
+          this.action.up = true;
+        }
+      }
     }
     this.avoidBottomless();
     this.processAction(this.action);
+    // Intended move, not actual.
+    this.lastMove.x = this.action.left ? -1 : this.action.right ? 1 : 0;
+    this.lastMove.y = this.action.down ? -1 : this.action.up ? 1 : 0;
   }
 
   clearAction() {
@@ -155,10 +170,24 @@ export class Enemy extends Runner {
     return Math.abs(this.game.stage.time - baseTime) < closeTime;
   }
 
+  dazed = false;
+
+  feetInCatcher() {
+    let isCatcher = (part: Part) => part == this.catcher;
+    return (
+      this.partAt(0, 0, isCatcher) ||
+      this.partAt(0, -1, isCatcher) ||
+      this.partAt(TilePos.right, 0, isCatcher) ||
+      this.partAt(TilePos.right, -1, isCatcher)
+    );
+  }
+
   getOther(x: number, y: number) {
     let isEnemy = (part: Part) => part instanceof Enemy && part != this;
     return this.partAt(x, y, isEnemy);
   }
+
+  lastMove = new Vector2();
 
   solid(other: Part, edge?: Edge): boolean {
     // Enemies block entrance to each other, but not exit from.
@@ -189,9 +218,13 @@ export class Enemy extends Runner {
   update() {
     let catcher = this.getCatcher();
     if (catcher instanceof Brick) {
-      // No moving in bricks.
-      this.move.setScalar(0);
-      this.caught = true;
+      // No horizontal moving in bricks.
+      this.move.x = 0;
+      if (!this.catcher) {
+        this.catcher = catcher;
+        this.caughtTime = this.game.stage.time;
+        this.dazed = true;
+      }
       // Lose treasure if we have one.
       let {treasure} = this;
       if (treasure) {
@@ -201,9 +234,23 @@ export class Enemy extends Runner {
         // Place it above.
         treasure.point.y += 10;
       }
+    } else if (this.catcher) {
+      let isCatcher = (part: Part) => part == this.catcher;
+      if (this.catcher instanceof Brick && !this.catcher.burned) {
+        this.catcher = undefined;
+      } else if (!this.feetInCatcher()) {
+        this.catcher = undefined;
+      }
+    }
+    if (this.dazed) {
+      if (this.caughtTime < this.game.stage.time - 3) {
+        this.dazed = false;
+      } else {
+        this.move.setScalar(0);
+      }
     }
     let hero = this.game.stage.hero;
-    if (hero) {
+    if (hero && !this.dead) {
       this.workPoint.copy(this.point).add(this.workPoint2.set(4, 5));
       if (hero.contains(this.workPoint)) {
         hero.die();

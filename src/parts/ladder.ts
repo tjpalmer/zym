@@ -4,7 +4,9 @@ export class Ladder extends Part {
 
   static char = 'H';
 
-  climbable = true;
+  climbable() {
+    return true;
+  }
 
   surface = true;
 
