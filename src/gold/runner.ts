@@ -54,6 +54,7 @@ export class RunnerArt implements Art {
       let movedX = Math.abs(moved.x) > 1e-1;
       // Mode.
       if (support) {
+        let speedScale = speed.x;
         let swinging = support.catches(this.runner);
         if (climbing) {
           let under = this.runner.getSupport();
@@ -63,6 +64,7 @@ export class RunnerArt implements Art {
         }
         if (climbing) {
           this.mode = Mode.climb;
+          speedScale = speed.y;
         } else {
           if (swinging) {
             this.mode = this.facing < 0 ? Mode.swingLeft : Mode.swingRight;
@@ -72,7 +74,7 @@ export class RunnerArt implements Art {
         }
         // Frame.
         let didMove = !!(moved.x || moved.y);
-        let stepTime = 1/20 / speed;
+        let stepTime = 1/20 / speedScale;
         let nextTime =
           stage.time > this.lastTime + stepTime || stage.time < this.lastTime;
         if (nextTime && didMove) {
