@@ -28,7 +28,7 @@ export class BiggieArt implements Art {
     if (facing < 0) {
       workPoint.x += 1;
     }
-    if (game.mode != game.edit) {
+    if (game.mode != game.edit && !biggie.dead) {
       let didMove = !!moved.x;
       let stepTime = 1/15 / speed.x;
       let nextTime = time > this.lastTime + stepTime || time < this.lastTime;

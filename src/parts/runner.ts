@@ -95,7 +95,7 @@ export class Runner extends Part {
       condition = part => true;
     }
     let isSurface = (part: Part) =>
-      part.surface && part != this && condition!(part);
+      part.surface(this) && part != this && condition!(part);
     // TODO Replace all -1 with -epsilon?
     let part1 = this.partAt(3, -1, isSurface);
     let part2 = this.partAt(midRight, -1, isSurface);
@@ -138,7 +138,7 @@ export class Runner extends Part {
       let wallEdge: Edge;
       // Prioritize vertical for enemy ai reasons, also because rarer options.
       // TODO Remember old move options to allow easier transition?
-      if (climbable || !support.surface) {
+      if (climbable || !support.surface(this)) {
         // Now move up or down.
         if (action.down) {
           move.y = -1;

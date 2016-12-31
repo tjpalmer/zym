@@ -81,7 +81,9 @@ export class Part {
     return false;
   }
 
-  surface = false;
+  surface(other: Part) {
+    return false;
+  }
 
   get type() {
     return this.constructor as PartType;

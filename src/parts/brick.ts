@@ -77,12 +77,8 @@ export class Brick extends Part {
     return !this.burned;
   }
 
-  get surface() {
+  surface() {
     return !this.burned;
-  }
-
-  set surface(value: boolean) {
-    // Ignore the setting of the default value.
   }
 
 }

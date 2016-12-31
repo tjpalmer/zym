@@ -8,7 +8,9 @@ export class Ladder extends Part {
     return true;
   }
 
-  surface = true;
+  surface() {
+    return true;
+  }
 
 }
 

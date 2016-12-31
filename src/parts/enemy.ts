@@ -1,4 +1,4 @@
-import {Brick, None, Runner, TilePos, Treasure} from './';
+import {Biggie, Brick, None, Runner, TilePos, Treasure} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -247,7 +247,9 @@ export class Enemy extends Runner {
 
   state = {x: State.chase, y: State.chase};
 
-  surface = true;
+  surface(other: Part) {
+    return !(other instanceof Biggie);
+  }
 
   take(treasure: Treasure) {
     if (this.treasure) {

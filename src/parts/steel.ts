@@ -8,6 +8,8 @@ export class Steel extends Part {
     return true;
   }
 
-  surface = true;
+  surface() {
+    return true;
+  }
 
 }
