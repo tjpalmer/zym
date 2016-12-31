@@ -1,5 +1,5 @@
 import {Brick, None, Runner, TilePos, Treasure} from './';
-import {Edge, Game, Part, RunnerAction} from '../';
+import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
 export class Enemy extends Runner {
@@ -49,94 +49,133 @@ export class Enemy extends Runner {
     // Using last intended move was for cases of falling not looking like going
     // down, but it interfered with coming up off ladder then going right into
     // ladder needing to go up.
-    let {action, moved: lastMove, state, waitTime} = this;
+    let {action, moved, state, waitPoint, waitPointHero, waitTime} = this;
     let {hero, time} = this.game.stage;
-    if (hero) {
-      let diff = this.workPoint2.copy(hero.point).sub(this.point);
-      // TODO Wander state?
-      // TODO Change state based on failure to move in intended direction?
-      // TODO Unify x and y commonality.
-      switch (state.y) {
-        case State.chase: {
-          if (Math.sign(diff.y) == -Math.sign(lastMove.y)) {
-            this.state.y = State.wait;
-            waitTime.y = time + closeTime;
-          } else if (diff.y) {
-            if (diff.y < 0) {
-              // Don't try to go down if we can't.
-              // The problem is that if we're on a ladder with a solid at
-              // bottom, it still tries to go down instead of left or right.
-              let solidSurface =
-                this.getSurface(part => part.solid(this, Edge.top));
-              if (solidSurface) {
-                // Well, also see if we have a climbable here.
-                // The problem is if we have imperfect alignment with a ladder
-                // between solids.
-                // TODO Reusing calculations from action processing or physics
-                // TODO could be nice.
-                let climbable = (x: number) =>
-                  this.partAt(x, -1, part => part.climbable(this));
-                if (climbable(TilePos.midLeft) || climbable(TilePos.midRight)) {
-                  // Let climbable trump.
-                  solidSurface = undefined;
-                }
-              }
-              if (!solidSurface) {
-                action.down = true;
-              }
-            } else {
-              // TODO Check for solid bottom at the top of a ladder.
-              let ceiling =
-                this.getSolid(Edge.bottom, TilePos.midLeft, 10) ||
-                this.getSolid(Edge.bottom, TilePos.midRight, 10);
-              if (!ceiling) {
-                action.up = true;
+    if (!hero) {
+      return;
+    }
+    let diff = this.workPoint2.copy(hero.point).sub(this.point);
+    // TODO Wander state?
+    // TODO Change state based on failure to move in intended direction?
+    // TODO Unify x and y commonality.
+    switch (state.y) {
+      case State.chase: {
+        if (Math.sign(diff.y) == -Math.sign(moved.y)) {
+          this.state.y = State.wait;
+          waitPoint.x = this.point.x;
+          waitPointHero.y = hero.point.y;
+          waitTime.y = time + closeTime;
+        } else if (diff.y) {
+          if (diff.y < 0) {
+            // Don't try to go down if we can't.
+            // The problem is that if we're on a ladder with a solid at
+            // bottom, it still tries to go down instead of left or right.
+            let solidSurface =
+              this.getSurface(part => part.solid(this, Edge.top));
+            if (solidSurface) {
+              // Well, also see if we have a climbable here.
+              // The problem is if we have imperfect alignment with a ladder
+              // between solids.
+              // TODO Reusing calculations from action processing or physics
+              // TODO could be nice.
+              let climbable = (x: number) =>
+                this.partAt(x, -1, part => part.climbable(this));
+              if (climbable(TilePos.midLeft) || climbable(TilePos.midRight)) {
+                // Let climbable trump.
+                solidSurface = undefined;
               }
             }
+            if (!solidSurface) {
+              action.down = true;
+            }
+          } else {
+            // TODO Check for solid bottom at the top of a ladder.
+            let ceiling =
+              this.getSolid(Edge.bottom, TilePos.midLeft, 10) ||
+              this.getSolid(Edge.bottom, TilePos.midRight, 10);
+            if (!ceiling) {
+              action.up = true;
+            }
           }
-          break;
         }
-        case State.wait: {
-          if (time >= waitTime.y) {
-            state.y = State.chase;
-          }
-          break;
-        }
+        break;
       }
-      switch (state.x) {
-        case State.chase: {
-          if (Math.sign(diff.x) == -Math.sign(lastMove.x)) {
-            this.state.x = State.wait;
-            waitTime.x = time + closeTime;
-          } else if (diff.x) {
-            // TODO Watch for not running over pits.
-            // Keep some spacing between enemies when possible.
-            // See if all surfaces are enemies who are actually mobile.
-            // TODO An enemy stuck in an ordinary hole should also count as
-            // TODO caught!
-            let isComrade =
-              (part: Part) => part instanceof Enemy && !part.catcher;
-            let comradeSurface = this.getSurface(isComrade);
-            let noncomradeSurface = this.getSurface(part => !isComrade(part));
-            let surface = comradeSurface && !noncomradeSurface;
-            if (diff.x < 0) {
-              if (!(this.getOther(-8, 4) || surface)) {
-                action.left = true;
-              }
-            } else if (diff.x > 0) {
-              if (!(this.getOther(16, 4) || surface)) {
-                action.right = true;
-              }
+      case State.wait:
+      case State.wanderNeg:
+      case State.wanderPos: {
+        if (state.y == State.wanderNeg) {
+          action.down = true;
+        } else if (state.y == State.wanderPos) {
+          action.up = true;
+        }
+        let waitDiff = Math.abs(this.point.x - this.waitPoint.x);
+        let waitDiffHero = Math.abs(hero.point.y - this.waitPointHero.y);
+        if (waitDiff >= Level.tileSize.x || waitDiffHero >= Level.tileSize.y) {
+          state.y = State.chase;
+        } else if (time >= waitTime.y) {
+          if (state.y == State.wait) {
+            state.y = this.lastWander.y > 0 ? State.wanderNeg : State.wanderPos;
+            this.lastWander.y = -this.lastWander.y;
+          } else {
+            state.y = State.wait;
+          }
+          waitTime.y = time + closeTime;
+        }
+        break;
+      }
+    }
+    switch (state.x) {
+      case State.chase: {
+        if (Math.sign(diff.x) == -Math.sign(moved.x)) {
+          this.state.x = State.wait;
+          waitPoint.y = this.point.y;
+          waitPointHero.x = hero.point.x;
+          waitTime.x = time + closeTime;
+        } else if (diff.x) {
+          // TODO Watch for not running over pits.
+          // Keep some spacing between enemies when possible.
+          // See if all surfaces are enemies who are actually mobile.
+          // TODO An enemy stuck in an ordinary hole should also count as
+          // TODO caught!
+          let isComrade = (part: Part) =>
+            part instanceof Enemy && !part.catcher && !part.dead;
+          let comradeSurface = this.getSurface(isComrade);
+          let noncomradeSurface = this.getSurface(part => !isComrade(part));
+          let surface = comradeSurface && !noncomradeSurface;
+          if (diff.x < 0) {
+            if (!(this.getOther(-8, 4) || surface)) {
+              action.left = true;
+            }
+          } else if (diff.x > 0) {
+            if (!(this.getOther(16, 4) || surface)) {
+              action.right = true;
             }
           }
-          break;
         }
-        case State.wait: {
-          if (time >= waitTime.x) {
-            state.x = State.chase;
+        break;
+      }
+      case State.wait:
+      case State.wanderNeg:
+      case State.wanderPos: {
+        if (state.x == State.wanderNeg) {
+          action.left = true;
+        } else if (state.x == State.wanderPos) {
+          action.right = true;
+        }
+        let waitDiff = Math.abs(this.point.y - this.waitPoint.y);
+        let waitDiffHero = Math.abs(hero.point.x - this.waitPointHero.x);
+        if (waitDiff >= Level.tileSize.y || waitDiffHero >= Level.tileSize.x) {
+          state.x = State.chase;
+        } else if (time >= waitTime.x) {
+          if (state.x == State.wait) {
+            state.x = this.lastWander.x > 0 ? State.wanderNeg : State.wanderPos;
+            this.lastWander.x = -this.lastWander.x;
+          } else {
+            state.x = State.wait;
           }
-          break;
+          waitTime.x = time + closeTime;
         }
+        break;
       }
     }
   }
@@ -144,7 +183,9 @@ export class Enemy extends Runner {
   choose() {
     this.clearAction();
     if (!(this.dazed || this.dead)) {
-      this.chase();
+      if (this.game.stage.hero) {
+        this.chase();
+      }
       if (this.catcher) {
         // Don't go down, and if still caught, go up.
         this.action.down = false;
@@ -188,6 +229,8 @@ export class Enemy extends Runner {
   }
 
   lastMove = new Vector2();
+
+  lastWander = new Vector2(1, 1);
 
   solid(other: Part, edge?: Edge): boolean {
     // Enemies block entrance to each other, but not exit from.
@@ -257,7 +300,26 @@ export class Enemy extends Runner {
       }
     }
     super.update();
+    // Check stuckness.
+    let {time} = this.game.stage;
+    if (
+      (time > this.waitTime.x || time > this.waitTime.y) &&
+      (this.state.x == State.chase && this.state.y == State.chase) &&
+      !(this.moved.x || this.moved.y)
+    ) {
+      this.state.x = this.state.y = State.wait;
+      this.waitTime.y = this.game.stage.time + closeTime;
+      this.waitTime.x = this.game.stage.time + 1.1 * closeTime;
+      this.waitPoint.copy(this.point);
+      if (this.game.stage.hero) {
+        this.waitPointHero.copy(this.game.stage.hero.point);
+      }
+    }
   }
+
+  waitPoint = new Vector2();
+
+  waitPointHero = new Vector2();
 
   waitTime = new Vector2();
 
@@ -267,8 +329,9 @@ export class Enemy extends Runner {
 
 enum State {
   chase,
-  wander,
+  wanderNeg,
+  wanderPos,
   wait,
 }
 
-let closeTime = 0.5;
+let closeTime = 2;
