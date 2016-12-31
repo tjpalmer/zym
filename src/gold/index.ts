@@ -2,6 +2,7 @@
 export * from './theme';
 
 // Individual parts.
+export * from './biggie';
 export * from './brick';
 export * from './runner';
 export * from './treasure';

@@ -1,6 +1,7 @@
-import {Art, BrickArt, Layer, RunnerArt, TreasureArt} from './';
+import {Art, BiggieArt, BrickArt, Layer, RunnerArt, TreasureArt} from './';
 import {
-  Bar, Brick, Enemy, Hero, Ladder, None, Runner, Steel, Treasure
+  Bar, Biggie, BiggieLeft, BiggieRight, Brick, Enemy, Hero, Ladder, None,
+  Runner, Steel, Treasure,
 } from '../parts/';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -17,6 +18,8 @@ export class Parts {
 
   static tileArts = new Map<PartType, (part: Part) => Art>([
     [Bar, artMaker(arts.Bar)],
+    [BiggieLeft, part => new BiggieArt(part as Biggie)],
+    [BiggieRight, part => new BiggieArt(part as Biggie)],
     [Brick, part => new BrickArt(part as Brick)],
     [Enemy, part => new RunnerArt(part as Runner, new Vector2(15, 14))],
     [Hero, part => new RunnerArt(part as Runner, new Vector2(9, 14))],

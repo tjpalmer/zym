@@ -183,12 +183,12 @@ export class Runner extends Part {
         Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
       );
     }
-    move.multiplyScalar(this.speed);
+    move.multiply(this.speed);
     this.oldCatcher = oldCatcher;
     this.support = support;
   }
 
-  speed: number;
+  speed: Vector2;
 
   support: Part | undefined = undefined;
 

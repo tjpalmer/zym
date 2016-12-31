@@ -54,6 +54,8 @@ export class Enemy extends Runner {
     if (!hero) {
       return;
     }
+    // TODO Using oldDiff also causes the top of ladder problem, but worse.
+    // let oldDiff = this.workPoint2.copy(hero.oldPoint).sub(this.oldPoint);
     let diff = this.workPoint2.copy(hero.point).sub(this.point);
     // TODO Wander state?
     // TODO Change state based on failure to move in intended direction?
@@ -241,7 +243,7 @@ export class Enemy extends Runner {
   // TODO They still get stuck when clumped in hordes after making this
   // TODO non-integer.
   // TODO Fix this sometime.
-  speed = 0.7;
+  speed = new Vector2(0.7, 0.7);
 
   state = {x: State.chase, y: State.chase};
 

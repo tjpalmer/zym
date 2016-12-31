@@ -39,7 +39,7 @@ export class Hero extends Runner {
     });
   }
 
-  speed = 1;
+  speed = new Vector2(1, 1);
 
   treasureCount = 0;
 

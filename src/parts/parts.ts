@@ -1,4 +1,7 @@
-import {Bar, Brick, Enemy, Hero, Ladder, None, Steel, Treasure} from './';
+import {
+  Bar, BiggieLeft, BiggieRight, Brick, Enemy, Hero, Ladder, None, Steel,
+  Treasure,
+} from './';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
 
@@ -6,6 +9,8 @@ export class Parts {
 
   static inventory: Array<PartType> = [
     Bar,
+    BiggieLeft,
+    BiggieRight,
     Brick,
     Enemy,
     Ladder,

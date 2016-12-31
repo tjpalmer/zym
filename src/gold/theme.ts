@@ -56,10 +56,14 @@ export class GoldTheme implements Theme {
   }
 
   buildArt(part: Part) {
-    let makeArt = Parts.tileArts.get(part.type.base);
+    let type = part.type;
+    if (type.ender) {
+      type = type.base;
+    }
+    let makeArt = Parts.tileArts.get(type);
     if (!makeArt) {
       // This makes it easier to deal with problems up front.
-      throw new Error(`No art for part type ${part.type.name}`);
+      throw new Error(`No art for part type ${type.name}`);
     }
     // Mark art non-optional so this would catch the error?
     part.art = makeArt(part);

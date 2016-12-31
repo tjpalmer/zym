@@ -3,6 +3,7 @@ export * from './runner';
 
 // Parts themselves.
 export * from './bar';
+export * from './biggie';
 export * from './brick';
 export * from './enemy';
 export * from './hero';
