@@ -213,7 +213,8 @@ export class Runner extends Part {
         // TODO How to know final move? Could try a part.moved ...
         // TODO Intermediate constraints???
         // TODO When this was active, a guy could walk toward me in pit.
-        // TODO move.x += support.move.x;
+        // TODO Tried moved now. Does it work?
+        move.x += support.moved.x;
       }
     }
     point.add(move);
