@@ -53,6 +53,8 @@ export class Biggie extends Runner {
     this.hold = false;
   }
 
+  climber = false;
+
   facing = 0;
 
   hold = false;

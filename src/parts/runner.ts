@@ -6,6 +6,8 @@ export class Runner extends Part {
 
   align = new Vector2();
 
+  climber = true;
+
   climbing = false;
 
   dead = false;
@@ -105,11 +107,17 @@ export class Runner extends Part {
     return part1.point.y > part2.point.y ? part1 : part2;
   }
 
+  intendedMove = new Vector2();
+
   processAction(action: RunnerAction) {
     // TODO Let changed keys override old ones.
     // TODO Find all actions (and alignments) before moving, for enemies?
     let {stage} = this.game;
     let {align, move, oldPoint, point, workPoint} = this;
+    // Intended move, not actual.
+    this.intendedMove.x = action.left ? -1 : action.right ? 1 : 0;
+    this.intendedMove.y = action.down ? -1 : action.up ? 1 : 0;
+    // Action.
     this.climbing = false;
     oldPoint.copy(point);
     move.setScalar(0);
@@ -119,7 +127,7 @@ export class Runner extends Part {
     // Pixel-specific for surfaces, because enemies are moving surfaces.
     // TODO If a support moves, it should move the supported thing, too.
     let support = this.getSupport();
-    let oldCatcher = this.getCatcher(false);
+    let oldCatcher = this.climber ? this.getCatcher(false) : undefined;
     // Unless we get moving climbables (falling ladders?), we can stick to near
     // (same grid position) for climbables.
     let inClimbable =
@@ -128,6 +136,10 @@ export class Runner extends Part {
       this.getClimbable(this.partsNear(3, top), this.partsNear(midRight, top));
     this.climbing = !!inClimbable;
     let climbable = this.getClimbable(leftParts, rightParts) || inClimbable;
+    if (!this.climber) {
+      this.climbing = false;
+      climbable = undefined;
+    }
     if (!support) {
       support = climbable;
     }
@@ -262,7 +274,7 @@ export class Runner extends Part {
           let y =
             Math.max(blockY(newSupport), blockY(blocker1), blockY(blocker2));
           point.y = y + Level.tileSize.y;
-        } else {
+        } else if (this.climber) {
           // See if we entered a catcher.
           let newCatcher = this.getCatcher(false);
           if (newCatcher && newCatcher != oldCatcher) {

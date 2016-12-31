@@ -33,12 +33,14 @@ export class RunnerArt implements Art {
 
   get tile(): Vector2 {
     let {mode} = this;
-    let {climbing, game, move, moved, point, speed, support} = this.runner;
+    let {
+      climbing, game, intendedMove, moved, point, speed, support,
+    } = this.runner;
     let {stage} = game;
     // Update facing.
-    if (move.x) {
+    if (intendedMove.x) {
       // Facing is always left or right.
-      this.facing = Math.sign(move.x);
+      this.facing = Math.sign(intendedMove.x);
     }
     // Figure out what frame and mode.
     if (game.mode == game.edit) {
@@ -73,7 +75,9 @@ export class RunnerArt implements Art {
           }
         }
         // Frame.
-        let didMove = !!(moved.x || moved.y);
+        let didMove = !!(
+          Math.min(Math.abs(intendedMove.x), Math.abs(moved.x)) || moved.y
+        );
         let stepTime = 1/20 / speedScale;
         let nextTime =
           stage.time > this.lastTime + stepTime || stage.time < this.lastTime;

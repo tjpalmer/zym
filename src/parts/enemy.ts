@@ -32,7 +32,9 @@ export class Enemy extends Runner {
     let {point: {y: myY}} = this;
     // Look from checkPoint down.
     while (y + myY >= 0) {
-      if (this.partAt(x, y, part => part.type != None)) {
+      if (this.partAt(x, y, part =>
+        part.catches(this) || part.surface(this) || part instanceof Brick
+      )) {
         // Something is here.
         return false;
       }
@@ -198,9 +200,6 @@ export class Enemy extends Runner {
     }
     this.avoidBottomless();
     this.processAction(this.action);
-    // Intended move, not actual.
-    this.lastMove.x = this.action.left ? -1 : this.action.right ? 1 : 0;
-    this.lastMove.y = this.action.down ? -1 : this.action.up ? 1 : 0;
   }
 
   clearAction() {
@@ -229,8 +228,6 @@ export class Enemy extends Runner {
     let isEnemy = (part: Part) => part instanceof Enemy && part != this;
     return this.partAt(x, y, isEnemy);
   }
-
-  lastMove = new Vector2();
 
   lastWander = new Vector2(1, 1);
 
