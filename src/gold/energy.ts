@@ -49,8 +49,10 @@ export class LatchArt implements Art {
   }
 
   get tile() {
+    let {latch} = this;
+    let {time} = latch.game.stage;
     this.workPoint.set(20, 16);
-    if (!this.latch.facing) {
+    if (time < latch.changeTime + 8 / 60 || !latch.facing) {
       // Center facing. TODO Separate facing from state.
       this.workPoint.x -= 1;
     } else if (this.latch.facing < 0) {

@@ -34,37 +34,37 @@ export class EnergyOff extends Energy {
 
 export class Latch extends Part {
 
+  changeTime = NaN;
+
   facing = 0;
+
+  heroWasNear = false;
 
   lastHeroSide = 0;
 
-  state = 0;
-
   update() {
-    let {workPoint} = this;
+    let {heroWasNear, workPoint} = this;
     let {stage} = this.game;
     let {hero} = stage;
     if (!hero) {
       return;
     }
+    // See if the hero overlaps our middle.
     workPoint.set(4, 5).add(this.point);
     if (hero.contains(workPoint)) {
-      let diff = hero.point.x - this.point.x;
-      let heroSide = Math.sign(diff);
-      if (heroSide && (heroSide == -this.lastHeroSide || !this.lastHeroSide)) {
-        if (Math.abs(diff) > 1) {
-          if (heroSide == -this.state) {
-            let oldState = this.state;
-            this.state = this.facing = heroSide;
-            stage.energyOn = !stage.energyOn;
-          }
-        } else {
-          this.facing = 0;
+      // If so, check for center crossings.
+      let heroSide = Math.sign(hero.point.x - this.point.x);
+      if (heroWasNear && heroSide && heroSide != this.lastHeroSide) {
+        if (heroSide == -this.facing) {
+          this.changeTime = stage.time;
+          this.facing = heroSide;
+          stage.energyOn = !stage.energyOn;
         }
-        this.lastHeroSide = heroSide;
       }
+      this.lastHeroSide = heroSide;
+      this.heroWasNear = true;
     } else {
-      this.lastHeroSide = 0;
+      this.heroWasNear = false;
     }
   }
 
@@ -76,8 +76,6 @@ export class LatchLeft extends Latch {
 
   facing = -1;
 
-  state = -1;
-
 }
 
 export class LatchRight extends Latch {
@@ -85,7 +83,5 @@ export class LatchRight extends Latch {
   static char = '/';
 
   facing = 1;
-
-  state = 1;
 
 }
