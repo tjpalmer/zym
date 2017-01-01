@@ -1,6 +1,6 @@
 import {
-  Bar, BiggieLeft, BiggieRight, Brick, Enemy, Hero, Ladder, None, Steel,
-  Treasure,
+  Bar, BiggieLeft, BiggieRight, Brick, Enemy, Energy, EnergyOff, Hero, Ladder,
+  LatchLeft, LatchRight, None, Steel, Treasure,
 } from './';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -13,7 +13,11 @@ export class Parts {
     BiggieRight,
     Brick,
     Enemy,
+    Energy,
+    EnergyOff,
     Ladder,
+    LatchLeft,
+    LatchRight,
     Hero,
     None,
     Steel,
@@ -27,6 +31,15 @@ export class Parts {
   ));
 
 }
+
+// Just to check for non-duplicates.
+let chars: {[char: string]: string} = {};
+Parts.inventory.forEach(({char}) => {
+  if (chars[char]) {
+    throw new Error(`Duplicate ${char}`);
+  }
+  chars[char] = char;
+});
 
 let nonEnders = [Hero, None, Treasure];
 
