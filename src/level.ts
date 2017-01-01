@@ -156,6 +156,7 @@ export class Level {
       stage.clearGrid();
       stage.ended = false;
       stage.ending = false;
+      stage.energyOn = true;
       stage.time = 0;
     }
     stage.hero = undefined;

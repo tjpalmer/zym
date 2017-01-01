@@ -48,6 +48,8 @@ export class Stage {
 
   ending = false;
 
+  energyOn = true;
+
   game: Game;
 
   // Collision grid.
