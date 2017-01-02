@@ -214,6 +214,11 @@ export class Enemy extends Runner {
 
   dazed = false;
 
+  die() {
+    super.die();
+    this.releaseTreasure();
+  }
+
   feetInCatcher() {
     let isCatcher = (part: Part) => part == this.catcher;
     return (
@@ -230,6 +235,17 @@ export class Enemy extends Runner {
   }
 
   lastWander = new Vector2(1, 1);
+
+  releaseTreasure() {
+    let {treasure} = this;
+    if (treasure) {
+      this.treasure = undefined;
+      treasure.owner = undefined;
+      treasure.point.copy(this.point);
+      // Place it above.
+      treasure.point.y += 10;
+    }
+  }
 
   solid(other: Part, edge?: Edge): boolean {
     // Enemies block entrance to each other, but not exit from.
@@ -261,8 +277,13 @@ export class Enemy extends Runner {
 
   update() {
     let catcher = this.getCatcher();
-    if (catcher instanceof Brick) {
+    if (
+      catcher instanceof Brick &&
+      // Require alignment in case of horizontal entry.
+      Math.abs(this.point.x - catcher.point.x) < 1
+    ) {
       // No horizontal moving in bricks.
+      this.point.x = catcher.point.x;
       this.move.x = 0;
       if (!this.catcher) {
         this.catcher = catcher;
@@ -270,14 +291,7 @@ export class Enemy extends Runner {
         this.dazed = true;
       }
       // Lose treasure if we have one.
-      let {treasure} = this;
-      if (treasure) {
-        this.treasure = undefined;
-        treasure.owner = undefined;
-        treasure.point.copy(this.point);
-        // Place it above.
-        treasure.point.y += 10;
-      }
+      this.releaseTreasure();
     } else if (this.catcher) {
       let isCatcher = (part: Part) => part == this.catcher;
       if (this.catcher instanceof Brick && !this.catcher.burned) {
