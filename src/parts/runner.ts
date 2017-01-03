@@ -10,6 +10,7 @@ export class Runner extends Part {
 
   climbing = false;
 
+  // TODO Push up to part, so we can read it easily for any art?
   dead = false;
 
   die() {

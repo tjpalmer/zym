@@ -214,6 +214,15 @@ body {
   margin-bottom: 0;
 }
 
+.toolbox > label canvas {
+  display: block;
+}
+
+.toolbox > label:hover .toolMenu,
+.toolMenu:hover {
+  display: block;
+}
+
 .toolbox i {
   display: block;
   position: relative;
@@ -226,9 +235,28 @@ body {
   display: block;
 }
 
-.toolbox > .selected {
+.toolbox .selected {
   border: 0.1em solid white;
   border-radius: 0.2em;
+}
+
+.toolbox .toolMenu label {
+  display: inline-block;
+}
+
+.toolbox .toolMenu label canvas {
+  display: inline-block;
+}
+
+.toolMenu {
+  background: #111;
+  display: none;
+  /* Left margin gets overruled later, but this at least offsets some. */
+  margin-left: 1em;
+  margin-top: -0.2em;
+  position: absolute;
+  padding: 0.2em 0.2em 0;
+  z-index: 1;
 }
 
 .view {

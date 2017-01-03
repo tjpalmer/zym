@@ -211,7 +211,7 @@ export class GoldTheme implements Theme {
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
       // Now draw to our canvas and to the button background.
-      let canvas = button.querySelector('canvas')!;
+      let canvas = button.querySelector(':scope > canvas') as HTMLCanvasElement;
       let context = canvas.getContext('2d')!;
       let image = type.ender ? this.enderImage : this.image;
       context.drawImage(
@@ -255,11 +255,15 @@ export class GoldTheme implements Theme {
       canvas.width = Level.tileSize.x;
       canvas.height = Level.tileSize.y;
       // Style it.
-      canvas.style.display = 'block';
       (canvas.style as any).imageRendering = 'pixelated';
       canvas.style.margin = 'auto';
       canvas.style.height = buttonHeight;
       button.appendChild(canvas);
+      // Align menu by now known canvas size.
+      let menu = button.querySelector('.toolMenu') as HTMLElement | undefined;
+      if (menu) {
+        menu.style.marginLeft = `${canvas.offsetWidth}px`;
+      }
     }
     this.prepareVariations();
     this.paintPanels();
