@@ -70,6 +70,7 @@ export class Toolbox {
     let query = this.radioQuery(fieldName) + ':checked';
     let selecteds =
       this.container.querySelectorAll(query) as NodeListOf<HTMLInputElement>;
+    // TODO Assert only one if fieldName?
     for (let selected of selecteds) {
       let label = selected.closest('label') as HTMLElement;
       label.classList.add('selected');
@@ -78,6 +79,8 @@ export class Toolbox {
       let name = this.getName(label);
       if (selected.name == 'tool') {
         this.edit.setToolFromName(name);
+      } else {
+        this.updateTool(label);
       }
     }
   }
@@ -88,6 +91,28 @@ export class Toolbox {
       query += `[name="${fieldName}"]`;
     }
     return query;
+  }
+
+  updateTool(menuButton: HTMLElement) {
+    let name = this.getName(menuButton);
+    // Change the parent.
+    let parent =
+      (menuButton.parentNode as HTMLElement).closest('label') as HTMLElement;
+    let parentName = this.getName(parent);
+    parent.classList.remove(parentName);
+    parent.classList.add(name);
+    // Change the parent's appearance.
+    // Theme could be missing during startup.
+    if (this.edit.game.theme) {
+      this.edit.game.theme.updateTool(parent);
+    }
+    // Select the parent.
+    parent.click();
+    // Hide the menu.
+    let menu = parent.querySelector('.toolMenu') as HTMLElement;
+    menu.style.display = 'none';
+    // But allow it to come back.
+    window.setTimeout(() => menu.style.display = '', 0);
   }
 
 }

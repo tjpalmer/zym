@@ -190,12 +190,15 @@ export class GoldTheme implements Theme {
 
   level = new Level();
 
-  paintPanels() {
+  paintPanels(changedName?: string) {
     let {game} = this;
     let {toolbox} = game.edit;
     for (let button of toolbox.getButtons()) {
       // Get the art for this tool. TODO Simplify this process?
       let name = toolbox.getName(button);
+      if (changedName && name != changedName) {
+        continue;
+      }
       let type = game.edit.toolFromName(name);
       if (!type || type == None) {
         // We don't draw a standard tile for this one.
@@ -214,6 +217,7 @@ export class GoldTheme implements Theme {
       let canvas = button.querySelector(':scope > canvas') as HTMLCanvasElement;
       let context = canvas.getContext('2d')!;
       let image = type.ender ? this.enderImage : this.image;
+      context.clearRect(0, 0, canvas.width, canvas.height);
       context.drawImage(
         image, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
         0, 0, canvas.width, canvas.height,
@@ -332,6 +336,10 @@ export class GoldTheme implements Theme {
   tilesMesh?: Mesh;
 
   uniforms: Uniforms;
+
+  updateTool(button: HTMLElement) {
+    this.paintPanels(this.game.edit.toolbox.getName(button));
+  }
 
 }
 

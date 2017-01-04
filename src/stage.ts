@@ -189,4 +189,6 @@ export interface Theme {
 
   buildDone(game: Game): void;
 
+  updateTool(button: HTMLElement): void;
+
 }
