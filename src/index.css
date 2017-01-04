@@ -205,6 +205,7 @@ body {
 }
 
 .toolbox label {
+  border: 0.1em solid transparent;
   display: block;
   /* This margin makes the borders overlap across neighbors. */
   margin-bottom: -0.1em;
@@ -220,7 +221,7 @@ body {
 
 .toolbox > label:hover .toolMenu,
 .toolMenu:hover {
-  display: block;
+  display: flex;
 }
 
 .toolbox i {
@@ -241,11 +242,12 @@ body {
 }
 
 .toolbox .toolMenu label {
-  display: inline-block;
+  display: block;
+  padding: 0.1em;
 }
 
 .toolbox .toolMenu label canvas {
-  display: inline-block;
+  display: block;
 }
 
 .toolMenu {
@@ -253,9 +255,9 @@ body {
   display: none;
   /* Left margin gets overruled later, but this at least offsets some. */
   margin-left: 1em;
-  margin-top: -0.2em;
+  margin-top: -0.3em;
   position: absolute;
-  padding: 0.2em 0.2em 0;
+  padding: 0.1em 0.1em 0.2em 0.3em;
   z-index: 1;
 }
 
