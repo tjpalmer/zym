@@ -9,12 +9,13 @@ export class Toolbox {
     this.edit = edit;
     this.markSelected();
     let container = this.container;
-    for (let input of container.querySelectorAll('input[name="tool"]')) {
-      input.addEventListener('click', () => {
-        for (let other of this.getToolButtons()) {
+    for (let input of container.querySelectorAll(this.radioQuery())) {
+      input.addEventListener('click', ({target}) => {
+        let input = target as HTMLInputElement;
+        for (let other of this.getToolButtons(input.name)) {
           other.classList.remove('selected');
         }
-        this.markSelected();
+        this.markSelected(input.name);
       });
     }
     for (let input of container.querySelectorAll('input[type="checkbox"]')) {
@@ -52,8 +53,8 @@ export class Toolbox {
     ).checked;
   }
 
-  getToolButtons(): Array<HTMLElement> {
-    return [...this.container.querySelectorAll('input[name="tool"]')].map(
+  getToolButtons(fieldName?: string): Array<HTMLElement> {
+    return [...this.container.querySelectorAll(this.radioQuery(fieldName))].map(
       input => input.closest('label') as HTMLElement
     );
   }
@@ -65,14 +66,28 @@ export class Toolbox {
     }
   }
 
-  markSelected() {
-    let selected = this.container.querySelector('input[name="tool"]:checked')!;
-    let label = selected.closest('label') as HTMLElement;
-    label.classList.add('selected');
-    // Get the class name that's not selected.
-    // TODO Instead put name on the input?
-    let name = this.getName(label);
-    this.edit.setToolFromName(name);
+  markSelected(fieldName?: string) {
+    let query = this.radioQuery(fieldName) + ':checked';
+    let selecteds =
+      this.container.querySelectorAll(query) as NodeListOf<HTMLInputElement>;
+    for (let selected of selecteds) {
+      let label = selected.closest('label') as HTMLElement;
+      label.classList.add('selected');
+      // Get the class name that's not selected.
+      // TODO Instead put name on the input?
+      let name = this.getName(label);
+      if (selected.name == 'tool') {
+        this.edit.setToolFromName(name);
+      }
+    }
+  }
+
+  radioQuery(fieldName?: string) {
+    let query = 'input[type="radio"]';
+    if (fieldName) {
+      query += `[name="${fieldName}"]`;
+    }
+    return query;
   }
 
 }
