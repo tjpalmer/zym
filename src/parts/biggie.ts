@@ -20,6 +20,13 @@ export class Biggie extends Runner {
       let wall = this.partAt(x, 0, part => part.solid(this, edge));
       if (wall) {
         ahead = undefined;
+      } else {
+        // Inside edges are opposite outside.
+        edge = this.facing < 0 ? Edge.left : Edge.right;
+        wall = this.getSolidInside(edge, x, 0, this.facing, 0);
+        if (wall) {
+          ahead = undefined;
+        }
       }
     }
     if (!ahead) {

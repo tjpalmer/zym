@@ -3,20 +3,18 @@ import {Vector2} from 'three';
 
 export class RunnerAction {
 
-  // TODO Simplify this down to what's possible?
-
   burnLeft = false;
 
   burnRight = false;
 
-  // copy(action: RunnerAction) {
-  //   this.burnLeft = action.burnLeft;
-  //   this.burnRight = action.burnRight;
-  //   this.down = action.down;
-  //   this.left = action.left;
-  //   this.right = action.right;
-  //   this.up = action.up;
-  // }
+  copy(action: RunnerAction) {
+    this.burnLeft = action.burnLeft;
+    this.burnRight = action.burnRight;
+    this.down = action.down;
+    this.left = action.left;
+    this.right = action.right;
+    this.up = action.up;
+  }
 
   down = false;
 

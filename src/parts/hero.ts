@@ -1,15 +1,34 @@
 import {None, Runner, Treasure} from './';
-import {Edge, Level, Part, Game} from '../';
+import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
 export class Hero extends Runner {
 
   static char = 'R';
 
+  action = new RunnerAction();
+
+  actionChange = new RunnerAction();
+
   carried = true;
 
+  checkAction() {
+    let {action, actionChange} = this;
+    let {control} = this.game;
+    // Find what changed.
+    actionChange.burnLeft = action.burnLeft != control.burnLeft;
+    actionChange.burnRight = action.burnRight != control.burnRight;
+    actionChange.down = action.down != control.down;
+    actionChange.left = action.left != control.left;
+    actionChange.right = action.right != control.right;
+    actionChange.up = action.up != control.up;
+    // Then copy the current.
+    this.action.copy(control);
+  }
+
   choose() {
-    let {control: action} = this.game;
+    this.checkAction();
+    let {action} = this;
     if (this.game.stage.ended) {
       action.left = action.right = action.up = action.down = false;
     }
