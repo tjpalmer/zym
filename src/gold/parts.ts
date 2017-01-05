@@ -3,7 +3,8 @@ import {
 } from './';
 import {
   Bar, Biggie, BiggieLeft, BiggieRight, Brick, Enemy, Energy, EnergyOff, Hero,
-  Ladder, Latch, LatchLeft, LatchRight, None, Runner, Steel, Treasure,
+  Ladder, Latch, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
+  LauncherLeft, LauncherRight, LauncherUp, None, Runner, Steel, Treasure,
 } from '../parts/';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -12,6 +13,11 @@ import {Vector2} from 'three';
 export let arts = {
   Bar: {layer: Layer.back, tile: new Vector2(9, 17)},
   Ladder: {layer: Layer.back, tile: new Vector2(8, 17)},
+  LauncherCenter: {layer: Layer.back, tile: new Vector2(12, 17)},
+  LauncherDown: {layer: Layer.back, tile: new Vector2(11, 17)},
+  LauncherLeft: {layer: Layer.back, tile: new Vector2(10, 16)},
+  LauncherRight: {layer: Layer.back, tile: new Vector2(11, 16)},
+  LauncherUp: {layer: Layer.back, tile: new Vector2(10, 17)},
   None: {layer: Layer.back, tile: new Vector2(0, 2)},
   Steel: {layer: Layer.front, tile: new Vector2(7, 17)},
 };
@@ -30,6 +36,11 @@ export class Parts {
     [Ladder, artMaker(arts.Ladder)], 
     [LatchLeft, part => new LatchArt(part as Latch)],
     [LatchRight, part => new LatchArt(part as Latch)],
+    [LauncherCenter, artMaker(arts.LauncherCenter)], 
+    [LauncherDown, artMaker(arts.LauncherDown)], 
+    [LauncherLeft, artMaker(arts.LauncherLeft)], 
+    [LauncherRight, artMaker(arts.LauncherRight)], 
+    [LauncherUp, artMaker(arts.LauncherUp)], 
     [None, artMaker(arts.None)],
     [Steel, artMaker(arts.Steel)],
     [Treasure, part => new TreasureArt(part as Treasure)],

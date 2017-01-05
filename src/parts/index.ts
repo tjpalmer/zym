@@ -9,6 +9,7 @@ export * from './enemy';
 export * from './energy';
 export * from './hero';
 export * from './ladder';
+export * from './launcher';
 export * from './none';
 export * from './steel';
 export * from './treasure';

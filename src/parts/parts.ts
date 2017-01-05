@@ -1,6 +1,7 @@
 import {
   Bar, BiggieLeft, BiggieRight, Brick, Enemy, Energy, EnergyOff, Hero, Ladder,
-  LatchLeft, LatchRight, None, Steel, Treasure,
+  LatchLeft, LatchRight, LauncherCenter, LauncherDown, LauncherLeft,
+  LauncherRight, LauncherUp, None, Steel, Treasure,
 } from './';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -18,6 +19,11 @@ export class Parts {
     Ladder,
     LatchLeft,
     LatchRight,
+    LauncherCenter,
+    LauncherDown,
+    LauncherLeft,
+    LauncherRight,
+    LauncherUp,
     Hero,
     None,
     Steel,
