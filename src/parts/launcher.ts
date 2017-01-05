@@ -6,6 +6,10 @@ export class Launcher extends Part {
     return true;
   }
 
+  solidInside(other: Part, edge: Edge) {
+    return this.solid(other, edge);
+  }
+
   surface() {
     return true;
   }

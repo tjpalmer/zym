@@ -88,6 +88,21 @@ export class Runner extends Part {
     return this.partAt(x, y, isSolid);
   }
 
+  getSolidInside(edge: Edge, x: number, y: number, dx: number, dy: number) {
+    let isSolid = (part: Part) => part.solidInside(this, edge) && part != this;
+    x -= dx;
+    y -= dy;
+    let solid = this.partAt(x, y, isSolid);
+    if (solid) {
+      this.workPointExtra.set(x + dx, y + dy).add(this.point);
+      if (!solid.contains(this.workPointExtra)) {
+        // Moving would put us outside the bounds, so we hit the inside.
+        return solid;
+      }
+    }
+    // implied return undefined;
+  }
+
   getSupport(exact?: boolean) {
     // TODO Check which is higher!
     return this.getSurface() || this.getCatcher(exact);
@@ -148,7 +163,6 @@ export class Runner extends Part {
       // This could happen if a brick just enclosed on part of us.
       this.die();
     } else if (support) {
-      let wallEdge: Edge;
       // Prioritize vertical for enemy ai reasons, also because rarer options.
       // TODO Remember old move options to allow easier transition?
       if (climbable || !support.surface(this)) {
@@ -162,10 +176,8 @@ export class Runner extends Part {
       if (!move.y) {
         if (action.left) {
           move.x = -1;
-          wallEdge = Edge.right;
         } else if (action.right) {
           move.x = 1;
-          wallEdge = Edge.left;
         }
       }
     } else {
@@ -246,6 +258,13 @@ export class Runner extends Part {
         if (blocker1 || blocker2) {
           let x = Math.max(blockX(blocker1), blockX(blocker2));
           point.x = x + Level.tileSize.x;
+        } else {
+          blocker1 = this.getSolidInside(Edge.left, 0, 0, move.x, 0);
+          blocker2 = this.getSolidInside(Edge.left, 0, top, move.x, 0);
+          if (blocker1 || blocker2) {
+            let x = Math.max(blockX(blocker1), blockX(blocker2));
+            point.x = x;
+          }
         }
       } else if (move.x > 0) {
         let blocker1 = this.getSolid(Edge.left, right, 0);
@@ -255,6 +274,13 @@ export class Runner extends Part {
         if (blocker1 || blocker2) {
           let x = Math.min(blockX(blocker1), blockX(blocker2));
           point.x = x - Level.tileSize.x;
+        } else {
+          blocker1 = this.getSolidInside(Edge.right, right, 0, move.x, 0);
+          blocker2 = this.getSolidInside(Edge.right, right, top, move.x, 0);
+          if (blocker1 || blocker2) {
+            let x = Math.min(blockX(blocker1), blockX(blocker2));
+            point.x = x;
+          }
         }
       }
     }
@@ -275,11 +301,19 @@ export class Runner extends Part {
           let y =
             Math.max(blockY(newSupport), blockY(blocker1), blockY(blocker2));
           point.y = y + Level.tileSize.y;
-        } else if (this.climber) {
-          // See if we entered a catcher.
-          let newCatcher = this.getCatcher(false);
-          if (newCatcher && newCatcher != oldCatcher) {
-            point.y = newCatcher.point.y;
+        } else {
+          // TODO Unify catcher and inside bottom solids at all?
+          blocker1 = this.getSolidInside(Edge.bottom, 0, 0, 0, move.y);
+          blocker2 = this.getSolidInside(Edge.bottom, right, 0, 0, move.y);
+          if (blocker1 || blocker2) {
+            let y = Math.max(blockY(blocker1), blockY(blocker2));
+            point.y = y;
+          } else if (this.climber) {
+            // See if we entered a catcher.
+            let newCatcher = this.getCatcher(false);
+            if (newCatcher && newCatcher != oldCatcher) {
+              point.y = newCatcher.point.y;
+            }
           }
         }
       } else if (move.y > 0) {
@@ -290,6 +324,13 @@ export class Runner extends Part {
         if (blocker1 || blocker2) {
           let y = Math.min(blockY(blocker1), blockY(blocker2));
           point.y = y - Level.tileSize.y;
+        } else {
+          blocker1 = this.getSolidInside(Edge.top, 0, top, 0, move.y);
+          blocker2 = this.getSolidInside(Edge.top, right, top, 0, move.y);
+          if (blocker1 || blocker2) {
+            let y = Math.min(blockY(blocker1), blockY(blocker2));
+            point.y = y;
+          }
         }
       }
     }
@@ -308,6 +349,8 @@ export class Runner extends Part {
     this.moved.copy(this.point).sub(oldPoint);
     this.game.stage.moved(this, oldPoint);
   }
+
+  workPointExtra = new Vector2();
 
 }
 

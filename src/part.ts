@@ -81,6 +81,10 @@ export class Part {
     return false;
   }
 
+  solidInside(other: Part, edge: Edge) {
+    return false;
+  }
+
   surface(other: Part) {
     return false;
   }
