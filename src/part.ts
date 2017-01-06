@@ -74,6 +74,18 @@ export class Part {
       []);    
   }
 
+  get phased() {
+    return this.game.stage.time < this.phaseEndTime;
+  }
+
+  phaseBeginPoint = new Vector2();
+
+  phaseBeginTime = 0;
+
+  phaseEndPoint = new Vector2();
+
+  phaseEndTime = 0;
+
   point = new Vector2();
 
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?

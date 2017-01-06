@@ -55,8 +55,7 @@ export class Biggie extends Runner {
   }
 
   clearAction() {
-    let {action} = this;
-    action.left = action.right = action.up = action.down = false;
+    this.action.clear();
     this.hold = false;
   }
 

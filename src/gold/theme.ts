@@ -88,6 +88,7 @@ export class GoldTheme implements Theme {
 
   handle() {
     let {game} = this;
+    let {time} = game.stage;
     if (game.edit.ender != this.ender) {
       this.ender = game.edit.ender;
       this.paintPanels();
@@ -99,7 +100,7 @@ export class GoldTheme implements Theme {
     // TODO Except energy blocks might look too much like steel???
     let ender = game.mode == game.edit && game.edit.ender;
     this.uniforms.state.value = +ender;
-    let {tileIndices, tileModes} = this;
+    let {tileIndices, tileModes, tileOpacities} = this;
     let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
     // Duplicate prototype, translated and tile indexed.
@@ -119,9 +120,13 @@ export class GoldTheme implements Theme {
           tileIndices[k + 0] = currentTileIndices.x;
           tileIndices[k + 1] = currentTileIndices.y;
         }
+        let opacity = time >= part.phaseEndTime ? 1 :
+          (time - part.phaseBeginTime) /
+            (part.phaseEndTime - part.phaseBeginTime);
         for (let n = 0; n < tileModes.length; ++n) {
           // Break state into bits.
           tileModes[n] = +part.type.ender;
+          tileOpacities[n] = opacity;
         }
         tilePlanes.merge(tilePlane, 6 * partIndex);
         tilePlane.translate(-part.point.x, -part.point.y, 0);
@@ -132,6 +137,7 @@ export class GoldTheme implements Theme {
     // For some reason, needsUpdate is missing on attributes, so go any here.
     let attributes: any = tilePlanes.attributes;
     attributes.mode.needsUpdate = true;
+    attributes.opacity.needsUpdate = true;
     attributes.position.needsUpdate = true;
     attributes.tile.needsUpdate = true;
   }
@@ -165,6 +171,9 @@ export class GoldTheme implements Theme {
     ]), 3));
     // Tile map offsets, repeated.
     tilePlane.addAttribute('mode', new BufferAttribute(this.tileModes, 1));
+    tilePlane.addAttribute(
+      'opacity', new BufferAttribute(this.tileOpacities, 1)
+    );
     tilePlane.addAttribute('tile', new BufferAttribute(this.tileIndices, 2));
     tilePlane.addAttribute('uv', new BufferAttribute(new Float32Array([
       // Uv are 2D.
@@ -329,6 +338,8 @@ export class GoldTheme implements Theme {
 
   tileModes = new Uint8Array(6);
 
+  tileOpacities = new Uint8Array(6);
+
   tilePlane?: BufferGeometry;
 
   tilePlanes?: BufferGeometry;
@@ -379,6 +390,7 @@ let tileFragmentShader = `
   uniform sampler2D map;
   uniform int state;
   varying float vMode;
+  varying float vOpacity;
   varying vec2 vTile;
   varying vec2 vUv;
 
@@ -395,20 +407,23 @@ let tileFragmentShader = `
       if (vMode != 0.0) {
         grayify(gl_FragColor.xyz);
       }
-      gl_FragColor.w = 1.0;
+      gl_FragColor.w = vOpacity;
     }
   }
 `;
 
 let tileVertexShader = `
   attribute float mode;
+  attribute float opacity;
   attribute vec2 tile;
   varying float vMode;
+  varying float vOpacity;
   varying vec2 vTile;
   varying vec2 vUv;
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     vMode = mode;
+    vOpacity = opacity;
     vUv = uv;
     vTile = tile;
   }

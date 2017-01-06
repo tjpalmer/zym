@@ -130,6 +130,11 @@ export class Runner extends Part {
     // TODO Find all actions (and alignments) before moving, for enemies?
     let {stage} = this.game;
     let {align, move, oldPoint, point, workPoint} = this;
+    if (this.phased) {
+      action.clear();
+      // We get off by one without this.
+      this.point.copy(this.phaseEndPoint);
+    }
     // Intended move, not actual.
     this.intendedMove.x = action.left ? -1 : action.right ? 1 : 0;
     this.intendedMove.y = action.down ? -1 : action.up ? 1 : 0;
@@ -350,6 +355,7 @@ export class Runner extends Part {
     this.game.stage.moved(this, oldPoint);
   }
 
+  // Move some of these to module global. We're sync, right?
   workPointExtra = new Vector2();
 
 }

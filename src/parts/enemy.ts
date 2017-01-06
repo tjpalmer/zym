@@ -185,7 +185,7 @@ export class Enemy extends Runner {
   }
 
   choose() {
-    this.clearAction();
+    this.action.clear();
     if (!(this.dazed || this.dead)) {
       if (this.game.stage.hero) {
         this.chase();
@@ -200,11 +200,6 @@ export class Enemy extends Runner {
     }
     this.avoidBottomless();
     this.processAction(this.action);
-  }
-
-  clearAction() {
-    let {action} = this;
-    action.left = action.right = action.up = action.down = false;
   }
 
   closeTime(baseTime: number) {

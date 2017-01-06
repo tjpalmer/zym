@@ -27,18 +27,18 @@ export class Hero extends Runner {
   }
 
   choose() {
+    if (this.game.stage.ended || this.phased) {
+      this.action.clear();
+    }
     this.checkAction();
     let {action} = this;
-    if (this.game.stage.ended) {
-      action.left = action.right = action.up = action.down = false;
-    }
     this.processAction(action);
   }
 
   dead = false;
 
   die() {
-    if (!this.game.stage.ended) {
+    if (!(this.phased || this.game.stage.ended)) {
       this.dead = true;
       this.game.stage.ended = true;
       this.game.play.showReport('Maybe next time.');

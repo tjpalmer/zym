@@ -7,6 +7,11 @@ export class RunnerAction {
 
   burnRight = false;
 
+  clear() {
+    this.burnLeft = this.burnRight = false;
+    this.left = this.right = this.up = this.down = false;
+  }
+
   copy(action: RunnerAction) {
     this.burnLeft = action.burnLeft;
     this.burnRight = action.burnRight;
