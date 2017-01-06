@@ -56,17 +56,21 @@ export abstract class Launcher extends Part {
       ) as Energy;
       if (energy) {
         // No launching through energy.
+        energy.keyTime = stage.time;
         break;
       }
       target = stage.partAt(checkPoint, part => part instanceof Launcher);
     }
     // TODO(tjp): What if no target? Nothing? One tile, far as possible?
+    if (!target) {
+      target = this;
+    }
     if (target) {
       // Align corners together.
       // checkPoint.sub(step.multiplyScalar(0.5));
       // Prep phase.
       part.phaseBeginTime = stage.time;
-      part.phaseEndTime = stage.time + 0.5;
+      part.phaseEndTime = stage.time + 1;
       part.phaseBeginPoint.copy(part.point);
       // And move official location.
       // AI will see the destination already.

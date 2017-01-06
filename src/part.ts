@@ -52,6 +52,9 @@ export class Part {
 
   game: Game;
 
+  // A way of drawing attention.
+  keyTime = -10;
+
   move = new Vector2();
 
   moved = new Vector2();

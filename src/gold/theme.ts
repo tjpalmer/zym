@@ -120,12 +120,14 @@ export class GoldTheme implements Theme {
           tileIndices[k + 0] = currentTileIndices.x;
           tileIndices[k + 1] = currentTileIndices.y;
         }
+        let mode = +(part.type.ender || part.keyTime + 0.5 > time);
         let opacity = time >= part.phaseEndTime ? 1 :
+          // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
           (time - part.phaseBeginTime) /
             (part.phaseEndTime - part.phaseBeginTime);
         for (let n = 0; n < tileModes.length; ++n) {
           // Break state into bits.
-          tileModes[n] = +part.type.ender;
+          tileModes[n] = mode;
           tileOpacities[n] = opacity;
         }
         tilePlanes.merge(tilePlane, 6 * partIndex);
