@@ -14,10 +14,10 @@ export abstract class Launcher extends Part {
 
   choose() {
     // Putting this in choose means hero has to be aligned from previous tick.
-    // TODO Or this tick, if already processed?
+    // TODO Or this tick, if already processed? New step to add in?
     let hero = this.game.stage.hero;
     let type = this.type as LauncherType;
-    if (hero && type.checkAction(hero)) {
+    if (hero && type.checkAction(hero) && !(hero.phased || hero.dead)) {
       checkPoint.set(4, 5).add(this.point);
       if (hero.contains(checkPoint)) {
         let {send} = type;
@@ -66,6 +66,7 @@ export abstract class Launcher extends Part {
       target = this;
     }
     if (target) {
+      target.keyTime = stage.time;
       // Align corners together.
       // checkPoint.sub(step.multiplyScalar(0.5));
       // Prep phase.

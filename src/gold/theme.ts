@@ -120,7 +120,7 @@ export class GoldTheme implements Theme {
           tileIndices[k + 0] = currentTileIndices.x;
           tileIndices[k + 1] = currentTileIndices.y;
         }
-        let mode = +(part.type.ender || part.keyTime + 0.5 > time);
+        let mode = +(part.type.ender || part.keyTime + 1 > time);
         let opacity = time >= part.phaseEndTime ? 1 :
           // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
           (time - part.phaseBeginTime) /
