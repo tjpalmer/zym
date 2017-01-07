@@ -179,6 +179,10 @@ body {
   text-align: right;
 }
 
+.scoreTimeRow > * {
+  padding-top: 1em;
+}
+
 .shade {
   background: black;
   /* Only to own content -> filter: blur(3px);*/
@@ -198,6 +202,20 @@ body {
 
 .status.other {
   visibility: hidden;
+}
+
+table {
+  margin-top: 1em;
+}
+
+.timeRow td {
+  text-align: right;
+}
+
+.timeRow th {
+  font-weight: normal;
+  padding-right: 0.5em;
+  text-align: right;
 }
 
 .toolbox input {

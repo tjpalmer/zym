@@ -29,11 +29,23 @@ export class Hero extends Runner {
   }
 
   choose() {
+    let {action} = this;
     if (this.game.stage.ended || this.phased) {
-      this.action.clear();
+      action.clear();
+    }
+    if (!this.startTime) {
+      // Remember the first action time.
+      // And we get cleared if over, so we count from the beginning if no action
+      // ever, and that's okay.
+      if (
+        action.left || action.right || action.up || action.down ||
+        action.burnLeft || action.burnRight
+      ) {
+        // TODO Visual indicator of when clock starts?
+        this.startTime = this.game.stage.time;
+      }
     }
     this.checkAction();
-    let {action} = this;
     this.processAction(action);
   }
 
@@ -61,6 +73,8 @@ export class Hero extends Runner {
   }
 
   speed = new Vector2(1, 1);
+
+  startTime = 0;
 
   treasureCount = 0;
 

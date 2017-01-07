@@ -21,6 +21,7 @@ export class Prize extends Part {
 
 export class Bonus extends Prize {
 
+  // Time is money, eh?
   static char = '$';
 
 }

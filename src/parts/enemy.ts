@@ -232,6 +232,15 @@ export class Enemy extends Runner {
     );
   }
 
+  get keyTime() {
+    // Indicate when holding a prize.
+    return this.prize ? this.game.stage.time : -10;
+  }
+
+  set keyTime(value: number) {
+    // Ignore.
+  }
+
   getOther(x: number, y: number) {
     let isEnemy = (part: Part) => part instanceof Enemy && part != this;
     return this.partAt(x, y, isEnemy);

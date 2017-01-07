@@ -1,10 +1,10 @@
 import {
-  Art, BiggieArt, BrickArt, EnergyArt, LatchArt, Layer, RunnerArt, TreasureArt,
+  Art, BiggieArt, BrickArt, EnergyArt, LatchArt, Layer, RunnerArt, PrizeArt,
 } from './';
 import {
-  Bar, Biggie, BiggieLeft, BiggieRight, Brick, Enemy, Energy, EnergyOff, Hero,
-  Ladder, Latch, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
-  LauncherLeft, LauncherRight, LauncherUp, None, Runner, Steel, Treasure,
+  Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff,
+  Hero, Ladder, Latch, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
+  LauncherLeft, LauncherRight, LauncherUp, None, Prize, Runner, Steel, Treasure,
 } from '../parts/';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -28,6 +28,7 @@ export class Parts {
     [Bar, artMaker(arts.Bar)],
     [BiggieLeft, part => new BiggieArt(part as Biggie)],
     [BiggieRight, part => new BiggieArt(part as Biggie)],
+    [Bonus, part => new PrizeArt(part as Prize, new Vector2(13, 16))],
     [Brick, part => new BrickArt(part as Brick)],
     [Enemy, part => new RunnerArt(part as Runner, new Vector2(15, 14))],
     [Energy, part => new EnergyArt(part as Energy)],
@@ -43,7 +44,7 @@ export class Parts {
     [LauncherUp, artMaker(arts.LauncherUp)], 
     [None, artMaker(arts.None)],
     [Steel, artMaker(arts.Steel)],
-    [Treasure, part => new TreasureArt(part as Treasure)],
+    [Treasure, part => new PrizeArt(part as Prize, new Vector2(13, 17))],
   ]);
 
 }

@@ -1,27 +1,28 @@
 import {Art, Layer} from './';
-import {Treasure} from '../parts';
+import {Prize} from '../parts';
 import {Vector2} from 'three';
 
-export class TreasureArt implements Art {
+export class PrizeArt implements Art {
 
-  constructor(treasure: Treasure) {
-    this.treasure = treasure;
+  constructor(prize: Prize, tile: Vector2) {
+    this.mainTile = tile;
+    this.prize = prize;
   }
 
   layer = Layer.treasure;
 
+  mainTile: Vector2;
+
   get part() {
-    return this.treasure;
+    return this.prize;
   }
 
   get tile() {
-    return this.treasure.owner ? goneTile : mainTile;
+    return this.prize.owner ? goneTile : this.mainTile;
   }
 
-  treasure: Treasure;
+  prize: Prize;
 
 }
 
 let goneTile = new Vector2(0, 2);
-
-let mainTile = new Vector2(13, 17);
