@@ -1,4 +1,4 @@
-import {None, Runner, Treasure} from './';
+import {None, Prize, Runner, Treasure} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -9,6 +9,8 @@ export class Hero extends Runner {
   action = new RunnerAction();
 
   actionChange = new RunnerAction();
+
+  bonusCount = 0;
 
   carried = true;
 
@@ -62,11 +64,16 @@ export class Hero extends Runner {
 
   treasureCount = 0;
 
-  take(treasure: Treasure) {
-    this.treasureCount += 1;
-    if (this.treasureCount == this.game.stage.treasureCount) {
-      this.game.stage.ending = true;
-      this.game.level.updateStage(this.game);
+  take(prize: Prize) {
+    if (prize instanceof Treasure) {
+      this.treasureCount += 1;
+      if (this.treasureCount == this.game.stage.treasureCount) {
+        this.game.stage.ending = true;
+        this.game.level.updateStage(this.game);
+      }
+    } else {
+      // Bonus is the only other option.
+      this.bonusCount += 1;
     }
     return true;
   }

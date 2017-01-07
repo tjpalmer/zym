@@ -1,4 +1,4 @@
-import {Biggie, Brick, None, Runner, TilePos, Treasure} from './';
+import {Biggie, Brick, None, Prize, Runner, TilePos} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -33,7 +33,7 @@ export class Enemy extends Runner {
     // Look from checkPoint down.
     while (y + myY >= 0) {
       if (this.partAt(x, y, part =>
-        part.catches(this) || part.surface(this) || part instanceof Brick
+        part.catches(this) || part.surface(this, true)
       )) {
         // Something is here.
         return false;
@@ -75,7 +75,7 @@ export class Enemy extends Runner {
             // The problem is that if we're on a ladder with a solid at
             // bottom, it still tries to go down instead of left or right.
             let solidSurface =
-              this.getSurface(part => part.solid(this, Edge.top));
+              this.getSurface(part => part.solid(this, Edge.top, true), true);
             if (solidSurface) {
               // Well, also see if we have a climbable here.
               // The problem is if we have imperfect alignment with a ladder
@@ -93,10 +93,9 @@ export class Enemy extends Runner {
               action.down = true;
             }
           } else {
-            // TODO Check for solid bottom at the top of a ladder.
             let ceiling =
-              this.getSolid(Edge.bottom, TilePos.midLeft, 10) ||
-              this.getSolid(Edge.bottom, TilePos.midRight, 10);
+              this.getSolid(Edge.bottom, TilePos.midLeft, 10, true) ||
+              this.getSolid(Edge.bottom, TilePos.midRight, 10, true);
             if (!ceiling) {
               action.up = true;
             }
@@ -182,6 +181,15 @@ export class Enemy extends Runner {
         break;
       }
     }
+    if (action.left || action.right) {
+      // Don't walk into seeming walls. TODO Exact alignment against such?
+      let x = action.left ? -this.speed.x : 8 + this.speed.x;
+      let edge = action.left ? Edge.right : Edge.left;
+      let wall = this.partAt(x, 0, part => part.solid(this, edge, true));
+      if (wall) {
+        action.left = action.right = false;
+      }
+    }
   }
 
   choose() {
@@ -231,14 +239,16 @@ export class Enemy extends Runner {
 
   lastWander = new Vector2(1, 1);
 
+  prize?: Prize = undefined;
+
   releaseTreasure() {
-    let {treasure} = this;
-    if (treasure) {
-      this.treasure = undefined;
-      treasure.owner = undefined;
-      treasure.point.copy(this.point);
+    let {prize} = this;
+    if (prize) {
+      this.prize = undefined;
+      prize.owner = undefined;
+      prize.point.copy(this.point);
       // Place it above.
-      treasure.point.y += 10;
+      prize.point.y += 10;
     }
   }
 
@@ -259,16 +269,14 @@ export class Enemy extends Runner {
     return !(other instanceof Biggie);
   }
 
-  take(treasure: Treasure) {
-    if (this.treasure) {
+  take(prize: Prize) {
+    if (this.prize) {
       return false;
     } else {
-      this.treasure = treasure;
+      this.prize = prize;
       return true;
     }
   }
-
-  treasure?: Treasure = undefined;
 
   update() {
     let catcher = this.getCatcher();

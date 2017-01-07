@@ -73,12 +73,12 @@ export class Brick extends Part {
     return false;
   }
 
-  solid(other: Part, edge?: Edge) {
-    return !this.burned;
+  solid(other: Part, edge?: Edge, seems?: boolean) {
+    return this.surface(other, seems);
   }
 
-  surface() {
-    return !this.burned;
+  surface(other: Part, seems?: boolean) {
+    return seems ? true : !this.burned;
   }
 
 }

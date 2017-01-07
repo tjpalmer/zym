@@ -12,12 +12,13 @@ export class Biggie extends Runner {
       return;
     }
     let x = this.facing < 0 ? TilePos.midLeft : TilePos.midRight;
-    let ahead =
-      this.partAt(x, -1, part => part.surface(this) || part instanceof Brick);
+    let ahead = this.partAt(
+      x, -1, part => part.surface(this) || part.solid(this, Edge.top, true)
+    );
     if (ahead) {
       x = this.facing < 0 ? -1 : 9;
       let edge = this.facing < 0 ? Edge.right : Edge.left;
-      let wall = this.partAt(x, 0, part => part.solid(this, edge));
+      let wall = this.partAt(x, 0, part => part.solid(this, edge, true));
       if (wall) {
         ahead = undefined;
       } else {

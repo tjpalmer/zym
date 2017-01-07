@@ -1,9 +1,7 @@
 import {Runner} from './';
 import {Part} from '../';
 
-export class Treasure extends Part {
-
-  static char = '*';
+export class Prize extends Part {
 
   owner?: Runner = undefined;
 
@@ -18,5 +16,17 @@ export class Treasure extends Part {
       }
     }
   }
+
+}
+
+export class Bonus extends Prize {
+
+  static char = '$';
+
+}
+
+export class Treasure extends Prize {
+
+  static char = '*';
 
 }

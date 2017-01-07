@@ -2,10 +2,11 @@ import {Game, Level} from './';
 import {Vector2} from 'three';
 
 export enum Edge {
-  top,
-  right,
+  all,
   bottom,
   left,
+  right,
+  top,
 }
 
 export class Part {
@@ -92,7 +93,7 @@ export class Part {
   point = new Vector2();
 
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?
-  solid(other: Part, edge?: Edge) {
+  solid(other: Part, edge?: Edge, seems?: boolean) {
     return false;
   }
 
@@ -100,7 +101,7 @@ export class Part {
     return false;
   }
 
-  surface(other: Part) {
+  surface(other: Part, seems?: boolean) {
     return false;
   }
 

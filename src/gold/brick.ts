@@ -17,6 +17,7 @@ export class BrickArt implements Art {
   }
 
   get tile() {
+    // TODO Additional translucent full brick even when burned?
     let {burned, burnTime, burnTimeLeft} = this.brick;
     if (burned) {
       let {workPoint} = this;

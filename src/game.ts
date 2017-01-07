@@ -56,6 +56,13 @@ export class Game {
 
   constructor(body: HTMLElement) {
     this.body = body;
+    // UI.
+    let dialogBox = body.querySelector('.dialogBox')!;
+    dialogBox.addEventListener('click', ({target}) => {
+      if (target == dialogBox) {
+        this.hideDialog()
+      }
+    });
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.

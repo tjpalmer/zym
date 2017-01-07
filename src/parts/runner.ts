@@ -1,4 +1,4 @@
-import {None, Treasure} from './';
+import {None, Prize} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -83,8 +83,8 @@ export class Runner extends Part {
       climbableAt(midLeft, top) || climbableAt(midRight, top));
   }
 
-  getSolid(edge: Edge, x: number, y: number) {
-    let isSolid = (part: Part) => part.solid(this, edge) && part != this;
+  getSolid(edge: Edge, x: number, y: number, seems?: boolean) {
+    let isSolid = (part: Part) => part.solid(this, edge, seems) && part != this;
     return this.partAt(x, y, isSolid);
   }
 
@@ -108,12 +108,12 @@ export class Runner extends Part {
     return this.getSurface() || this.getCatcher(exact);
   }
 
-  getSurface(condition?: (part: Part) => boolean) {
+  getSurface(condition?: (part: Part) => boolean, seems?: boolean) {
     if (!condition) {
       condition = part => true;
     }
     let isSurface = (part: Part) =>
-      part.surface(this) && part != this && condition!(part);
+      part.surface(this, seems) && part != this && condition!(part);
     // TODO Replace all -1 with -epsilon?
     let part1 = this.partAt(3, -1, isSurface);
     let part2 = this.partAt(midRight, -1, isSurface);
@@ -222,7 +222,7 @@ export class Runner extends Part {
 
   support: Part | undefined = undefined;
 
-  take(treasure: Treasure) {
+  take(prize: Prize) {
     // For overriding.
     return false;
   }

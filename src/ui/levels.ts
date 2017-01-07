@@ -53,8 +53,8 @@ export class Levels implements Dialog {
   buildTitleBar() {
     let add = this.titleBar.querySelector('.add') as HTMLElement;
     add.addEventListener('click', () => this.addLevel());
-    let close = this.titleBar.querySelector('.close') as HTMLElement;
-    close.addEventListener('click', () => this.game.hideDialog());
+    // let close = this.titleBar.querySelector('.close') as HTMLElement;
+    // close.addEventListener('click', () => this.game.hideDialog());
   }
 
   content: HTMLElement;
