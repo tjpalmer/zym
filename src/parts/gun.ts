@@ -108,7 +108,7 @@ export class Shot extends Part {
     let {facing} = gun;
     let {stage} = game;
     oldPoint.copy(this.point);
-    this.point.x += 2 * facing;
+    this.point.x += 1.5 * facing;
     stage.moved(this, oldPoint);
     if (this.point.x < -10 || this.point.x > Level.pixelCount.x + 10) {
       this.active = false;
