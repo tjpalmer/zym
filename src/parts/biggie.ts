@@ -95,6 +95,8 @@ export class Biggie extends Runner {
 
 export class BiggieLeft extends Biggie {
 
+  // The inside of the bracket faces forward to represent the head and foot or
+  // tread facing forward.
   static char = ']';
 
   facing = -1;

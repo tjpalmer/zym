@@ -158,6 +158,7 @@ export class Level {
       stage.ending = false;
       stage.energyOn = true;
       stage.time = 0;
+      stage.particles.clear();
     }
     stage.hero = undefined;
     stage.treasureCount = 0;

@@ -7,6 +7,7 @@ export * from './biggie';
 export * from './brick';
 export * from './enemy';
 export * from './energy';
+export * from './gun';
 export * from './hero';
 export * from './ladder';
 export * from './launcher';

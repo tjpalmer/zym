@@ -16,7 +16,8 @@ export enum Layer {
   // Biggies go behind other enemies because they are bigger.
   biggie,
   enemy,
-  // Front is also static.
+  shot,
+  // Front is also static. TODO Really? Does it matter? No?
   front,
   // Just to track the number of enum values.
   length,
@@ -49,6 +50,8 @@ export class GoldTheme implements Theme {
     this.texture.needsUpdate = true;
     // Prepare layers.
     // Add 1 to allow an undefined at the end.
+    // We'll extend these arrays later as needed. But not shrink them.
+    // TODO Don't bother to preallocate?
     let maxLayerPartCount = Level.tileCount.x * Level.tileCount.y + 1;
     for (let i = 0; i < Layer.length; ++i) {
       this.layers.push(new Array<Part>(maxLayerPartCount));
@@ -70,11 +73,18 @@ export class GoldTheme implements Theme {
   }
 
   buildDone(game: Game) {
-    let layerPartIndices = this.layers.map(() => 0);
-    game.stage.parts.forEach(part => {
+    this.buildLayers(game.stage.parts, true);
+  }
+
+  buildLayers(parts: Iterable<Part>, reset = false) {
+    let {layerPartIndices, layers} = this;
+    if (reset) {
+      layers.forEach((_, index) => layerPartIndices[index] = 0);
+    }
+    for (let part of parts) {
       let {layer} = part.art as Art;
       this.layers[layer][layerPartIndices[layer]++] = part;
-    });
+    }
     layerPartIndices.forEach((layerPartIndex, layer) => {
       this.layers[layer][layerPartIndex] = undefined;
     });
@@ -107,6 +117,8 @@ export class GoldTheme implements Theme {
     // TODO How to make sure tilePlanes is large enough?
     // TODO Fill the back with none parts when it's too big?
     let partIndex = 0;
+    this.buildLayers(game.stage.parts, true);
+    this.buildLayers(game.stage.particles);
     this.layers.forEach(layer => {
       for (let part of layer) {
         if (!part) {
@@ -135,10 +147,12 @@ export class GoldTheme implements Theme {
         ++partIndex;
       }
     });
+    this.tilePlanes!.setDrawRange(0, 6 * partIndex);
     // TODO What if the amount varies? Need to back fill with nones?
-    // For some reason, needsUpdate is missing on attributes, so go any here.
     let attributes: any = tilePlanes.attributes;
-    attributes.mode.needsUpdate = true;
+    // Older typing missed needsUpdate, but looks like it's here now.
+    // TODO Define a type with all our attributes on it?
+    (attributes.mode as BufferAttribute).needsUpdate = true;
     attributes.opacity.needsUpdate = true;
     attributes.position.needsUpdate = true;
     attributes.tile.needsUpdate = true;
@@ -183,7 +197,8 @@ export class GoldTheme implements Theme {
       1, 0, 1, 1, 0, 1,
     ]), 2));
     // All tiles in a batch.
-    let tileCount = Level.tileCount.x * Level.tileCount.y;
+    // '4 *' to have space for particles.
+    let tileCount = 4 * Level.tileCount.x * Level.tileCount.y;
     this.tilePlanes = new BufferGeometry();
     for (let name in tilePlane.attributes) {
       let attribute = tilePlane.getAttribute(name);
@@ -196,6 +211,8 @@ export class GoldTheme implements Theme {
     game.scene.add(this.tilesMesh);
     game.redraw = () => this.handle();
   }
+
+  layerPartIndices = new Array<number>();
 
   layers = new Array<Array<Part | undefined>>();
 

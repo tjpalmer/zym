@@ -51,6 +51,10 @@ export class Part {
   // For overriding.
   editPlacedAt(tilePoint: Vector2) {}
 
+  get exists() {
+    return true;
+  }
+
   game: Game;
 
   // A way of drawing attention.
@@ -92,6 +96,8 @@ export class Part {
 
   point = new Vector2();
 
+  reset() {}
+
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?
   solid(other: Part, edge?: Edge, seems?: boolean) {
     return false;
@@ -130,4 +136,5 @@ export interface PartType {
 
   // Don't use new. Use make. It just helps TypeScript know we're a class.
   new (game: Game): Part;
+
 }

@@ -1,4 +1,4 @@
-import {Game, Grid, Level, Part} from './';
+import {Game, Grid, Level, Part, Ring} from './';
 import {Hero, Steel, Treasure} from './parts';
 import {Vector2} from 'three';
 
@@ -57,6 +57,23 @@ export class Stage {
 
   hero: Hero | undefined = undefined;
 
+  manageParticles() {
+    let {particles} = this;
+    // The oldest particles should likely be the first to cease existing.
+    // So clear them out to prevent excess work.
+    while (!particles.empty) {
+      let particle = particles.first!;
+      if (particle.exists) {
+        // Don't worry about later gaps.
+        break;
+      } else {
+        particles.shift();
+        // TODO Require others elsewhere to be responsible on particle death?
+        this.removed(particle);
+      }
+    }
+  }
+
   moved(part: Part, oldPoint: Vector2) {
     // First see if it's still in the same place.
     let {workPoint, workPoint2} = this;
@@ -75,6 +92,10 @@ export class Stage {
     this.removed(part, oldPoint);
     this.added(part);
   }
+
+  // These particles are short-lived but relevant to game state.
+  // Other particles might exist only in the visual theme.
+  particles = new Ring<Part>(10 * Level.tileCount.x * Level.tileCount.y);
 
   // During level editing, these corresponding exactly to level tile indices.
   // This can include nones.
@@ -129,14 +150,9 @@ export class Stage {
   tick() {
     // TODO Move all updates to worker thread, and just receive state each
     // TODO frame?
-    // Choose based on current state.
-    for (let part of this.parts) {
-      part.choose();
-    }
-    // Update after choices.
-    for (let part of this.parts) {
-      part.update();
-    }
+    this.manageParticles();
+    this.tickParts(this.parts);
+    this.tickParts(this.particles);
     // Count time.
     // TODO Actual time once we do that.
     this.time += 1/60;
@@ -145,6 +161,17 @@ export class Stage {
       this.time = 0;
     }
     // TODO Maybe separate constrain step?
+  }
+
+  tickParts(parts: Iterable<Part>) {
+    // Choose based on current state.
+    for (let part of parts) {
+      part.choose();
+    }
+    // Update after choices.
+    for (let part of parts) {
+      part.update();
+    }
   }
 
   // Time in seconds since play start.

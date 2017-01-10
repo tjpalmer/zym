@@ -1,7 +1,7 @@
 import {
-  Bar, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff, Hero,
-  Ladder, LatchLeft, LatchRight, LauncherCenter, LauncherDown, LauncherLeft,
-  LauncherRight, LauncherUp, None, Steel, Treasure,
+  Bar, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff, GunLeft,
+  GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
+  LauncherLeft, LauncherRight, LauncherUp, None, Steel, Treasure,
 } from './';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -17,6 +17,9 @@ export class Parts {
     Enemy,
     Energy,
     EnergyOff,
+    GunLeft,
+    GunRight,
+    Hero,
     Ladder,
     LatchLeft,
     LatchRight,
@@ -25,13 +28,10 @@ export class Parts {
     LauncherLeft,
     LauncherRight,
     LauncherUp,
-    Hero,
     None,
     Steel,
     Treasure,
   ];
-
-  // TODO Assert no duplicate chars!
 
   static charParts = new Map(Parts.inventory.map(
     part => [part.char, part] as [string, PartType]
