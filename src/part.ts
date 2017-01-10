@@ -48,6 +48,12 @@ export class Part {
       point.y >= y && point.y < y + Level.tileSize.y);
   }
 
+  dead = false;
+
+  die() {
+    this.dead = true;
+  }
+
   // For overriding.
   editPlacedAt(tilePoint: Vector2) {}
 
@@ -97,6 +103,14 @@ export class Part {
   point = new Vector2();
 
   reset() {}
+
+  get shootable() {
+    return this.solid(this);
+  }
+
+  get shotKillable() {
+    return false;
+  }
 
   // TODO Inside solid for burned bricks vs enemies, or launchers for all?
   solid(other: Part, edge?: Edge, seems?: boolean) {

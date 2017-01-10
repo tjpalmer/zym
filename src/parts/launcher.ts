@@ -13,9 +13,12 @@ interface LauncherType extends PartType {
 export abstract class Launcher extends Part {
 
   choose() {
+    if (this.dead) {
+      return;
+    }
     // Putting this in choose means hero has to be aligned from previous tick.
     // TODO Or this tick, if already processed? New step to add in?
-    let hero = this.game.stage.hero;
+    let {hero} = this.game.stage;
     let type = this.type as LauncherType;
     if (hero && type.checkAction(hero) && !(hero.phased || hero.dead)) {
       checkPoint.set(4, 5).add(this.point);
@@ -59,7 +62,9 @@ export abstract class Launcher extends Part {
         energy.keyTime = stage.time;
         break;
       }
-      target = stage.partAt(checkPoint, part => part instanceof Launcher);
+      target = stage.partAt(checkPoint, part =>
+        part instanceof Launcher && !part.dead
+      );
     }
     // TODO(tjp): What if no target? Nothing? One tile, far as possible?
     if (!target) {
@@ -82,6 +87,14 @@ export abstract class Launcher extends Part {
 
   outside(point: Vector2) {
     // Override based on direction.
+    return true;
+  }
+
+  get shootable() {
+    return true;
+  }
+
+  get shotKillable() {
     return true;
   }
 
@@ -122,7 +135,7 @@ export class LauncherDown extends Launcher {
   static send = new Vector2(0, -1);
 
   solid(other: Part, edge?: Edge) {
-    return edge == Edge.bottom;
+    return edge == Edge.bottom && !this.dead;
   }
 
 }
@@ -142,7 +155,7 @@ export class LauncherLeft extends Launcher {
   static send = new Vector2(-1, 0);
 
   solid(other: Part, edge?: Edge) {
-    return edge == Edge.left;
+    return edge == Edge.left && !this.dead;
   }
 
 }
@@ -162,7 +175,7 @@ export class LauncherRight extends Launcher {
   static send = new Vector2(1, 0);
 
   solid(other: Part, edge?: Edge) {
-    return edge == Edge.right;
+    return edge == Edge.right && !this.dead;
   }
 
 }
@@ -182,7 +195,7 @@ export class LauncherUp extends Launcher {
   static send = new Vector2(0, 1);
 
   solid(other: Part, edge?: Edge) {
-    return edge == Edge.top;
+    return edge == Edge.top && !this.dead;
   }
 
 }

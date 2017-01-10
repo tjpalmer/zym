@@ -30,6 +30,7 @@ export class Hero extends Runner {
 
   choose() {
     let {action} = this;
+    this.checkAction();
     if (this.game.stage.ended || this.phased) {
       action.clear();
     }
@@ -45,11 +46,8 @@ export class Hero extends Runner {
         this.startTime = this.game.stage.time;
       }
     }
-    this.checkAction();
     this.processAction(action);
   }
-
-  dead = false;
 
   die() {
     if (!(this.phased || this.game.stage.ended)) {

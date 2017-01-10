@@ -68,6 +68,10 @@ export class Biggie extends Runner {
 
   lastTurn = 0;
 
+  get shotKillable() {
+    return false;
+  }
+
   solid(other: Part): boolean {
     return other instanceof Biggie;
   }

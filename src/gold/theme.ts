@@ -11,6 +11,7 @@ export enum Layer {
   // Back is all for static items that people go in front of.
   back,
   treasure,
+  dead,
   hero,
   // All enemies appear above player to be aggressive.
   // Biggies go behind other enemies because they are bigger.
@@ -83,6 +84,9 @@ export class GoldTheme implements Theme {
     }
     for (let part of parts) {
       let {layer} = part.art as Art;
+      if (part.dead) {
+        layer = Layer.dead;
+      }
       this.layers[layer][layerPartIndices[layer]++] = part;
     }
     layerPartIndices.forEach((layerPartIndex, layer) => {
@@ -133,6 +137,9 @@ export class GoldTheme implements Theme {
           tileIndices[k + 1] = currentTileIndices.y;
         }
         let mode = +(part.type.ender || part.keyTime + 1 > time);
+        if (part.dead) {
+          mode = 2;
+        }
         let opacity = time >= part.phaseEndTime ? 1 :
           // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
           (time - part.phaseBeginTime) /
@@ -425,6 +432,9 @@ let tileFragmentShader = `
       // TODO Break mode (in vert shader?) and state into bits.
       if (vMode != 0.0) {
         grayify(gl_FragColor.xyz);
+        if (vMode > 1.0) {
+          gl_FragColor.xyz *= 0.5;
+        }
       }
       gl_FragColor.w = vOpacity;
     }

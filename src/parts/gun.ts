@@ -1,4 +1,4 @@
-import {Biggie, Runner} from './';
+import {Biggie, Launcher, Runner} from './';
 import {Game, Level, Part} from '../';
 import {Vector2} from 'three';
 
@@ -9,17 +9,44 @@ export class Gun extends Part {
     this.shot = new Shot(game, this);
   }
 
-  dead = false;
-
-  die() {
-    this.dead = true;
-  }
-
   facing = 0;
+
+  heroVisible() {
+    let {point} = this;
+    let {stage} = this.game;
+    let {hero} = stage;
+    if (!hero) {
+      return false;
+    }
+    if (hero.point.y + 10 < point.y || hero.point.y > point.y + 10) {
+      // Totally not vertically aligned. Skip.
+      return false;
+    }
+    workPoint.set(4, 5).add(point);
+    let step = this.facing * 8;
+    while (workPoint.x > -10 && workPoint.x < 330) {
+      workPoint.x += step;
+      if (hero.contains(workPoint)) {
+        return true;
+      }
+      if (stage.partAt(workPoint, part => part.solid(this))) {
+        break;
+      }
+    }
+    return false;
+  }
 
   reset() {
     this.shot.active = false;
     this.game.stage.removed(this.shot);
+  }
+
+  get shootable() {
+    return true;
+  }
+
+  get shotKillable() {
+    return true;
   }
 
   shot: Shot;
@@ -30,7 +57,7 @@ export class Gun extends Part {
     if (this.dead) {
       return;
     }
-    if (!shot.active) {
+    if (!shot.active && this.heroVisible()) {
       if (!shot.art) {
         this.game.theme.buildArt(shot);
       }
@@ -81,7 +108,7 @@ export class Shot extends Part {
     let {facing} = gun;
     let {stage} = game;
     oldPoint.copy(this.point);
-    this.point.x += 1.5 * facing;
+    this.point.x += 2 * facing;
     stage.moved(this, oldPoint);
     if (this.point.x < -10 || this.point.x > Level.pixelCount.x + 10) {
       this.active = false;
@@ -98,12 +125,7 @@ export class Shot extends Part {
     let hit: Part | undefined = undefined;
     for (let part of parts) {
       if (
-        part != gun &&
-        (
-          ((part instanceof Gun || part instanceof Runner) && !part.dead) ||
-          part.solid(this)
-        ) &&
-        part.contains(workPoint)
+        part != gun && part.shootable && !part.dead && part.contains(workPoint)
       ) {
         if (hit) {
           // Hit the first thing.
@@ -117,10 +139,7 @@ export class Shot extends Part {
     }
     if (hit) {
       this.active = false;
-      if (
-        hit instanceof Gun ||
-        (hit instanceof Runner && !(hit instanceof Biggie))
-      ) {
+      if (hit.shotKillable) {
         hit.die();
       }
     }

@@ -10,13 +10,6 @@ export class Runner extends Part {
 
   climbing = false;
 
-  // TODO Push up to part, so we can read it easily for any art?
-  dead = false;
-
-  die() {
-    this.dead = true;
-  }
-
   encased() {
     let isSolid = (part: Part) => part.solid(this) && part != this;
     return (
@@ -216,6 +209,14 @@ export class Runner extends Part {
     move.multiply(this.speed);
     this.oldCatcher = oldCatcher;
     this.support = support;
+  }
+
+  get shootable() {
+    return true;
+  }
+
+  get shotKillable() {
+    return true;
   }
 
   speed: Vector2;
