@@ -1,4 +1,4 @@
-import {Game, Grid, Level, Part, Ring} from './';
+import {Game, Grid, Group, Level, Part} from './';
 import {Hero, Steel, Treasure} from './parts';
 import {Vector2} from 'three';
 
@@ -61,14 +61,12 @@ export class Stage {
     let {particles} = this;
     // The oldest particles should likely be the first to cease existing.
     // So clear them out to prevent excess work.
-    while (!particles.empty) {
-      let particle = particles.first!;
+    for (let index = 0; index < particles.length;) {
+      let particle = particles.items[index]!;
       if (particle.exists) {
-        // Don't worry about later gaps.
-        break;
+        index += 1;
       } else {
-        particles.shift();
-        // TODO Require others elsewhere to be responsible on particle death?
+        particles.removeAt(index);
         this.removed(particle);
       }
     }
@@ -95,7 +93,7 @@ export class Stage {
 
   // These particles are short-lived but relevant to game state.
   // Other particles might exist only in the visual theme.
-  particles = new Ring<Part>(10 * Level.tileCount.x * Level.tileCount.y);
+  particles = new Group<Part>();
 
   // During level editing, these corresponding exactly to level tile indices.
   // This can include nones.

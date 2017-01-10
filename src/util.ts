@@ -29,16 +29,60 @@ export class Grid<Item> {
 
 }
 
+export class Group<Item> {
+  // Not a mathematical group. Just a group.
+  // Doesn't necessarily support set operations, but it's sort of a set.
+
+  clear() {
+    // TODO If I say array.length = 0 in Chrome, does it retain memory space?
+    // TODO If so, can I trust it to stay that way?
+    let {items, length} = this;
+    this.length = 0;
+    for (let i = 0; i < length; ++i) {
+      items[i] = undefined;
+    }
+  }
+
+  items = new Array<Item | undefined>();
+
+  length = 0;
+
+  push(item: Item) {
+    this.items[this.length++] = item;
+  }
+
+  removeAt(index: number) {
+    let {items} = this;
+    items[index] = items[--this.length];
+    // Only grow. Don't shrink.
+    items[this.length + 1] = undefined;
+  }
+
+  *[Symbol.iterator]() {
+    // TODO How to make Ring directly Iterable?
+    let {items, length} = this;
+    for (let i = 0; i < length; ++i) {
+      yield items[i]!;
+    }
+  }
+
+}
+
 export type Id = string;
 
 export class Ring<Item> {
   // A circular queue with push and shift functions.
+  // TODO Keep this or ditch it?
 
   constructor(capacity: number) {
     if (!capacity) {
       throw new Error(`capacity ${capacity} <= 0`);
     }
     this.items = new Array<Item>(capacity);
+  }
+
+  at(index: number) {
+    return this.items[(this.begin + index) % this.items.length];
   }
 
   begin = 0;
@@ -65,6 +109,14 @@ export class Ring<Item> {
   }
 
   items: Array<Item | undefined>;
+
+  get length() {
+    let length = this.end - this.begin;
+    if (length < 0) {
+      length += this.items.length;
+    }
+    return length;
+  }
 
   push(item: Item) {
     let {end, items} = this;
