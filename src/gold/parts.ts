@@ -22,10 +22,14 @@ export let arts = {
   LauncherRight: {layer: Layer.back, tile: new Vector2(11, 16)},
   LauncherUp: {layer: Layer.back, tile: new Vector2(10, 17)},
   None: {layer: Layer.back, tile: new Vector2(0, 2)},
-  // TODO Pixel x offsets for Shot and BiggieLeft.
   Shot: {layer: Layer.shot, tile: new Vector2(22, 10)},
   Steel: {layer: Layer.front, tile: new Vector2(7, 17)},
 };
+
+interface SimpleArt {
+  layer: Layer;
+  tile: Vector2;
+}
 
 export class Parts {
 
@@ -59,8 +63,8 @@ export class Parts {
 
 }
 
-function artMaker(base: {layer: Layer, tile: Vector2}) {
+function artMaker({layer, tile}: SimpleArt) {
   return (part: Part): Art => {
-    return {layer: base.layer, part, tile: base.tile};
+    return {layer, offsetX: 0, part, tile};
   }
 }

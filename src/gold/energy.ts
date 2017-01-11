@@ -1,26 +1,16 @@
-import {Art, Layer} from './';
+import {BaseArt, Layer} from './';
 import {Energy, EnergyOff, Latch, LatchLeft, LatchRight} from '../parts';
 import {Vector2} from 'three';
 
-export class EnergyArt implements Art {
-
-  constructor(energy: Energy) {
-    this.energy = energy;
-  }
-
-  energy: Energy;
+export class EnergyArt extends BaseArt<Energy> {
 
   layer = Layer.front;
 
-  get part() {
-    return this.energy;
-  }
-
   get tile() {
-    let {energy, workPoint} = this;
-    let {game} = energy;
+    let {part, workPoint} = this;
+    let {game} = part;
     workPoint.set(16, 16);
-    if (!energy.on) {
+    if (!part.on) {
       if (game.mode == game.edit) {
         workPoint.x += 1;
       } else {
@@ -34,28 +24,18 @@ export class EnergyArt implements Art {
 
 }
 
-export class LatchArt implements Art {
-
-  constructor(latch: Latch) {
-    this.latch = latch;
-  }
-
-  latch: Latch;
+export class LatchArt extends BaseArt<Latch> {
 
   layer = Layer.front;
 
-  get part() {
-    return this.latch;
-  }
-
   get tile() {
-    let {latch} = this;
-    let {time} = latch.game.stage;
+    let {part} = this;
+    let {time} = part.game.stage;
     this.workPoint.set(20, 16);
-    if (time < latch.changeTime + 8 / 60 || !latch.facing) {
+    if (time < part.changeTime + 8 / 60 || !part.facing) {
       // Center facing. TODO Separate facing from state.
       this.workPoint.x -= 1;
-    } else if (this.latch.facing < 0) {
+    } else if (part.facing < 0) {
       this.workPoint.x -= 2;
     }
     return this.workPoint;

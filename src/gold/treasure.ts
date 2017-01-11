@@ -1,27 +1,21 @@
-import {Art, Layer} from './';
+import {BaseArt, Layer} from './';
 import {Prize} from '../parts';
 import {Vector2} from 'three';
 
-export class PrizeArt implements Art {
+export class PrizeArt extends BaseArt<Prize> {
 
   constructor(prize: Prize, tile: Vector2) {
+    super(prize);
     this.mainTile = tile;
-    this.prize = prize;
   }
 
   layer = Layer.treasure;
 
   mainTile: Vector2;
 
-  get part() {
-    return this.prize;
-  }
-
   get tile() {
-    return this.prize.owner ? goneTile : this.mainTile;
+    return this.part.owner ? goneTile : this.mainTile;
   }
-
-  prize: Prize;
 
 }
 

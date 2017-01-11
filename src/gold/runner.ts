@@ -1,14 +1,14 @@
-import {Art, Layer} from './';
+import {BaseArt, Layer} from './';
 import {Enemy, Runner} from '../parts';
 import {Vector2} from 'three';
 
-export class RunnerArt implements Art {
+export class RunnerArt extends BaseArt<Runner> {
 
   constructor(runner: Runner, tile: Vector2) {
+    super(runner);
     if (runner.type == Enemy) {
       this.layer = Layer.enemy;
     }
-    this.runner = runner;
     this.base = tile;
   }
 
@@ -25,17 +25,11 @@ export class RunnerArt implements Art {
 
   mode = Mode.right;
 
-  get part() {
-    return this.runner;
-  }
-
-  runner: Runner;
-
   get tile(): Vector2 {
-    let {mode} = this;
+    let {mode, part} = this;
     let {
       climbing, game, intendedMove, moved, point, speed, support,
-    } = this.runner;
+    } = part;
     let {stage} = game;
     // Update facing.
     if (intendedMove.x) {
@@ -46,7 +40,7 @@ export class RunnerArt implements Art {
     if (game.mode == game.edit) {
       this.frame = 0;
       // TODO Subclass RunnerArt for enemies?
-      if (this.runner instanceof Enemy) {
+      if (this.part instanceof Enemy) {
         let {hero} = game.stage;
         this.mode = hero && hero.point.x < point.x ? Mode.left : Mode.right;
       } else {
@@ -57,10 +51,10 @@ export class RunnerArt implements Art {
       // Mode.
       if (support) {
         let speedScale = speed.x;
-        let swinging = support.catches(this.runner);
+        let swinging = support.catches(part);
         if (climbing) {
-          let under = this.runner.getSupport();
-          if (under && !under.climbable(this.runner)) {
+          let under = part.getSupport();
+          if (under && !under.climbable(part)) {
             climbing = false;
           }
         }

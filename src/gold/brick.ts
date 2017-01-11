@@ -1,24 +1,14 @@
-import {Art, arts, Layer} from './';
+import {BaseArt, Layer} from './';
 import {Brick} from '../parts';
 import {Vector2} from 'three';
 
-export class BrickArt implements Art {
-
-  constructor(brick: Brick) {
-    this.brick = brick;
-  }
-
-  brick: Brick;
+export class BrickArt extends BaseArt<Brick> {
 
   layer = Layer.front;
 
-  get part() {
-    return this.brick;
-  }
-
   get tile() {
     // TODO Additional translucent full brick even when burned?
-    let {burned, burnTime, burnTimeLeft} = this.brick;
+    let {burned, burnTime, burnTimeLeft} = this.part;
     if (burned) {
       let {workPoint} = this;
       workPoint.copy(mainTile);

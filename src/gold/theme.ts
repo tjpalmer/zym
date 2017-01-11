@@ -32,7 +32,27 @@ export interface Art {
   // TODO Will layers also exist on 3D, or will it all be z-ordered?
   layer: Layer;
 
+  offsetX: number;
+
   part: Part;
+
+  tile: Vector2;
+
+}
+
+export abstract class BaseArt<PartType extends Part> implements Art {
+
+  constructor(part: PartType) {
+    this.part = part;
+  }
+
+  layer: Layer;
+
+  get offsetX() {
+    return 0;
+  }
+
+  part: PartType;
 
   tile: Vector2;
 
@@ -83,6 +103,11 @@ export class GoldTheme implements Theme {
       layers.forEach((_, index) => layerPartIndices[index] = 0);
     }
     for (let part of parts) {
+      if (!part.exists) {
+        // This applies mostly to nones right now from the main parts.
+        // TODO Don't ever add the nones when in play mode?
+        continue;
+      }
       let {layer} = part.art as Art;
       if (part.dead) {
         layer = Layer.dead;
@@ -129,15 +154,13 @@ export class GoldTheme implements Theme {
           // That's the end of this layer.
           break;
         }
-        if (!part.exists) {
-          continue;
-        }
         let currentTileIndices = (part.art as Art).tile;
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(part.point.x, part.point.y, 0);
-        for (let k = 0; k < tileIndices.length; k += 2) {
+        for (let k = 0; k < tileIndices.length; k += 3) {
           tileIndices[k + 0] = currentTileIndices.x;
           tileIndices[k + 1] = currentTileIndices.y;
+          tileIndices[k + 2] = part.art.offsetX;
         }
         let mode = +(part.type.ender || part.keyTime + 1 > time);
         if (part.dead) {
@@ -201,7 +224,7 @@ export class GoldTheme implements Theme {
     tilePlane.addAttribute(
       'opacity', new BufferAttribute(this.tileOpacities, 1)
     );
-    tilePlane.addAttribute('tile', new BufferAttribute(this.tileIndices, 2));
+    tilePlane.addAttribute('tile', new BufferAttribute(this.tileIndices, 3));
     tilePlane.addAttribute('uv', new BufferAttribute(new Float32Array([
       // Uv are 2D.
       1, 0, 0, 1, 0, 0,
@@ -250,6 +273,7 @@ export class GoldTheme implements Theme {
       this.buildArt(part);
       // Now calculate the pixel point.
       let point = (part.art as Art).tile.clone();
+      // TODO Add offset to point.x here.
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
       // Now draw to our canvas and to the button background.
@@ -282,7 +306,6 @@ export class GoldTheme implements Theme {
     // Fit about 20 tiles at vertically, but use integer scaling for kindness.
     // Base this on screen size rather than window size, presuming that screen
     // size implies what looks reasonable for ui elements.
-    // TODO Grayed versions, too! Go through GL so we get the same shaders?
     let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
     let buttonHeight = `${scale * Level.tileSize.y}px`;
     for (let button of toolbox.getButtons()) {
@@ -364,7 +387,7 @@ export class GoldTheme implements Theme {
 
   texture: Texture;
 
-  tileIndices = new Uint8Array(2 * 6);
+  tileIndices = new Uint8Array(3 * 6);
 
   tileModes = new Uint8Array(6);
 
@@ -421,14 +444,17 @@ let tileFragmentShader = `
   uniform int state;
   varying float vMode;
   varying float vOpacity;
-  varying vec2 vTile;
+  varying vec3 vTile;
   varying vec2 vUv;
 
   ${grayify}
 
   void main() {
     vec2 coord = (
-      (vUv + vTile) * vec2(8, 10) + vec2(0, 56)
+      // Tile z is the horizontal offset to fix the offset problems with a
+      // couple of the tiles.
+      // The +56 in y is for the texture offset.
+      (vUv + vTile.xy) * vec2(8, 10) + vec2(vTile.z, 56)
     ) / vec2(512, 256);
     gl_FragColor = texture2D(map, coord);
     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
@@ -448,10 +474,10 @@ let tileFragmentShader = `
 let tileVertexShader = `
   attribute float mode;
   attribute float opacity;
-  attribute vec2 tile;
+  attribute vec3 tile;
   varying float vMode;
   varying float vOpacity;
-  varying vec2 vTile;
+  varying vec3 vTile;
   varying vec2 vUv;
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
