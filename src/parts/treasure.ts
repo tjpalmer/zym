@@ -9,8 +9,9 @@ export class Prize extends Part {
     if (this.owner) {
       this.point.copy(this.owner.point);
     } else {
-      let runner =
-        this.partAt(4, 5, part => part instanceof Runner) as Runner | undefined;
+      let runner = this.partAt(4, 5, part =>
+        part instanceof Runner && !part.dead
+      ) as Runner | undefined;
       if (runner && runner.take(this)) {
         this.owner = runner;
       }

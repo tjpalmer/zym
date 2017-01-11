@@ -257,7 +257,13 @@ export class Enemy extends Runner {
       prize.owner = undefined;
       prize.point.copy(this.point);
       // Place it above.
-      prize.point.y += 10;
+      // TODO Only above if center in brick! Otherwise go to center!
+      if (this.partAt(4, 5, part => part instanceof Brick)) {
+        // If our center is in a brick, look up.
+        prize.point.y += 10;
+      }
+      // Align vertically on grid.
+      prize.point.y = Math.round(prize.point.y / 10) * 10;
     }
   }
 
@@ -279,7 +285,7 @@ export class Enemy extends Runner {
   }
 
   take(prize: Prize) {
-    if (this.prize) {
+    if (this.dead || this.prize) {
       return false;
     } else {
       this.prize = prize;
