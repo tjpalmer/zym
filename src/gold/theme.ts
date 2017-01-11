@@ -129,6 +129,9 @@ export class GoldTheme implements Theme {
           // That's the end of this layer.
           break;
         }
+        if (!part.exists) {
+          continue;
+        }
         let currentTileIndices = (part.art as Art).tile;
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(part.point.x, part.point.y, 0);
@@ -155,7 +158,6 @@ export class GoldTheme implements Theme {
       }
     });
     this.tilePlanes!.setDrawRange(0, 6 * partIndex);
-    // TODO What if the amount varies? Need to back fill with nones?
     let attributes: any = tilePlanes.attributes;
     // Older typing missed needsUpdate, but looks like it's here now.
     // TODO Define a type with all our attributes on it?
@@ -163,6 +165,8 @@ export class GoldTheme implements Theme {
     attributes.opacity.needsUpdate = true;
     attributes.position.needsUpdate = true;
     attributes.tile.needsUpdate = true;
+    // TODO Preset uv for all spots, so no need for later update?
+    attributes.uv.needsUpdate = true;
   }
 
   image: HTMLImageElement;
