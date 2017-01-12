@@ -20,6 +20,8 @@ export enum Layer {
   shot,
   // Front is also static. TODO Really? Does it matter? No?
   front,
+  // Flame is in front of front, eh?
+  flame,
   // Just to track the number of enum values.
   length,
 }

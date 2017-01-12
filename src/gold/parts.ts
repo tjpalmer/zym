@@ -1,5 +1,6 @@
 import {
-  Art, BiggieArt, BrickArt, EnergyArt, LatchArt, Layer, RunnerArt, PrizeArt,
+  Art, BiggieArt, BrickArt, EnergyArt, Flame, FlameArt, LatchArt, Layer,
+  RunnerArt, PrizeArt,
 } from './';
 import {
   Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff,
@@ -44,6 +45,7 @@ export class Parts {
     [Enemy, part => new RunnerArt(part as Runner, new Vector2(15, 14))],
     [Energy, part => new EnergyArt(part as Energy)],
     [EnergyOff, part => new EnergyArt(part as Energy)],
+    [Flame, part => new FlameArt(part as Flame)],
     [GunLeft, artMaker(arts.GunLeft)],
     [GunRight, artMaker(arts.GunRight)],
     [Hero, part => new RunnerArt(part as Runner, new Vector2(9, 14))],
