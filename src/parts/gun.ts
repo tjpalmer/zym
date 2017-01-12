@@ -140,7 +140,7 @@ export class Shot extends Part {
     if (hit) {
       this.active = false;
       if (hit.shotKillable) {
-        hit.die();
+        hit.die(this);
       }
     }
   }

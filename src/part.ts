@@ -50,7 +50,7 @@ export class Part {
 
   dead = false;
 
-  die() {
+  die(killer?: Part) {
     this.dead = true;
   }
 

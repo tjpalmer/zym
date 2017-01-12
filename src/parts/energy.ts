@@ -1,3 +1,4 @@
+import {Shot} from './';
 import {Part, PartType} from '../';
 
 interface EnergyType extends PartType {
@@ -36,16 +37,40 @@ export class Latch extends Part {
 
   changeTime = NaN;
 
+  die(part?: Part) {
+    super.die();
+    if (part instanceof Shot) {
+      let facing = part.gun.facing;
+      if (facing != this.facing) {
+        this.flip(facing);
+      }
+    }
+  }
+
   facing = 0;
+
+  flip(facing: number) {
+    let {stage} = this.game;
+    this.changeTime = stage.time;
+    this.facing = facing;
+    stage.energyOn = !stage.energyOn;
+  }
 
   heroWasNear = false;
 
   lastHeroSide = 0;
 
+  get shotKillable() {
+    return true;
+  }
+
+  get shootable() {
+    return true;
+  }
+
   update() {
     let {heroWasNear, workPoint} = this;
-    let {stage} = this.game;
-    let {hero} = stage;
+    let {hero} = this.game.stage;
     if (!hero) {
       return;
     }
@@ -56,9 +81,7 @@ export class Latch extends Part {
       let heroSide = Math.sign(hero.point.x - this.point.x);
       if (heroWasNear && heroSide && heroSide != this.lastHeroSide) {
         if (heroSide == -this.facing) {
-          this.changeTime = stage.time;
-          this.facing = heroSide;
-          stage.energyOn = !stage.energyOn;
+          this.flip(heroSide);
         }
       }
       this.lastHeroSide = heroSide;

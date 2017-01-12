@@ -219,6 +219,7 @@ export class Enemy extends Runner {
 
   die() {
     super.die();
+    this.climber = false;
     this.releaseTreasure();
   }
 
