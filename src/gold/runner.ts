@@ -54,7 +54,8 @@ export class RunnerArt extends BaseArt<Runner> {
         let swinging = support.catches(part);
         if (climbing) {
           let under = part.getSupport();
-          if (under && !under.climbable(part)) {
+          let on = part.partAt(4, 5, part => part.climbable(part));
+          if (under && on && under.type.common != on.type.common) {
             climbing = false;
           }
         }

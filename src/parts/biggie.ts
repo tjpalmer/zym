@@ -15,19 +15,30 @@ export class Biggie extends Runner {
     let ahead = this.partAt(
       x, -1, part => part.surface(this) || part.solid(this, Edge.top, true)
     );
-    if (ahead) {
+    checkMore: if (ahead) {
+      if (ahead.climbable) {
+        // Don't walk through continuous climbables.
+        let commonType = ahead.type.common;
+        if (
+          this.partAt(x, 5, part => part.type.common == commonType)
+        ) {
+          ahead = undefined;
+          break checkMore;
+        }
+      }
       x = this.facing < 0 ? -1 : 9;
       let edge = this.facing < 0 ? Edge.right : Edge.left;
       let wall = this.partAt(x, 0, part => part.solid(this, edge, true));
       if (wall) {
         ahead = undefined;
-      } else {
-        // Inside edges are opposite outside.
-        edge = this.facing < 0 ? Edge.left : Edge.right;
-        wall = this.getSolidInside(edge, x, 0, this.facing, 0);
-        if (wall) {
-          ahead = undefined;
-        }
+        break checkMore;
+      }
+      // Inside edges are opposite outside.
+      edge = this.facing < 0 ? Edge.left : Edge.right;
+      wall = this.getSolidInside(edge, x, 0, this.facing, 0);
+      if (wall) {
+        ahead = undefined;
+        break checkMore;
       }
     }
     if (!ahead) {

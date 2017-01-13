@@ -1,4 +1,4 @@
-import {Game, Grid, Id, Part, PartType, createId} from './';
+import {Game, GenericPartType, Grid, Id, Part, PartType, createId} from './';
 import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
 

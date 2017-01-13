@@ -1,5 +1,5 @@
 import {Parts} from './';
-import {Level, Part, PartType, Game, Theme} from '../';
+import {GenericPartType, Level, Part, PartType, Game, Theme} from '../';
 import {None} from '../parts';
 import {
   BufferAttribute, BufferGeometry, Mesh, NearestFilter, PlaneBufferGeometry,

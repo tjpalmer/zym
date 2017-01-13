@@ -15,6 +15,10 @@ export class Part {
     return this as PartType;
   }
 
+  static get common(): GenericPartType {
+    return this as GenericPartType;
+  }
+
   static ender = false;
 
   static make(game: Game) {
@@ -135,18 +139,27 @@ export class Part {
 
 }
 
-export interface PartType {
+export interface GenericPartType {
+
+  // Whenever a group of types should be considered somewhat equivalent.
+  common: GenericPartType;
+
+  ender: boolean;
+
+  name: string;
+
+}
+
+// TODO Another generic "makeable" type.
+
+export interface PartType extends GenericPartType {
 
   base: PartType;
 
   char: string;
 
-  ender: boolean;
-
   // Use instead of new, so we can return base types.
   make(game: Game): Part;
-
-  name: string;
 
   // Don't use new. Use make. It just helps TypeScript know we're a class.
   new (game: Game): Part;

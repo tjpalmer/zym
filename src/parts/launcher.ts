@@ -1,4 +1,4 @@
-import {Edge, Level, Part, PartType} from '../';
+import {Edge, GenericPartType, Level, Part, PartType} from '../';
 import {Energy, Hero} from '../parts';
 import {Vector2} from 'three';
 
@@ -11,6 +11,10 @@ interface LauncherType extends PartType {
 }
 
 export abstract class Launcher extends Part {
+
+  static get common() {
+    return Launcher;
+  }
 
   choose() {
     if (this.dead) {
