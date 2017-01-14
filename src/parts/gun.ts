@@ -97,11 +97,23 @@ export class Shot extends Part {
 
   active = false;
 
+  die() {
+    this.active = false;
+  }
+
   get exists() {
     return this.active;
   }
 
   gun: Gun;
+
+  get shootable() {
+    return true;
+  }
+
+  get shotKillable() {
+    return true;
+  }
 
   update() {
     let {game, gun} = this;
@@ -125,7 +137,8 @@ export class Shot extends Part {
     let hit: Part | undefined = undefined;
     for (let part of parts) {
       if (
-        part != gun && part.shootable && !part.dead && part.contains(workPoint)
+        part != gun && part != this && part.shootable && !part.dead &&
+        part.contains(workPoint)
       ) {
         if (hit) {
           // Hit the first thing.
