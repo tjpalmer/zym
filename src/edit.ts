@@ -1,4 +1,7 @@
-import {Level, Mode, Part, PartType, PointEvent, Game, Toolbox} from './';
+import {
+  Level, Mode, NopTool, Part, PartTool, PartType, PointEvent, Game, Toolbox,
+  Tool,
+} from './';
 import {Levels} from './ui';
 import {None, Parts} from './parts';
 import {Vector2} from 'three';
@@ -24,28 +27,14 @@ export class EditMode extends Mode {
 
   active = false;
 
-  apply(tilePoint: Vector2) {
+  apply(begin: boolean, tilePoint: Vector2) {
     // Even if we don't make changes, the user seems active, so push off save.
     this.editState.updateChangeTime();
-    let {level} = this.game;
-    let tool = this.tool;
-    if (this.erasing) {
-      if (tool == level.tiles.get(tilePoint)) {
-        tool = None;
-      } else {
-        // We only erase those matching our current tool, so get out.
-        return;
-      }
+    if (begin) {
+      this.tool.begin(tilePoint);
+    } else {
+      this.tool.drag(tilePoint);
     }
-    if (level.tiles.get(tilePoint) == tool) {
-      // No need to spin wheels when no change.
-      return;
-    }
-    level.tiles.set(tilePoint, tool);
-    if (tool) {
-      tool.make(this.game).editPlacedAt(tilePoint);
-    }
-    level.updateStage(this.game);
   }
 
   commandsContainer: HTMLElement;
@@ -76,22 +65,11 @@ export class EditMode extends Mode {
     return !!this.toolbox && this.toolbox.getState('ender');
   }
 
-  erasing = false;
-
   mouseDown(event: PointEvent) {
     // Mouse down is always in bounds.
     let point = this.tilePoint(event.point)!;
-    let {tiles} = this.game.level;
-    let old = tiles.get(point);
-    if (this.tool == None) {
-      this.erasing = false;
-    } else {
-      this.erasing = old == this.tool;
-    }
-    // Now changes.
-    this.apply(point);
+    this.apply(true, point);
     this.active = true;
-    // console.log('mouseDown', point);
   }
 
   mouseMove(event: PointEvent) {
@@ -100,11 +78,9 @@ export class EditMode extends Mode {
       // Move and up can be out of bounds.
       return;
     }
-    let {tiles} = this.game.level;
     if (this.active) {
-      this.apply(point);
+      this.apply(false, point);
     }
-    // console.log('mouseMove', event.point);
   }
 
   mouseUp(event: PointEvent) {
@@ -114,12 +90,14 @@ export class EditMode extends Mode {
   }
 
   namedEnderTools = new Map(Parts.inventory.filter(type => type.ender).map(
-    type => [type.base.name.toLowerCase(), type] as [string, PartType])
-  );
+    type =>
+      [type.base.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
+  ));
 
   namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
-    type => [type.name.toLowerCase(), type] as [string, PartType])
-  );
+    type =>
+      [type.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
+  ));
 
   saveAll() {
     for (let key in this.editStates) {
@@ -134,11 +112,13 @@ export class EditMode extends Mode {
 
   setToolFromName(name: string) {
     let tool = this.toolFromName(name);
-    if (!tool) {
-      console.warn(`No such part: ${name}`);
-      this.tool = None;
+    if (tool) {
+      this.tool = tool;
+    } else {
+      // This shouldn't happen when things are complete. It's just a fallback.
+      console.warn(`No such tool: ${name}`);
+      this.tool = new NopTool(this);
     }
-    this.tool = tool!;
   }
 
   showCommand(command: string, shown: boolean) {
@@ -197,7 +177,7 @@ export class EditMode extends Mode {
   }
 
   // Default gets set from HTML settings.
-  tool: PartType;
+  tool: Tool;
 
   toolFromName(name: string) {
     let tool = this.namedTools.get(name);
@@ -213,8 +193,9 @@ export class EditMode extends Mode {
   toolbox: Toolbox;
 
   updateTool() {
-    // TODO For left vs right, base is probably wrong.
-    this.setToolFromName(this.tool.base.name.toLowerCase());
+    if (this.tool instanceof PartTool) {
+      this.setToolFromName(this.tool.type.base.name.toLowerCase());
+    }
   }
 
 }

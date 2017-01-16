@@ -1,5 +1,7 @@
 import {Parts} from './';
-import {GenericPartType, Level, Part, PartType, Game, Theme} from '../';
+import {
+  GenericPartType, Level, Part, PartTool, PartType, Game, Theme,
+} from '../';
 import {None} from '../parts';
 import {
   BufferAttribute, BufferGeometry, Mesh, NearestFilter, PlaneBufferGeometry,
@@ -104,6 +106,7 @@ export class GoldTheme implements Theme {
     if (reset) {
       layers.forEach((_, index) => layerPartIndices[index] = 0);
     }
+    // TODO .forEach instead of Iterable to avoid creating iterable object?
     for (let part of parts) {
       if (!part.exists) {
         // This applies mostly to nones right now from the main parts.
@@ -263,7 +266,11 @@ export class GoldTheme implements Theme {
       if (changedName && name != changedName) {
         continue;
       }
-      let type = game.edit.toolFromName(name);
+      let tool = game.edit.toolFromName(name);
+      if (!(tool instanceof PartTool)) {
+        continue;
+      }
+      let type = tool.type;
       if (!type || type == None) {
         // We don't draw a standard tile for this one.
         continue;
@@ -312,7 +319,8 @@ export class GoldTheme implements Theme {
     let buttonHeight = `${scale * Level.tileSize.y}px`;
     for (let button of toolbox.getButtons()) {
       let name = toolbox.getName(button);
-      let type = game.edit.namedTools.get(name);
+      let tool = game.edit.namedTools.get(name);
+      let type = tool instanceof PartTool ? tool.type : undefined;
       if (!type || type == None) {
         // We don't draw a standard tile for this one.
         button.style.height = buttonHeight;

@@ -1,5 +1,6 @@
-import {EditMode} from './';
-import {Vector3} from 'three';
+import {EditMode, PartType} from './';
+import {None} from './parts';
+import {Vector2} from 'three';
 
 export class Toolbox {
 
@@ -114,5 +115,69 @@ export class Toolbox {
     // But allow it to come back.
     window.setTimeout(() => menu.style.display = '', 0);
   }
+
+}
+
+export abstract class Tool {
+
+  constructor(edit: EditMode) {
+    this.edit = edit;
+  }
+
+  abstract begin(tilePoint: Vector2): void;
+
+  abstract drag(tilePoint: Vector2): void;
+
+  edit: EditMode;
+
+}
+
+export class NopTool extends Tool {
+  begin() {}
+  drag() {}
+}
+
+export class PartTool extends Tool {
+
+  constructor(edit: EditMode, type: PartType) {
+    super(edit);
+    this.type = type;
+  }
+
+  begin(tilePoint: Vector2) {
+    if (this.type == None) {
+      this.erasing = false;
+    } else {
+      let old = this.edit.game.level.tiles.get(tilePoint);
+      this.erasing = old == this.type;
+    }
+  }
+
+  drag(tilePoint: Vector2) {
+    let {game} = this.edit;
+    let {level} = game;
+    let {type} = this;
+    if (this.erasing) {
+      if (type == level.tiles.get(tilePoint)) {
+        type = None;
+      } else {
+        // We only erase those matching our current tool, so get out.
+        return;
+      }
+    }
+    if (level.tiles.get(tilePoint) == type) {
+      // No need to spin wheels when no change.
+      return;
+    }
+    level.tiles.set(tilePoint, type);
+    if (type) {
+      type.make(game).editPlacedAt(tilePoint);
+    }
+    level.updateStage(game);
+  }
+
+  erasing = false;
+
+  type: PartType;
 
 }
