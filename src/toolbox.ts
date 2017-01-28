@@ -134,6 +134,8 @@ export abstract class Tool {
 
   edit: EditMode;
 
+  resize() {}
+
 }
 
 export class CopyTool extends Tool {
@@ -166,18 +168,12 @@ export class CopyTool extends Tool {
   }
 
   drag(tilePoint: Vector2) {
-    let {point, tileBegin, tileBottomRight, tileTopLeft} = this;
+    let {tileBegin, tileBottomRight, tileTopLeft} = this;
     tileTopLeft.x = Math.min(tileBegin.x, tilePoint.x);
     tileTopLeft.y = Math.max(tileBegin.y, tilePoint.y);
-    this.place(tileTopLeft);
     tileBottomRight.x = Math.max(tileBegin.x, tilePoint.x);
     tileBottomRight.y = Math.min(tileBegin.y, tilePoint.y);
-    point.copy(tileBottomRight).sub(tileTopLeft);
-    point.x += 1;
-    point.y = -point.y + 1;
-    this.scaled(point);
-    this.selector.style.width = `${point.x}px`;
-    this.selector.style.height = `${point.y}px`;
+    this.resize();
   }
 
   place(tilePoint: Vector2) {
@@ -187,6 +183,17 @@ export class CopyTool extends Tool {
   }
 
   point = new Vector2();
+
+  resize() {
+    let {point, tileBottomRight, tileTopLeft} = this;
+    this.place(tileTopLeft);
+    point.copy(tileBottomRight).sub(tileTopLeft);
+    point.x += 1;
+    point.y = -point.y + 1;
+    this.scaled(point);
+    this.selector.style.width = `${point.x}px`;
+    this.selector.style.height = `${point.y}px`;
+  }
 
   scaled(tilePoint: Vector2) {
     let {point} = this;

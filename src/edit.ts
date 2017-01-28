@@ -112,6 +112,12 @@ export class EditMode extends Mode {
     super.onClick(command, handler);
   }
 
+  resize() {
+    if (this.tool) {
+      this.tool.resize();
+    }
+  }
+
   saveAll() {
     for (let key in this.editStates) {
       let editState = this.editStates[key];

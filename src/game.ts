@@ -35,6 +35,8 @@ export class Mode {
     this.getButton(command).addEventListener('click', handler);
   }
 
+  resize() {}
+
   tick() {}
 
   toggleClasses(options: {
@@ -189,6 +191,7 @@ export class Game {
       let offset = viewSize.clone().sub(canvasSize).divideScalar(2);
       this.renderer.domElement.style.left = `${offset.x}px`;
       this.renderer.setSize(canvasSize.x, canvasSize.y);
+      this.mode.resize();
     }, 0);
   }
 
