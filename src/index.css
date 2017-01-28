@@ -183,6 +183,16 @@ body {
   padding-top: 1em;
 }
 
+.selector {
+  border: 0.2em solid white;
+  border-radius: 0.2em;
+  display: none;
+  height: 10em;
+  pointer-events: none;
+  position: absolute;
+  width: 10em;
+}
+
 .shade {
   background: black;
   /* Only to own content -> filter: blur(3px);*/
@@ -192,12 +202,9 @@ body {
 .stage {
   background: black;
   display: none;
-  left: 50%;
   margin-bottom: auto;
   margin-top: auto;
   position: absolute;
-  /*top: 50%;*/
-  transform: translate(-50%, 0);
 }
 
 .status.other {

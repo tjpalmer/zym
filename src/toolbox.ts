@@ -1,4 +1,4 @@
-import {EditMode, PartType} from './';
+import {EditMode, Level, PartType} from './';
 import {None} from './parts';
 import {Vector2} from 'three';
 
@@ -124,11 +124,97 @@ export abstract class Tool {
     this.edit = edit;
   }
 
+  activate() {}
+
   abstract begin(tilePoint: Vector2): void;
+
+  deactivate() {}
 
   abstract drag(tilePoint: Vector2): void;
 
   edit: EditMode;
+
+}
+
+export class CopyTool extends Tool {
+
+  constructor(edit: EditMode) {
+    super(edit);
+    this.selector = edit.game.body.querySelector('.selector') as HTMLElement;
+  }
+
+  activate() {
+    this.borderPixels = Number.parseInt(
+      getComputedStyle(this.selector).getPropertyValue('border-left-width')
+    );
+  }
+
+  begin(tilePoint: Vector2) {
+    let {point, tileTopLeft} = this;
+    tileTopLeft.copy(tilePoint);
+    this.place(this.tileBegin.copy(tilePoint));
+    this.scaled(point.set(1, 1));
+    this.selector.style.width = `${point.x}px`;
+    this.selector.style.height = `${point.y}px`;
+    this.selector.style.display = 'block';
+  }
+
+  borderPixels = 0;
+
+  deactivate() {
+    this.selector.style.display = 'none';
+  }
+
+  drag(tilePoint: Vector2) {
+    let {point, tileBegin, tileBottomRight, tileTopLeft} = this;
+    tileTopLeft.x = Math.min(tileBegin.x, tilePoint.x);
+    tileTopLeft.y = Math.max(tileBegin.y, tilePoint.y);
+    this.place(tileTopLeft);
+    tileBottomRight.x = Math.max(tileBegin.x, tilePoint.x);
+    tileBottomRight.y = Math.min(tileBegin.y, tilePoint.y);
+    point.copy(tileBottomRight).sub(tileTopLeft);
+    point.x += 1;
+    point.y = -point.y + 1;
+    this.scaled(point);
+    this.selector.style.width = `${point.x}px`;
+    this.selector.style.height = `${point.y}px`;
+  }
+
+  place(tilePoint: Vector2) {
+    let point = this.scaledOffset(tilePoint);
+    this.selector.style.left = `${point.x - this.borderPixels}px`;
+    this.selector.style.top = `${point.y - this.borderPixels}px`;
+  }
+
+  point = new Vector2();
+
+  scaled(tilePoint: Vector2) {
+    let {point} = this;
+    let canvas = this.edit.game.renderer.domElement;
+    point.copy(tilePoint).divide(Level.tileCount);
+    point.x *= canvas.clientWidth;
+    point.y *= canvas.clientHeight;
+    return point;
+  }
+
+  private scaledOffset(tilePoint: Vector2) {
+    let {point} = this;
+    point.copy(tilePoint);
+    point.y = Level.tileCount.y - point.y - 1;
+    let canvas = this.edit.game.renderer.domElement;
+    this.scaled(point);
+    point.x += canvas.offsetLeft;
+    point.y += canvas.offsetTop;
+    return point;
+  }
+
+  selector: HTMLElement;
+
+  tileBegin = new Vector2();
+
+  tileBottomRight = new Vector2();
+
+  tileTopLeft = new Vector2();
 
 }
 

@@ -186,9 +186,8 @@ export class Game {
         classList.add('horizontal');
         classList.remove('vertical');
       }
-      // TODO OrthographicCamera version of this.
-      // this.camera.aspect = size.x / size.y;
-      // this.camera.updateProjectionMatrix();
+      let offset = viewSize.clone().sub(canvasSize).divideScalar(2);
+      this.renderer.domElement.style.left = `${offset.x}px`;
       this.renderer.setSize(canvasSize.x, canvasSize.y);
     }, 0);
   }

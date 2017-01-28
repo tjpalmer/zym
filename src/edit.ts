@@ -1,6 +1,6 @@
 import {
-  Level, Mode, NopTool, Part, PartTool, PartType, PointEvent, Game, Toolbox,
-  Tool,
+  CopyTool, Level, Mode, NopTool, Part, PartTool, PartType, PointEvent, Game,
+  Tool, Toolbox,
 } from './';
 import {Levels} from './ui';
 import {None, Parts} from './parts';
@@ -21,6 +21,8 @@ export class EditMode extends Mode {
     this.onClick('redo', () => this.editState.redo());
     this.onClick('showLevels', () => this.showLevels());
     this.onClick('undo', () => this.editState.undo());
+    // Tools.
+    this.namedTools.set('copy', new CopyTool(this));
     // Initial history entry.
     this.editState.pushHistory(true);
   }
@@ -99,6 +101,17 @@ export class EditMode extends Mode {
       [type.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
   ));
 
+  onClick(command: string, handler: () => void) {
+    // Hide tool effects.
+    this.getButton(command).addEventListener('click', () => {
+      if (this.tool) {
+        this.tool.deactivate();
+      }
+    });
+    // And the requested handler, too.
+    super.onClick(command, handler);
+  }
+
   saveAll() {
     for (let key in this.editStates) {
       let editState = this.editStates[key];
@@ -111,6 +124,10 @@ export class EditMode extends Mode {
   saveDelay = 10e3;
 
   setToolFromName(name: string) {
+    // Should only be undefined the first time in.
+    if (this.tool) {
+      this.tool.deactivate();
+    }
     let tool = this.toolFromName(name);
     if (tool) {
       this.tool = tool;
@@ -119,6 +136,7 @@ export class EditMode extends Mode {
       console.warn(`No such tool: ${name}`);
       this.tool = new NopTool(this);
     }
+    this.tool.activate();
   }
 
   showCommand(command: string, shown: boolean) {
@@ -168,6 +186,9 @@ export class EditMode extends Mode {
         // TODO Activate function on modes for general handling?
         this.game.play.togglePause();
       }
+      this.tool.activate();
+    } else {
+      this.tool.deactivate();
     }
     this.toggleClasses({
       element: this.game.body,
