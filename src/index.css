@@ -21,8 +21,7 @@ body {
 .commands .play,
 .commands .redo,
 .commands .showLevels,
-.status .pause,
-.toolbox .none  {
+.status .pause  {
   margin-bottom: 0.5em;
 }
 
@@ -225,6 +224,10 @@ table {
   text-align: right;
 }
 
+.toolbox .ender {
+  margin-top: 0.5em;
+}
+
 .toolbox input {
   display: none;
 }
@@ -234,6 +237,7 @@ table {
   display: block;
   /* This margin makes the borders overlap across neighbors. */
   margin-bottom: -0.1em;
+  position: relative;
 }
 
 .toolbox label.ender {
@@ -280,9 +284,10 @@ table {
   display: none;
   /* Left margin gets overruled later, but this at least offsets some. */
   margin-left: 1em;
-  margin-top: -0.3em;
+  margin-top: -0.2em;
   position: absolute;
   padding: 0.1em 0.1em 0.2em 0.3em;
+  top: 0;
   z-index: 1;
 }
 

@@ -316,14 +316,28 @@ export class GoldTheme implements Theme {
     // Base this on screen size rather than window size, presuming that screen
     // size implies what looks reasonable for ui elements.
     let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
-    let buttonHeight = `${scale * Level.tileSize.y}px`;
+    let buttonSize = Level.tileSize.clone().multiplyScalar(scale);
+    let offsetLeft: Number | undefined;
     for (let button of toolbox.getButtons()) {
       let name = toolbox.getName(button);
       let tool = game.edit.namedTools.get(name);
       let type = tool instanceof PartTool ? tool.type : undefined;
+      // Align menu by now known canvas size.
+      let menu = button.querySelector('.toolMenu') as HTMLElement | undefined;
+      if (menu) {
+        if (offsetLeft == undefined) {
+          let style = window.getComputedStyle(button);
+          offsetLeft =
+            Number.parseInt(style.width!) +
+            Number.parseInt(style.borderRightWidth!) +
+            Number.parseInt(style.paddingRight!);
+        }
+        menu.style.marginLeft = `${offsetLeft}px`;
+      }
       if (!type || type == None) {
         // We don't draw a standard tile for this one.
-        button.style.height = buttonHeight;
+        button.style.width = `${buttonSize.x}px`;
+        button.style.height = `${buttonSize.y}px`;
         continue;
       }
       // Now make a canvas to draw to.
@@ -333,13 +347,8 @@ export class GoldTheme implements Theme {
       // Style it.
       (canvas.style as any).imageRendering = 'pixelated';
       canvas.style.margin = 'auto';
-      canvas.style.height = buttonHeight;
+      canvas.style.height = `${buttonSize.y}px`;
       button.appendChild(canvas);
-      // Align menu by now known canvas size.
-      let menu = button.querySelector('.toolMenu') as HTMLElement | undefined;
-      if (menu) {
-        menu.style.marginLeft = `${canvas.offsetWidth}px`;
-      }
     }
     this.prepareVariations();
     this.paintPanels();

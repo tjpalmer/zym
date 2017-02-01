@@ -103,9 +103,16 @@ export class Toolbox {
     parent.classList.remove(parentName);
     parent.classList.add(name);
     // Change the parent's appearance.
-    // Theme could be missing during startup.
-    if (this.edit.game.theme) {
-      this.edit.game.theme.updateTool(parent);
+    let fontIcon = menuButton.querySelector('i');
+    if (fontIcon) {
+      // Copy over the full class.
+      parent.querySelector(':scope > i')!.className = fontIcon.className;
+    } else {
+      // Game element.
+      // Theme could be missing during startup.
+      if (this.edit.game.theme) {
+        this.edit.game.theme.updateTool(parent);
+      }
     }
     // Select the parent.
     parent.click();

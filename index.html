@@ -11,7 +11,7 @@
     <div class="panelBox">
       <form class="panel toolbox">
         <label class="hero"><input name="tool" type="radio"/></label>
-        <label class="treasure">
+        <label>
           <input name="tool" type="radio"/>
           <div class="toolMenu">
             <label class="treasure">
@@ -28,7 +28,7 @@
         <label class="steel"><input name="tool" type="radio"/></label>
         <label class="ladder"><input name="tool" type="radio"/></label>
         <label class="bar"><input name="tool" type="radio"/></label>
-        <label class="latchright">
+        <label>
           <input name="tool" type="radio"/>
           <div class="toolMenu">
             <label class="latchright">
@@ -39,7 +39,7 @@
             <label class="energyoff"><input name="energy" type="radio"/></label>
           </div>
         </label>
-        <label class="launchercenter">
+        <label>
           <input name="tool" type="radio"/>
           <div class="toolMenu">
             <label class="launchercenter">
@@ -59,7 +59,7 @@
             </label>
           </div>
         </label>
-        <label class="enemy">
+        <label>
           <input name="tool" type="radio"/>
           <div class="toolMenu">
             <label class="enemy">
@@ -79,13 +79,23 @@
             </label>
           </div>
         </label>
-        <label class="copy">
-          <i class="fa fa-clone"></i>
+        <label>
+          <i class="fa"></i>
           <input name="tool" type="radio"/>
-        </label>
-        <label class="none">
-          <i class="fa fa-remove"></i>
-          <input name="tool" type="radio"/>
+          <div class="toolMenu">
+            <label class="none" title="Erase Any">
+              <i class="fa fa-remove"></i>
+              <input name="meta" type="radio" checked="checked"/>
+            </label>
+            <label class="copy" title="Copy Select">
+              <i class="fa fa-clone"></i>
+              <input name="meta" type="radio"/>
+            </label>
+            <label class="paste" title="Paste Selection">
+              <i class="fa fa-th"></i>
+              <input name="meta" type="radio"/>
+            </label>
+          </div>
         </label>
         <label class="ender">
           <i class="fa fa-angle-double-up"></i>
@@ -106,14 +116,14 @@
     </div>
     <div class="panelBox right">
       <div class="panel status">
-        <i class="fa fa-pause pause"></i>
-        <i class="fa fa-stop stop"></i>
+        <i class="fa fa-pause pause" title="Pause"></i>
+        <i class="fa fa-stop stop" title="Stop Playtest"></i>
       </div>
       <div class="panel commands">
-        <i class="fa fa-play play"></i>
-        <i class="fa fa-reply undo disabled"></i>
-        <i class="fa fa-share redo disabled"></i>
-        <i class="fa fa-list showLevels"></i>
+        <i class="fa fa-play play" title="Playtest Level"></i>
+        <i class="fa fa-reply undo disabled" title="Undo"></i>
+        <i class="fa fa-share redo disabled" title="Redo"></i>
+        <i class="fa fa-list showLevels" title="Show Levels"></i>
         <i class="fa fa-sign-out exit disabled"></i>
         <!-- Placeholders for reminders of save status. -->
         <i class="fa fa-pencil-square changing disabled"></i>
