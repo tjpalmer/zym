@@ -1,6 +1,6 @@
 import {
-  CopyTool, Level, Mode, NopTool, Part, PartTool, PartType, PointEvent, Game,
-  Tool, Toolbox,
+  CopyTool, Level, Mode, NopTool, Part, PartTool, PartType, PasteTool,
+  PointEvent, Game, Tool, Toolbox,
 } from './';
 import {Levels} from './ui';
 import {None, Parts} from './parts';
@@ -23,6 +23,7 @@ export class EditMode extends Mode {
     this.onClick('undo', () => this.editState.undo());
     // Tools.
     this.namedTools.set('copy', new CopyTool(this));
+    this.namedTools.set('paste', new PasteTool(this));
     // Initial history entry.
     this.editState.pushHistory(true);
   }
@@ -82,6 +83,10 @@ export class EditMode extends Mode {
     }
     if (this.active) {
       this.apply(false, point);
+    } else {
+      if (this.tool) {
+        this.tool.hover(point);
+      }
     }
   }
 

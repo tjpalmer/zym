@@ -1,4 +1,4 @@
-import {EditMode, Level, PartType} from './';
+import {EditMode, Grid, Level, PartType} from './';
 import {None} from './parts';
 import {Vector2} from 'three';
 
@@ -141,6 +141,8 @@ export abstract class Tool {
 
   edit: EditMode;
 
+  hover(tilePoint: Vector2) {}
+
   resize() {}
 
 }
@@ -159,13 +161,15 @@ export class CopyTool extends Tool {
   }
 
   begin(tilePoint: Vector2) {
-    let {point, tileTopLeft} = this;
+    let {point, tileBottomRight, tileTopLeft} = this;
     tileTopLeft.copy(tilePoint);
+    tileBottomRight.copy(tilePoint);
     this.place(this.tileBegin.copy(tilePoint));
     this.scaled(point.set(1, 1));
     this.selector.style.width = `${point.x}px`;
     this.selector.style.height = `${point.y}px`;
     this.selector.style.display = 'block';
+    this.updateData();
   }
 
   borderPixels = 0;
@@ -175,12 +179,24 @@ export class CopyTool extends Tool {
   }
 
   drag(tilePoint: Vector2) {
-    let {tileBegin, tileBottomRight, tileTopLeft} = this;
-    tileTopLeft.x = Math.min(tileBegin.x, tilePoint.x);
-    tileTopLeft.y = Math.max(tileBegin.y, tilePoint.y);
-    tileBottomRight.x = Math.max(tileBegin.x, tilePoint.x);
-    tileBottomRight.y = Math.min(tileBegin.y, tilePoint.y);
-    this.resize();
+    let anyChange = false;
+    let {point, tileBegin, tileBottomRight, tileTopLeft} = this;
+    point.x = Math.min(tileBegin.x, tilePoint.x);
+    point.y = Math.max(tileBegin.y, tilePoint.y);
+    if (!point.equals(tileTopLeft)) {
+      tileTopLeft.copy(point);
+      anyChange = true;
+    }
+    point.x = Math.max(tileBegin.x, tilePoint.x);
+    point.y = Math.min(tileBegin.y, tilePoint.y);
+    if (!point.equals(tileBottomRight)) {
+      tileBottomRight.copy(point);
+      anyChange = true;
+    }
+    if (anyChange) {
+      this.resize();
+      this.updateData();
+    }
   }
 
   place(tilePoint: Vector2) {
@@ -229,6 +245,26 @@ export class CopyTool extends Tool {
   tileBottomRight = new Vector2();
 
   tileTopLeft = new Vector2();
+
+  tiles: Grid<PartType> | undefined = undefined;
+
+  updateData() {
+    let {edit, point, tileBottomRight, tileTopLeft} = this;
+    let {tiles: levelTiles} = edit.game.level;
+    let min = new Vector2(tileTopLeft.x, tileBottomRight.y);
+    let size =
+      new Vector2(tileBottomRight.x - min.x + 1, tileTopLeft.y - min.y + 1);
+    let tiles = this.tiles = new Grid<PartType>(size);
+    for (let x = 0; x < size.x; ++x) {
+      for (let y = 0; y < size.y; ++y) {
+        point.set(x, y).add(min);
+        let tile = levelTiles.get(point)!;
+        point.sub(min);
+        tiles.set(point, tile);
+      }
+    }
+    // console.log(tiles);
+  }
 
 }
 
@@ -279,5 +315,29 @@ export class PartTool extends Tool {
   erasing = false;
 
   type: PartType;
+
+}
+
+export class PasteTool extends Tool {
+
+  constructor(edit: EditMode) {
+    super(edit);
+  }
+
+  activate() {
+    // TODO Canvas shot or lots of translucent parts?
+  }
+
+  begin(tilePoint: Vector2) {
+    this.drag(tilePoint);
+  }
+
+  drag(tilePoint: Vector2) {
+    // TODO Apply.
+  }
+
+  hover(tilePoint: Vector2) {
+    console.log('show paste at', tilePoint);
+  }
 
 }
