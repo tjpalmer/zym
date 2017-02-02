@@ -1,6 +1,6 @@
 import {EditMode, Grid, Level, PartType} from './';
 import {None} from './parts';
-import {Vector2} from 'three';
+import {Vector2, WebGLRenderTarget} from 'three';
 
 export class Toolbox {
 
@@ -161,6 +161,8 @@ export class CopyTool extends Tool {
   }
 
   begin(tilePoint: Vector2) {
+    // First, reset our selection.
+    this.needsUpdate = true;
     let {point, tileBottomRight, tileTopLeft} = this;
     tileTopLeft.copy(tilePoint);
     tileBottomRight.copy(tilePoint);
@@ -169,13 +171,16 @@ export class CopyTool extends Tool {
     this.selector.style.width = `${point.x}px`;
     this.selector.style.height = `${point.y}px`;
     this.selector.style.display = 'block';
-    this.updateData();
   }
 
   borderPixels = 0;
 
   deactivate() {
     this.selector.style.display = 'none';
+    if (this.needsUpdate) {
+      this.updateData();
+      this.needsUpdate = false;
+    }
   }
 
   drag(tilePoint: Vector2) {
@@ -195,9 +200,10 @@ export class CopyTool extends Tool {
     }
     if (anyChange) {
       this.resize();
-      this.updateData();
     }
   }
+
+  needsUpdate = false;
 
   place(tilePoint: Vector2) {
     let point = this.scaledOffset(tilePoint);
@@ -249,11 +255,12 @@ export class CopyTool extends Tool {
   tiles: Grid<PartType> | undefined = undefined;
 
   updateData() {
+    // Copy data.
     let {edit, point, tileBottomRight, tileTopLeft} = this;
     let {tiles: levelTiles} = edit.game.level;
     let min = new Vector2(tileTopLeft.x, tileBottomRight.y);
-    let size =
-      new Vector2(tileBottomRight.x - min.x + 1, tileTopLeft.y - min.y + 1);
+    let max = new Vector2(tileBottomRight.x, tileTopLeft.y).addScalar(1);
+    let size = new Vector2(max.x - min.x, max.y - min.y);
     let tiles = this.tiles = new Grid<PartType>(size);
     for (let x = 0; x < size.x; ++x) {
       for (let y = 0; y < size.y; ++y) {
@@ -264,6 +271,40 @@ export class CopyTool extends Tool {
       }
     }
     // console.log(tiles);
+    // Copy visuals.
+    // The other option is phantom parts.
+    // Or a whole separate scene.
+    // All have pain.
+    max.multiply(Level.tileSize);
+    min.multiply(Level.tileSize);
+    size.multiply(Level.tileSize);
+    let image = document.createElement('canvas');
+    let target = new WebGLRenderTarget(size.x, size.y);
+    try {
+      let {camera, renderer, scene} = edit.game;
+      camera = camera.clone();
+      camera.bottom = min.y;
+      camera.left = min.x;
+      camera.right = max.x;
+      camera.top = max.y;
+      camera.updateProjectionMatrix();
+      // TODO Extract this render to canvas logic?
+      renderer.render(scene, camera, target);
+      let data = new Uint8Array(4 * size.x * size.y);
+      renderer.readRenderTargetPixels(target, 0, 0, size.x, size.y, data);
+      image.width = size.x;
+      image.height = size.y;
+      let context = image.getContext('2d')!;
+      let imageData = context.createImageData(size.x, size.y);
+      imageData.data.set(data as any);
+      context.putImageData(imageData, 0, 0);
+    } finally {
+      target.dispose();
+    }
+    image.style.transform = 'scaleY(-1)';
+    let clipboard = edit.game.body.querySelector('.clipboard')!;
+    clipboard.innerHTML = '';
+    clipboard.appendChild(image);
   }
 
 }
@@ -322,10 +363,6 @@ export class PasteTool extends Tool {
 
   constructor(edit: EditMode) {
     super(edit);
-  }
-
-  activate() {
-    // TODO Canvas shot or lots of translucent parts?
   }
 
   begin(tilePoint: Vector2) {

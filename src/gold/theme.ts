@@ -185,7 +185,7 @@ export class GoldTheme implements Theme {
         ++partIndex;
       }
     });
-    this.tilePlanes!.setDrawRange(0, 6 * partIndex);
+    tilePlanes.setDrawRange(0, 6 * partIndex);
     let attributes: any = tilePlanes.attributes;
     // Older typing missed needsUpdate, but looks like it's here now.
     // TODO Define a type with all our attributes on it?
