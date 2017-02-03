@@ -22,7 +22,7 @@ export class EditMode extends Mode {
     this.onClick('showLevels', () => this.showLevels());
     this.onClick('undo', () => this.editState.undo());
     // Tools.
-    this.namedTools.set('copy', new CopyTool(this));
+    this.namedTools.set('copy', this.copyTool = new CopyTool(this));
     this.namedTools.set('paste', new PasteTool(this));
     // Initial history entry.
     this.editState.pushHistory(true);
@@ -41,6 +41,8 @@ export class EditMode extends Mode {
   }
 
   commandsContainer: HTMLElement;
+
+  copyTool: CopyTool;
 
   // TODO Histories by level id.
   editStates: {[levelId: string]: EditState} = {};

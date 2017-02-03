@@ -233,7 +233,7 @@ export class CopyTool extends Tool {
     return point;
   }
 
-  private scaledOffset(tilePoint: Vector2) {
+  scaledOffset(tilePoint: Vector2) {
     let {point} = this;
     point.copy(tilePoint);
     point.y = Level.tileCount.y - point.y - 1;
@@ -365,16 +365,81 @@ export class PasteTool extends Tool {
     super(edit);
   }
 
+  activate() {
+    let {body} = this.edit.game;
+    this.clipboard = body.querySelector('.clipboard') as HTMLElement;
+    this.resize();
+  }
+
   begin(tilePoint: Vector2) {
     this.drag(tilePoint);
   }
 
+  clipboard?: HTMLElement = undefined;
+
+  deactivate() {
+    this.clipboard!.style.display = 'none';
+  }
+
   drag(tilePoint: Vector2) {
+    this.place(tilePoint);
     // TODO Apply.
   }
 
   hover(tilePoint: Vector2) {
+    if (!this.edit.copyTool.tiles) {
+      return;
+    }
+    this.place(tilePoint);
+    this.clipboard!.style.display = 'block';
     console.log('show paste at', tilePoint);
   }
+
+  place(tilePoint: Vector2) {
+    let {clipboard, edit, point, tileMin} = this;
+    let {copyTool} = edit;
+    if (!copyTool.tiles) {
+      return;
+    }
+    // TODO Treat size as immutable!
+    let {size} = copyTool.tiles;
+    point.copy(copyTool.tiles.size).multiplyScalar(0.5);
+    tileMin.copy(tilePoint).sub(point);
+    // Keep things in bounds.
+    tileMin.x = Math.max(0, tileMin.x);
+    tileMin.y = Math.max(0, tileMin.y);
+    point.copy(tileMin).add(size);
+    if (point.x >= Level.tileCount.x) {
+      tileMin.x = Level.tileCount.x - size.x;
+    }
+    if (point.y >= Level.tileCount.y) {
+      tileMin.y = Level.tileCount.y - size.y;
+    }
+    // Now make sure to align with grid.
+    tileMin.x = Math.ceil(tileMin.x);
+    tileMin.y = Math.ceil(tileMin.y);
+    // Now place it.
+    point.copy(tileMin);
+    point.y += size.y - 1;
+    // Copy because we otherwise get copyTool's internal storage point.
+    point.copy(copyTool.scaledOffset(point));
+    clipboard!.style.left = `${point.x}px`;
+    clipboard!.style.top = `${point.y}px`;
+  }
+
+  point = new Vector2();
+
+  resize() {
+    let {domElement} = this.edit.game.renderer;
+    let image = this.clipboard!.querySelector('canvas')!;
+    let size = new Vector2(domElement.width, domElement.height);
+    size.divide(Level.pixelCount);
+    size.x *= image.width;
+    size.y *= image.height;
+    image.style.width = `${size.x}px`;
+    image.style.height = `${size.y}px`;
+  }
+
+  tileMin = new Vector2();
 
 }
