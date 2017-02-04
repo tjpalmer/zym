@@ -102,7 +102,7 @@ export class EditMode extends Mode {
     if (this.active) {
       this.apply(false, point);
     } else {
-      if (this.tool) {
+      if (this.tool && !this.game.showingDialog()) {
         this.tool.hover(point);
       }
     }

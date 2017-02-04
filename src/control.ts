@@ -96,11 +96,11 @@ export class Control extends RunnerAction {
         }
         let pane = this.game.body.querySelector('.pane') as HTMLElement;
         let style = window.getComputedStyle(pane);
-        if (style.display == 'none') {
+        if (this.game.showingDialog()) {
+          this.game.hideDialog();
+        } else {
           // TODO Generalize to whatever context dialog makes most sense.
           this.game.edit.showLevels();
-        } else {
-          this.game.hideDialog();
         }
         break;
       }

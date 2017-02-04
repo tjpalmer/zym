@@ -214,6 +214,12 @@ export class Game {
     pane.style.display = 'block';
   }
 
+  showingDialog() {
+    let pane = this.body.querySelector('.pane') as HTMLElement;
+    let style = window.getComputedStyle(pane);
+    return style.display != 'none';
+  }
+
   stage = new Stage(this);
 
   scene: Scene;
