@@ -110,6 +110,9 @@ export class EditMode extends Mode {
 
   mouseUp(event: PointEvent) {
     // console.log('mouseUp', event);
+    if (this.tool && this.active) {
+      this.tool.end();
+    }
     this.active = false;
     this.editState.pushHistory();
   }

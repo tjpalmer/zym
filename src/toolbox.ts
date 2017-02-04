@@ -141,6 +141,8 @@ export abstract class Tool {
 
   edit: EditMode;
 
+  end() {}
+
   hover(tilePoint: Vector2) {}
 
   resize() {}
@@ -201,6 +203,13 @@ export class CopyTool extends Tool {
     if (anyChange) {
       this.resize();
     }
+  }
+
+  end() {
+    let paste =
+      this.edit.toolbox.container.querySelector('.paste') as HTMLElement;
+    paste.click();
+    this.selector.style.display = 'block';
   }
 
   needsUpdate = false;
@@ -369,12 +378,15 @@ export class PasteTool extends Tool {
 
   begin(tilePoint: Vector2) {
     this.drag(tilePoint);
+    this.edit.copyTool.selector.style.display = 'none';
   }
 
   clipboard?: HTMLElement = undefined;
 
   deactivate() {
     this.clipboard!.style.display = 'none';
+    // TODO How to avoid hiding if the new tool is copy?
+    this.edit.copyTool.selector.style.display = 'none';
   }
 
   drag(tilePoint: Vector2) {
@@ -443,6 +455,7 @@ export class PasteTool extends Tool {
   point = new Vector2();
 
   resize() {
+    this.edit.copyTool.resize();
     let {domElement} = this.edit.game.renderer;
     let image = this.clipboard!.querySelector('canvas')!;
     let size = new Vector2(domElement.width, domElement.height);
