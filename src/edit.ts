@@ -44,6 +44,21 @@ export class EditMode extends Mode {
 
   copyTool: CopyTool;
 
+  draw(tilePoint: Vector2, tile: PartType) {
+    // Need to call level.updateStage after this.
+    let {game} = this;
+    let {level} = game;
+    if (level.tiles.get(tilePoint) == tile) {
+      // No need to spin wheels when no change.
+      return;
+    }
+    level.tiles.set(tilePoint, tile);
+    if (tile) {
+      // TODO Move function to PartType?
+      tile.make(game).editPlacedAt(tilePoint);
+    }
+  }
+
   // TODO Histories by level id.
   editStates: {[levelId: string]: EditState} = {};
 
@@ -78,6 +93,7 @@ export class EditMode extends Mode {
   }
 
   mouseMove(event: PointEvent) {
+    // TODO Don't send these events when level list or such is up!
     let point = this.tilePoint(event.point);
     if (!point) {
       // Move and up can be out of bounds.

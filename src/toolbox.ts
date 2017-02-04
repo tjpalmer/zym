@@ -322,12 +322,15 @@ export class PartTool extends Tool {
   }
 
   begin(tilePoint: Vector2) {
+    // Figure out mode.
     if (this.type == None) {
       this.erasing = false;
     } else {
       let old = this.edit.game.level.tiles.get(tilePoint);
       this.erasing = old == this.type;
     }
+    // Now apply.
+    this.drag(tilePoint);
   }
 
   drag(tilePoint: Vector2) {
@@ -342,14 +345,7 @@ export class PartTool extends Tool {
         return;
       }
     }
-    if (level.tiles.get(tilePoint) == type) {
-      // No need to spin wheels when no change.
-      return;
-    }
-    level.tiles.set(tilePoint, type);
-    if (type) {
-      type.make(game).editPlacedAt(tilePoint);
-    }
+    this.edit.draw(tilePoint, type);
     level.updateStage(game);
   }
 
@@ -382,8 +378,26 @@ export class PasteTool extends Tool {
   }
 
   drag(tilePoint: Vector2) {
+    let {edit, point, tileMin} = this;
+    let {tiles} = edit.copyTool;
+    if (!tiles) {
+      return;
+    }
+    let {game} = edit;
+    let {level} = edit.game;
+    let {tiles: levelTiles} = level;
+    // Update where we are.
     this.place(tilePoint);
-    // TODO Apply.
+    // Draw.
+    let {size} = tiles;
+    for (let x = 0; x < size.x; ++x) {
+      for (let y = 0; y < size.y; ++y) {
+        point.set(x, y);
+        let tile = tiles.get(point)!;
+        this.edit.draw(point.add(tileMin), tile);
+      }
+    }
+    level.updateStage(edit.game);
   }
 
   hover(tilePoint: Vector2) {
@@ -392,7 +406,6 @@ export class PasteTool extends Tool {
     }
     this.place(tilePoint);
     this.clipboard!.style.display = 'block';
-    console.log('show paste at', tilePoint);
   }
 
   place(tilePoint: Vector2) {
