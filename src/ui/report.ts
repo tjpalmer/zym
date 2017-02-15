@@ -14,13 +14,6 @@ export class Report implements Dialog {
     let {hero, time: stopTime} = game.stage;
     let scoreTime = stopTime;
     if (hero) {
-      if (hero.bonusCount) {
-        let bonusTime = -10 * hero.bonusCount;
-        this.show('bonusTimeRow', 'table-row-group');
-        this.field('bonusCount').innerText = '' + hero.bonusCount;
-        this.field('bonusTime').innerText = formatTime(bonusTime);
-        scoreTime += bonusTime;
-      }
       if (hero.startTime) {
         this.show('startTimeRow');
         this.field('startTime').innerText = formatTime(hero.startTime);

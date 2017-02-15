@@ -10,8 +10,6 @@ export class Hero extends Runner {
 
   actionChange = new RunnerAction();
 
-  bonusCount = 0;
-
   carried = true;
 
   checkAction() {
@@ -29,7 +27,12 @@ export class Hero extends Runner {
   }
 
   choose() {
-    let {action} = this;
+    let {action, fastEnd, game, speed} = this;
+    if (fastEnd >= game.stage.time) {
+      speed.setScalar(1.75);
+    } else {
+      speed.setScalar(1);
+    }
     this.checkAction();
     if (this.game.stage.ended || this.phased) {
       action.clear();
@@ -70,6 +73,8 @@ export class Hero extends Runner {
     });
   }
 
+  fastEnd = -10;
+
   speed = new Vector2(1, 1);
 
   startTime = 0;
@@ -85,7 +90,12 @@ export class Hero extends Runner {
       }
     } else {
       // Bonus is the only other option.
-      this.bonusCount += 1;
+      let {stage} = this.game;
+      let baseTime = Math.max(this.fastEnd, stage.time);
+      this.fastEnd = baseTime + 10;
+      // Change visually before slowing.
+      // TODO There's also about 1 second diff here in keyTime handling. Why?
+      this.keyTime = this.fastEnd - 1.5;
     }
     return true;
   }

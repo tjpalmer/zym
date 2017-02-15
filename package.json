@@ -17,7 +17,7 @@
     "style-loader": "^0.13.1",
     "tslint": "^3.14.0",
     "tslint-loader": "^2.1.5",
-    "typescript": "^2.1.4",
+    "typescript": "^2.2.0",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"

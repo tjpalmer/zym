@@ -1,4 +1,4 @@
-import {Biggie, Brick, None, Prize, Runner, TilePos} from './';
+import {Biggie, Bonus, Brick, None, Prize, Runner, TilePos} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -254,6 +254,9 @@ export class Enemy extends Runner {
   releaseTreasure() {
     let {prize} = this;
     if (prize) {
+      if (prize instanceof Bonus) {
+        this.speed.divideScalar(1.5);
+      }
       this.prize = undefined;
       prize.owner = undefined;
       prize.point.copy(this.point);
@@ -290,6 +293,9 @@ export class Enemy extends Runner {
       return false;
     } else {
       this.prize = prize;
+      if (prize instanceof Bonus) {
+        this.speed.multiplyScalar(1.5);
+      }
       return true;
     }
   }
