@@ -83,8 +83,10 @@ export class Biggie extends Runner {
     return false;
   }
 
-  solid(other: Part): boolean {
-    return other instanceof Biggie;
+  solid(other: Part, edge?: Edge): boolean {
+    // Enemies block entrance to each other, but not exit from.
+    // Just a touch of safety precaution.
+    return other instanceof Biggie && !!edge;
   }
 
   speed = new Vector2(0.3, 0.7);

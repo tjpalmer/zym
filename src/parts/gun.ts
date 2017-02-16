@@ -1,12 +1,22 @@
 import {Biggie, Launcher, Runner} from './';
-import {Game, Level, Part} from '../';
+import {Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
-export class Gun extends Part {
+export class Gun extends Runner {
 
   constructor(game: Game) {
     super(game);
     this.shot = new Shot(game, this);
+  }
+
+  // Never moves anywhere by choice, but eh.
+  action = new RunnerAction();
+
+  carried = true;
+
+  choose() {
+    // Guns don't actually act, but we need falling dynamics.
+    super.processAction(this.action);
   }
 
   facing = 0;
@@ -36,6 +46,8 @@ export class Gun extends Part {
     return false;
   }
 
+  speed = new Vector2(0.7, 0.7);
+
   reset() {
     this.shot.active = false;
     this.game.stage.removed(this.shot);
@@ -51,7 +63,12 @@ export class Gun extends Part {
 
   shot: Shot;
 
+  surface(other: Part) {
+    return other instanceof Gun;
+  }
+
   update() {
+    super.update();
     let {shot} = this;
     let {stage} = this.game;
     if (this.dead) {
