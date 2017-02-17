@@ -72,7 +72,7 @@ export class Game {
     this.level = loadLevel(this.world);
     // TODO Extract some setup to graphics modes?
     // Renderer.
-    let canvas = document.body.querySelector('.stage') as HTMLCanvasElement;
+    let canvas = body.querySelector('.stage') as HTMLCanvasElement;
     let renderer = this.renderer =
       new WebGLRenderer({antialias: false, canvas});
     // Camera.
@@ -160,10 +160,6 @@ export class Game {
   renderer: WebGLRenderer;
 
   resize() {
-    // -----------------------------------------------------------------------
-    // TODO After a few resizing, frame rate drops permanently and keeps going
-    // TODO down with each resize. What's up????
-    // -----------------------------------------------------------------------
     // This is a hack to let the layout adjust without concern for the canvas
     // size.
     // TODO Set a class that lets us overflow instead of shrinking?

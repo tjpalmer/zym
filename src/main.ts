@@ -5,9 +5,6 @@ import 'font-awesome';
 
 window.onload = main;
 
-// There's probably a better place for this declaration.
-declare function require(name: string): any;
-
 function main() {
   let game = new Game(window.document.body);
   let theme = new GoldTheme(game);
