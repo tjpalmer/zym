@@ -5,6 +5,7 @@ export * from './theme';
 export * from './biggie';
 export * from './brick';
 export * from './energy';
+export * from './gun';
 export * from './runner';
 export * from './treasure';
 

@@ -14,6 +14,19 @@ export class Gun extends Runner {
 
   carried = true;
 
+  carriedMove(x: number) {
+    let {lastSupport, support} = this;
+    if (support == lastSupport && support instanceof Biggie) {
+      if (support.facing && support.facing == -this.lastSupportFacing) {
+        this.facing = -this.facing;
+      }
+      this.lastSupportFacing = support.facing;
+    } else {
+      this.lastSupportFacing = 0;
+    }
+    this.lastSupport = support;
+  }
+
   choose() {
     // Guns don't actually act, but we need falling dynamics.
     super.processAction(this.action);
@@ -45,6 +58,10 @@ export class Gun extends Runner {
     }
     return false;
   }
+
+  lastSupport?: Part = undefined;
+
+  lastSupportFacing = 0;
 
   speed = new Vector2(0.7, 0.7);
 
@@ -78,6 +95,7 @@ export class Gun extends Runner {
       if (!shot.art) {
         this.game.theme.buildArt(shot);
       }
+      shot.facing = this.facing;
       shot.active = true;
       shot.point.copy(this.point);
       stage.particles.push(shot);
@@ -122,6 +140,9 @@ export class Shot extends Part {
     return this.active;
   }
 
+  // Remember own facing in case gun changes facing.
+  facing = 0;
+
   gun: Gun;
 
   get shootable() {
@@ -133,8 +154,7 @@ export class Shot extends Part {
   }
 
   update() {
-    let {game, gun} = this;
-    let {facing} = gun;
+    let {facing, game, gun} = this;
     let {stage} = game;
     oldPoint.copy(this.point);
     this.point.x += 1.5 * facing;

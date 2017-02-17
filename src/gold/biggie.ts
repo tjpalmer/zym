@@ -33,7 +33,7 @@ export class BiggieArt extends BaseArt<Biggie> {
       }
       workPoint.y -= frames[this.frame];
     }
-    return this.workPoint;
+    return workPoint;
   }
 
   workPoint = new Vector2();

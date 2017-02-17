@@ -1,4 +1,4 @@
-import {Biggie, Bonus, Brick, None, Prize, Runner, TilePos} from './';
+import {Biggie, Bonus, Brick, Hero, None, Prize, Runner, TilePos} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -285,7 +285,7 @@ export class Enemy extends Runner {
   state = {x: State.chase, y: State.chase};
 
   surface(other: Part) {
-    return !(other instanceof Biggie);
+    return other instanceof Enemy || other instanceof Hero;
   }
 
   take(prize: Prize) {

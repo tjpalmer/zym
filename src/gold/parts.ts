@@ -1,5 +1,5 @@
 import {
-  Art, BiggieArt, BrickArt, EnergyArt, Flame, FlameArt, LatchArt, Layer,
+  Art, BiggieArt, BrickArt, EnergyArt, Flame, FlameArt, GunArt, LatchArt, Layer,
   RunnerArt, PrizeArt,
 } from './';
 import {
@@ -14,8 +14,6 @@ import {Vector2} from 'three';
 // Simple arts for unchanging parts.
 export let arts = {
   Bar: {layer: Layer.back, tile: new Vector2(9, 17)},
-  GunLeft: {layer: Layer.front, tile: new Vector2(24, 10)},
-  GunRight: {layer: Layer.front, tile: new Vector2(21, 10)},
   Ladder: {layer: Layer.back, tile: new Vector2(8, 17)},
   LauncherCenter: {layer: Layer.back, tile: new Vector2(12, 17)},
   LauncherDown: {layer: Layer.back, tile: new Vector2(11, 17)},
@@ -46,8 +44,8 @@ export class Parts {
     [Energy, part => new EnergyArt(part as Energy)],
     [EnergyOff, part => new EnergyArt(part as Energy)],
     [Flame, part => new FlameArt(part as Flame)],
-    [GunLeft, artMaker(arts.GunLeft)],
-    [GunRight, artMaker(arts.GunRight)],
+    [GunLeft, part => new GunArt(part as GunLeft)],
+    [GunRight, part => new GunArt(part as GunRight)],
     [Hero, part => new RunnerArt(part as Runner, new Vector2(9, 14))],
     [Ladder, artMaker(arts.Ladder)], 
     [LatchLeft, part => new LatchArt(part as Latch)],

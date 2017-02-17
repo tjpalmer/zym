@@ -6,6 +6,8 @@ export class Runner extends Part {
 
   align = new Vector2();
 
+  carriedMove(x: number) {}
+
   climber = true;
 
   climbing = false;
@@ -245,7 +247,9 @@ export class Runner extends Part {
         // TODO Intermediate constraints???
         // TODO When this was active, a guy could walk toward me in pit.
         // TODO Tried moved now. Does it work?
-        move.x += support.moved.x;
+        let carriedMove = support.moved.x;
+        move.x += carriedMove;
+        this.carriedMove(carriedMove);
       }
     }
     point.add(move);
