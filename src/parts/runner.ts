@@ -124,7 +124,7 @@ export class Runner extends Part {
     // TODO Let changed keys override old ones.
     // TODO Find all actions (and alignments) before moving, for enemies?
     let {stage} = this.game;
-    let {align, move, oldPoint, point, workPoint} = this;
+    let {align, move, oldPoint, point, speed, workPoint} = this;
     if (this.phased) {
       action.clear();
       // We get off by one without this.
@@ -141,7 +141,6 @@ export class Runner extends Part {
     let leftParts = this.partsNear(3, -1);
     let rightParts = this.partsNear(midRight, -1);
     // Pixel-specific for surfaces, because enemies are moving surfaces.
-    // TODO If a support moves, it should move the supported thing, too.
     let support = this.getSupport();
     let oldCatcher = this.climber ? this.getCatcher(false) : undefined;
     // Unless we get moving climbables (falling ladders?), we can stick to near
@@ -208,7 +207,7 @@ export class Runner extends Part {
         Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
       );
     }
-    move.multiply(this.speed);
+    move.multiply(speed);
     this.oldCatcher = oldCatcher;
     this.support = support;
   }
@@ -232,13 +231,13 @@ export class Runner extends Part {
 
   update() {
     // Change player position.
-    let {align, move, oldCatcher, oldPoint, point, support} = this;
+    let {align, move, oldCatcher, oldPoint, point, speed, support} = this;
     if (support) {
-      if (support.move.y < 0) {
-        // Speeds could be different, but for now this helps to fall with
-        // a support.
-        // TODO Reassess how to handle this?
-        move.y = support.move.y;
+      if (support.move.y <= 0) {
+        if (speed.y >= -support.move.y) {
+          // Try to put us directly on the support.
+          move.y = support.point.y + Level.tileSize.y - point.y;
+        }
       }
       if (this.carried) {
         // TODO Allow being carried.
