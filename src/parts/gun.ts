@@ -16,8 +16,17 @@ export class Gun extends Runner {
 
   carriedMove(x: number) {
     let {lastSupport, support} = this;
-    if (support == lastSupport && support instanceof Biggie) {
+    if (
+      support == lastSupport &&
+      (support instanceof Biggie || support instanceof Gun)
+    ) {
       if (support.facing && support.facing == -this.lastSupportFacing) {
+        // This isn't really sufficient.
+        // It should also change position relative to the support.
+        // It's extra obvious when a biggie carries two guns side by side, and
+        // yes this can happen.
+        // Also, this should apply to everything, not just guns, but it's most
+        // interesting for guns, so eh.
         this.facing = -this.facing;
       }
       this.lastSupportFacing = support.facing;

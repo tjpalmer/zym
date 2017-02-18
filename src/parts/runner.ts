@@ -150,12 +150,13 @@ export class Runner extends Part {
       // Allow dangling.
       this.getClimbable(this.partsNear(3, top), this.partsNear(midRight, top));
     this.climbing = !!inClimbable;
-    let climbable = this.getClimbable(leftParts, rightParts) || inClimbable;
+    // Keep the support the highest thing.
+    let climbable = inClimbable || this.getClimbable(leftParts, rightParts);
     if (!this.climber) {
       this.climbing = false;
       climbable = undefined;
     }
-    if (!support) {
+    if (climbable && (!support || support.point.y < climbable.point.y)) {
       support = climbable;
     }
     if (this.encased()) {
@@ -185,6 +186,7 @@ export class Runner extends Part {
     // Align non-moving direction.
     // TODO Make this actually change the move. Nix the align var.
     // TODO Except when all on same climbable or none?
+    // TODO No! Make align only when both allowed and needed for movement!!!!!
     align.setScalar(0);
     // Prioritize y because y move options are rarer.
     if (move.y) {
@@ -234,9 +236,10 @@ export class Runner extends Part {
     let {align, move, oldCatcher, oldPoint, point, speed, support} = this;
     if (support) {
       if (support.move.y <= 0) {
-        if (speed.y >= -support.move.y) {
+        let gap = support.point.y + Level.tileSize.y - point.y;
+        if (gap < 0 && speed.y >= -support.move.y) {
           // Try to put us directly on the support.
-          move.y = support.point.y + Level.tileSize.y - point.y;
+          move.y = gap;
         }
       }
       if (this.carried) {
