@@ -9,7 +9,7 @@ export class World {
     this.levels.push(new Level());
   }
 
-  decode(encoded: EncodedWorld) {
+  decode(encoded: EncodedWorld<Id>) {
     this.id = encoded.id;
     this.levels = encoded.levels.map(levelId => {
       let levelString = window.localStorage[`zym.objects.${levelId}`];
@@ -25,11 +25,26 @@ export class World {
     return this;
   }
 
-  encode(): EncodedWorld {
-    // This presumes that all individual levels have already been saved.
+  encode(): EncodedWorld<Id> {
+    // This presumes that all individual levels have already been saved under
+    // their own ids.
+    return {
+      levels: this.levels.map(level => level.id),
+      ...this.encodeMeta(),
+    }
+  }
+
+  encodeExpanded(): EncodedWorld<EncodedLevel> {
+    // Intended for full export.
+    return {
+      levels: this.levels.map(level => level.encode()),
+      ...this.encodeMeta(),
+    }
+  }
+
+  encodeMeta(): WorldMeta {
     return {
       id: this.id,
-      levels: this.levels.map(level => level.id),
       name: this.name,
       type: 'World',
     }
@@ -112,7 +127,7 @@ export class Level {
       rows.push(row.join(''));
     }
     return {
-      id: this.id, name: this.name, tiles: rows.join('\n'), type: 'Level'
+      id: this.id, name: this.name, tiles: rows.join('\n'), type: 'Level',
     };
   }
 
@@ -219,14 +234,18 @@ export interface EncodedLevel {
 
 }
 
-export interface EncodedWorld {
+export interface WorldMeta {
 
   id: Id;
-
-  levels: Array<Id>;
 
   name: string;
 
   type: 'World';
+
+}
+
+export interface EncodedWorld<LevelRepresentation> extends WorldMeta {
+
+  levels: Array<LevelRepresentation>;
 
 }

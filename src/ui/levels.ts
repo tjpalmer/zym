@@ -51,15 +51,30 @@ export class Levels implements Dialog {
   }
 
   buildTitleBar() {
-    let add = this.titleBar.querySelector('.add') as HTMLElement;
-    add.addEventListener('click', () => this.addLevel());
-    // let close = this.titleBar.querySelector('.close') as HTMLElement;
-    // close.addEventListener('click', () => this.game.hideDialog());
+    this.on('add', () => this.addLevel());
+    // this.on('close', () => this.game.hideDialog());
+    this.on('save', () => this.saveWorld());
   }
 
   content: HTMLElement;
 
   game: Game;
+
+  getButton(name: string) {
+    return this.titleBar.querySelector(`.${name}`) as HTMLElement;
+  }
+
+  on(name: string, action: () => void) {
+    this.getButton(name).addEventListener('click', action);
+  }
+
+  saveWorld() {
+    let link = window.document.createElement('a');
+    let data = JSON.stringify(this.game.world.encodeExpanded());
+    link.href = `data:application/json,${data}`;
+    link.setAttribute('download', 'world.zym');
+    link.click();
+  }
 
   selectLevel(level: Level) {
     this.showLevel(level);
