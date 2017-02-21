@@ -71,7 +71,8 @@ export class Levels implements Dialog {
   saveWorld() {
     let link = window.document.createElement('a');
     let data = JSON.stringify(this.game.world.encodeExpanded());
-    link.href = `data:application/json,${data}`;
+    // TODO Zip it first?
+    link.href = `data:application/json,${encodeURIComponent(data)}`;
     link.setAttribute('download', 'world.zym');
     link.click();
   }
