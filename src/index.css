@@ -77,7 +77,8 @@ body {
   pointer-events: none;
 }
 
-.dialog .content .item:hover .highlight {
+.dialog .content .item:hover .highlight,
+.dialog .content:not(:hover) .item.selected .highlight {
   display: block;
 }
 

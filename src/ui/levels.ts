@@ -13,10 +13,15 @@ export class Levels implements Dialog {
     this.selectedLevel = game.level;
     game.world.levels.forEach(level => this.addItem(level));
     this.content = dialogElement;
+    window.setTimeout(() => this.scrollIntoView(), 0);
   }
 
   addItem(level: Level) {
     let item = this.itemTemplate.cloneNode(true) as HTMLElement;
+    if (level.id == this.game.level.id) {
+      item.classList.add('selected');
+    }
+    item.dataset['level'] = level.id;
     item.addEventListener('mouseenter', () => {
       this.hoverLevel = level;
       this.showLevel(level);
@@ -64,6 +69,12 @@ export class Levels implements Dialog {
     return this.titleBar.querySelector(`.${name}`) as HTMLElement;
   }
 
+  getSelectedItem() {
+    return this.content.querySelector(
+      `[data-level="${this.selectedLevel.id}"]`
+    ) as HTMLElement;
+  }
+
   on(name: string, action: () => void) {
     this.getButton(name).addEventListener('click', action);
   }
@@ -77,7 +88,20 @@ export class Levels implements Dialog {
     link.click();
   }
 
+  scrollIntoView() {
+    let {list} = this;
+    let item = this.getSelectedItem();
+    // This automatically limits to top and bottom of scroll area.
+    // Other than that, try to center.
+    let top = item.offsetTop;
+    top -= list.offsetHeight / 2;
+    top += item.offsetHeight / 2;
+    list.scrollTop = top;
+  }
+
   selectLevel(level: Level) {
+    this.content.querySelector('.selected')!.classList.remove('selected');
+    this.getSelectedItem().classList.add('selected');
     this.showLevel(level);
     this.selectedLevel = level;
     window.localStorage['zym.levelId'] = level.id;
