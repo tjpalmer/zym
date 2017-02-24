@@ -39,6 +39,7 @@ export class Levels implements Dialog {
     nameBox.addEventListener('click', () => {
       this.selectLevel(level);
     });
+    // TODO Name input!
     let edit = item.querySelector('.edit') as HTMLElement;
     edit.addEventListener('click', () => {
       this.selectLevel(level);

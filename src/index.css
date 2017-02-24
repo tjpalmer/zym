@@ -96,6 +96,12 @@ body {
 .dialog .content .item .nameBox {
   flex: 1;
   padding: 0.1em 0.2em;
+  position: relative;
+}
+
+.dialog .content .item .nameInput {
+  display: none;
+  position: absolute;
 }
 
 .dialog .content .number::before {
