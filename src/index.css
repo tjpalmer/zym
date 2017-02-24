@@ -99,11 +99,6 @@ body {
   position: relative;
 }
 
-.dialog .content .item .nameInput {
-  display: none;
-  position: absolute;
-}
-
 .dialog .content .number::before {
   content: counter(dialogContentCounter);
   counter-increment: dialogContentCounter;

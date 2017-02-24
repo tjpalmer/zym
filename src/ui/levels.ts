@@ -35,8 +35,23 @@ export class Levels implements Dialog {
     });
     let nameElement = item.querySelector('.name') as HTMLElement;
     nameElement.innerText = level.name;
+    nameElement.addEventListener('click', () => {
+      nameElement.contentEditable = 'plaintext-only';
+    });
+    nameElement.addEventListener('blur', () => {
+      let text = nameElement.innerText;
+      if (level.name != text) {
+        level.name = text;
+        level.save();
+      }
+    });
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
     nameBox.addEventListener('click', () => {
+      for (let other of this.list.querySelectorAll('.name')) {
+        if (other != nameElement) {
+          (other as HTMLElement).contentEditable = 'false';
+        }
+      }
       this.selectLevel(level);
     });
     // TODO Name input!
@@ -101,10 +116,12 @@ export class Levels implements Dialog {
   }
 
   selectLevel(level: Level) {
-    this.content.querySelector('.selected')!.classList.remove('selected');
-    this.getSelectedItem().classList.add('selected');
+    for (let old of this.content.querySelectorAll('.selected')) {
+      old.classList.remove('selected');
+    }
     this.showLevel(level);
     this.selectedLevel = level;
+    this.getSelectedItem().classList.add('selected');
     window.localStorage['zym.levelId'] = level.id;
   }
 
