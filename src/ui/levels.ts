@@ -35,15 +35,33 @@ export class Levels implements Dialog {
     });
     let nameElement = item.querySelector('.name') as HTMLElement;
     nameElement.innerText = level.name;
-    nameElement.addEventListener('click', () => {
-      nameElement.contentEditable = 'plaintext-only';
-    });
     nameElement.addEventListener('blur', () => {
       let text = nameElement.innerText;
       if (level.name != text) {
         level.name = text;
         level.save();
       }
+    });
+    nameElement.addEventListener('click', () => {
+      nameElement.contentEditable = 'plaintext-only';
+    });
+    nameElement.addEventListener('keydown', event => {
+      switch (event.key) {
+        case 'Enter': {
+          nameElement.contentEditable = 'false';
+          nameElement.blur();
+          break;
+        }
+        case 'Escape': {
+          nameElement.innerText = level.name;
+          nameElement.contentEditable = 'false';
+          break;
+        }
+        default: {
+          return;
+        }
+      }
+      event.cancelBubble = true;
     });
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
     nameBox.addEventListener('click', () => {
@@ -54,14 +72,12 @@ export class Levels implements Dialog {
       }
       this.selectLevel(level);
     });
-    // TODO Name input!
     let edit = item.querySelector('.edit') as HTMLElement;
     edit.addEventListener('click', () => {
       this.selectLevel(level);
       this.game.hideDialog();
     });
     this.list.appendChild(item);
-    // TODO Save world.
   }
 
   addLevel() {

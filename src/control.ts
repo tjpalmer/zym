@@ -128,6 +128,10 @@ export class Control extends RunnerAction {
   onKey(event: KeyboardEvent, down: boolean) {
     // console.log(event.key);
     let field = this.keyFields[event.key];
+    // Let 'escape' be global because that's already handled well enough.
+    if (this.game.showingDialog() && field != 'escape') {
+      return;
+    }
     if (field) {
       (this.keyAction as any)[field] = down;
       this.onField(field, down);
