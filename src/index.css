@@ -40,6 +40,11 @@ body {
   outline: 1px solid white;
 }
 
+[contenteditable]::selection {
+  background-color: white;
+  color: black;
+}
+
 .dialog {
   bottom: 0.5em;
   border: 0.1em solid white;

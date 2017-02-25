@@ -21,6 +21,7 @@ export class World {
       // Always keep one level.
       this.levels.push(new Level());
     }
+    // TODO Sanitize names?
     this.name = encoded.name;
     return this;
   }
@@ -108,6 +109,7 @@ export class Level {
     this.excluded = !!encoded.excluded;
     // Id. Might be missing for old saved levels.
     // TODO Not by now, surely? Try removing checks?
+    // TODO Sanitize id, name, and tiles?
     if (encoded.id) {
       this.id = encoded.id;
     }
