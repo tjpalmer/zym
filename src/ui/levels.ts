@@ -3,15 +3,16 @@ import {Dialog, Game, Level, load} from '../';
 export class Levels implements Dialog {
 
   constructor(game: Game) {
+    this.game = game;
     let dialogElement = load(require('./levels.html'));
     this.titleBar = dialogElement.querySelector('.title') as HTMLElement;
     this.buildTitleBar();
     this.itemTemplate = dialogElement.querySelector('.item') as HTMLElement;
     this.list = this.itemTemplate.parentNode as HTMLElement;
     this.list.removeChild(this.itemTemplate);
-    this.game = game;
     this.selectedLevel = game.level;
     game.world.levels.forEach(level => this.addItem(level));
+    this.updateNumbers();
     this.content = dialogElement;
     window.setTimeout(() => this.scrollIntoView(), 0);
   }
@@ -34,12 +35,15 @@ export class Levels implements Dialog {
       }
     });
     let nameElement = item.querySelector('.name') as HTMLElement;
-    nameElement.innerText = level.name;
+    nameElement.innerText = level.name.trim() || 'Level';
     nameElement.addEventListener('blur', () => {
-      let text = nameElement.innerText;
+      let text = nameElement.innerText.trim();
       if (level.name != text) {
         level.name = text;
         level.save();
+      }
+      if (!text) {
+        nameElement.innerText = 'Level';
       }
     });
     nameElement.addEventListener('click', () => {
@@ -85,15 +89,24 @@ export class Levels implements Dialog {
     this.game.world.levels.push(level);
     this.game.world.save();
     this.addItem(level);
+    this.updateNumbers();
   }
 
   buildTitleBar() {
+    this.getButton('name').innerText = this.game.world.name.trim() || 'Zone';
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
+    this.on('exclude', () => this.excludeLevel());
     this.on('save', () => this.saveWorld());
   }
 
   content: HTMLElement;
+
+  excludeLevel() {
+    this.selectedLevel.excluded = !this.selectedLevel.excluded;
+    this.selectedLevel.save();
+    this.updateNumbers();
+  }
 
   game: Game;
 
@@ -116,7 +129,8 @@ export class Levels implements Dialog {
     let data = JSON.stringify(this.game.world.encodeExpanded());
     // TODO Zip it first?
     link.href = `data:application/json,${encodeURIComponent(data)}`;
-    link.setAttribute('download', 'world.zym');
+    // TODO Base file name on zone name, but need to sanitize first!
+    link.setAttribute('download', 'Zone.zym');
     link.click();
   }
 
@@ -151,6 +165,37 @@ export class Levels implements Dialog {
     }
     editState.trackChange();
     level.updateStage(this.game, true);
+  }
+
+  updateNumbers() {
+    let {levels} = this.game.world;
+    this.game.world.numberLevels();
+    let numberElements =
+      [...this.list.querySelectorAll('.number')] as Array<HTMLElement>;
+    // Build the numbers.
+    numberElements.forEach((numberElement, index) => {
+      let level = levels[index];
+      numberElement.innerText = (level.number || '') as string;
+      // TODO This makes things flicker sometimes.
+      // TODO Or just cave and make this a table?
+      // TODO Instead make some invisible area for calculation?
+      numberElement.style.minWidth = '0';
+    });
+    // Make their widths uniform.
+    // TODO Grid layout might be nice, eh?
+    window.setTimeout(() => {
+      let maxWidth = 0;
+      numberElements.forEach(numberElement => {
+        // Calculete width. TODO Extract this?
+        let style = window.getComputedStyle(numberElement);
+        let padding = Math.ceil(+style.paddingRight!.slice(0, -2));
+        let width = Math.max(numberElement.offsetWidth - padding, 0);
+        maxWidth = Math.max(width, maxWidth);
+      });
+      numberElements.forEach(numberElement => {
+        numberElement.style.minWidth = `${maxWidth}px`;
+      });
+    });
   }
 
   private hoverLevel: Level | undefined = undefined;

@@ -54,7 +54,19 @@ export class World {
 
   levels = new Array<Level>();
 
-  name = 'World';
+  name = 'Zone';
+
+  numberLevels() {
+    let number = 1;
+    for (let level of this.levels) {
+      if (level.excluded) {
+        level.number = undefined;
+      } else {
+        level.number = number;
+        ++number;
+      }
+    }
+  }
 
   save() {
     window.localStorage[`zym.objects.${this.id}`] =
@@ -93,7 +105,9 @@ export class Level {
   }
 
   decode(encoded: EncodedLevel) {
+    this.excluded = !!encoded.excluded;
     // Id. Might be missing for old saved levels.
+    // TODO Not by now, surely? Try removing checks?
     if (encoded.id) {
       this.id = encoded.id;
     }
@@ -113,8 +127,6 @@ export class Level {
     return this;
   }
 
-  disabled = false;
-
   encode(): EncodedLevel {
     let point = new Vector2();
     let rows: Array<string> = [];
@@ -126,9 +138,17 @@ export class Level {
       }
       rows.push(row.join(''));
     }
-    return {
-      id: this.id, name: this.name, tiles: rows.join('\n'), type: 'Level',
-    };
+    let encoded = {
+      id: this.id,
+      name: this.name,
+      tiles: rows.join('\n'),
+      type: 'Level',
+    } as EncodedLevel;
+    // Actually keep this one optional.
+    if (this.excluded) {
+      encoded.excluded = true;
+    }
+    return encoded;
   }
 
   equals(other: Level): boolean {
@@ -139,6 +159,8 @@ export class Level {
     }
     return true;
   }
+
+  excluded = false;
 
   id: Id;
 
@@ -153,6 +175,10 @@ export class Level {
   }
 
   name = 'Level';
+
+  // Starting from 1, undefined for excluded levels.
+  // Lazily applied.
+  number?: number;
 
   save() {
     window.localStorage[`zym.objects.${this.id}`] =
@@ -223,6 +249,9 @@ export class Level {
 }
 
 export interface EncodedLevel {
+
+  // Totally okay to leave off for included levels.
+  excluded?: boolean;
 
   id: Id;
 

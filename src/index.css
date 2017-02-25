@@ -95,15 +95,14 @@ body {
 }
 
 .dialog .content .item .nameBox {
+  display: flex;
   flex: 1;
   padding: 0.1em 0.2em;
-  position: relative;
 }
 
-.dialog .content .number::before {
-  content: counter(dialogContentCounter);
-  counter-increment: dialogContentCounter;
+.dialog .content .number {
   padding-right: 0.2em;
+  text-align: right;
 }
 
 .dialog .contentBox {
