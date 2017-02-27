@@ -97,6 +97,8 @@ body {
 
 .dialog .content .item .name {
   margin-left: 0.3em;
+  /* For easier seeing of caret at right. */
+  padding-right: 0.05em;
 }
 
 .dialog .content .item .nameBox {
@@ -120,6 +122,7 @@ body {
   margin-top: 0.08em;
 }
 
+.dialog .fa.load,
 .dialog .fa.paste,
 .dialog .fa.redo,
 .dialog .fa.zap {
@@ -134,6 +137,11 @@ body {
 }
 
 .dialog .title .name {
+  /* For easier seeing of caret at right. */
+  padding-right: 0.05em;
+}
+
+.dialog .title .nameBox {
   flex: 1;
 }
 

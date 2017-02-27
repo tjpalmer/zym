@@ -2,6 +2,7 @@ import {Dialog, Game, Level, load} from '../';
 
 export class Levels implements Dialog {
 
+  // TODO Generalize all this to zone lists, too!
   constructor(game: Game) {
     this.game = game;
     let dialogElement = load(require('./levels.html'));
@@ -35,37 +36,9 @@ export class Levels implements Dialog {
       }
     });
     let nameElement = item.querySelector('.name') as HTMLElement;
-    nameElement.innerText = level.name.trim() || 'Level';
-    nameElement.addEventListener('blur', () => {
-      let text = nameElement.innerText.trim();
-      if (level.name != text) {
-        level.name = text;
-        level.save();
-      }
-      if (!text) {
-        nameElement.innerText = 'Level';
-      }
-    });
-    nameElement.addEventListener('click', () => {
-      nameElement.contentEditable = 'plaintext-only';
-    });
-    nameElement.addEventListener('keydown', event => {
-      switch (event.key) {
-        case 'Enter': {
-          nameElement.contentEditable = 'false';
-          nameElement.blur();
-          break;
-        }
-        case 'Escape': {
-          nameElement.innerText = level.name;
-          nameElement.contentEditable = 'false';
-          break;
-        }
-        default: {
-          return;
-        }
-      }
-      event.cancelBubble = true;
+    this.makeEditable(nameElement, 'Level', () => level.name, text => {
+      level.name = text;
+      level.save();
     });
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
     nameBox.addEventListener('click', () => {
@@ -93,7 +66,12 @@ export class Levels implements Dialog {
   }
 
   buildTitleBar() {
-    this.getButton('name').innerText = this.game.world.name.trim() || 'Zone';
+    let {world} = this.game;
+    let nameElement = this.getButton('name');
+    this.makeEditable(nameElement, 'Zone', () => world.name, text => {
+      world.name = text;
+      world.save();
+    });
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
     this.on('exclude', () => this.excludeLevel());
@@ -118,6 +96,46 @@ export class Levels implements Dialog {
     return this.content.querySelector(
       `[data-level="${this.selectedLevel.id}"]`
     ) as HTMLElement;
+  }
+
+  makeEditable(
+    field: HTMLElement,
+    defaultText: string,
+    get: () => string,
+    set: (text: string) => void,
+  ) {
+    field.spellcheck = false;
+    field.innerText = get().trim() || defaultText;
+    field.addEventListener('blur', () => {
+      let text = field.innerText.trim();
+      if (get() != text) {
+        set(text);
+      }
+      if (!text) {
+        field.innerText = 'Level';
+      }
+    });
+    field.addEventListener('click', () => {
+      field.contentEditable = 'plaintext-only';
+    });
+    field.addEventListener('keydown', event => {
+      switch (event.key) {
+        case 'Enter': {
+          field.contentEditable = 'false';
+          field.blur();
+          break;
+        }
+        case 'Escape': {
+          field.innerText = get();
+          field.contentEditable = 'false';
+          break;
+        }
+        default: {
+          return;
+        }
+      }
+      event.cancelBubble = true;
+    });
   }
 
   on(name: string, action: () => void) {

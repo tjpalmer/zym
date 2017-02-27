@@ -207,6 +207,11 @@ export class EditMode extends Mode {
   }
 
   togglePlay() {
+    // Sometimes things get confused, and clearing the action might help.
+    // We can't directly read keyboard state.
+    this.game.control.clear();
+    this.game.control.keyAction.clear();
+    // Now toggle mode.
     this.game.mode = this.game.mode == this.game.play ?
       this.game.edit : this.game.play;
     this.game.level.updateStage(this.game, true);
