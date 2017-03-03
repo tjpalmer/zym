@@ -234,7 +234,7 @@ function loadLevel(world: World) {
   let levelString = window.localStorage['zym.level'];
   if (levelString) {
     level = new Level().load(levelString);
-    world.levels.push(level);
+    world.items.push(level);
     window.localStorage['zym.levelId'] = level.id;
     window.localStorage.removeItem('zym.level');
     world.save();
@@ -243,7 +243,7 @@ function loadLevel(world: World) {
     let levelId = window.localStorage['zym.levelId'];
     if (levelId) {
       // Should already be loaded in the world.
-      level = world.levels.find(level => level.id == levelId);
+      level = world.items.find(level => level.id == levelId);
     }
     if (!level) {
       // Safety net, in case it's unlisted in the world.
@@ -251,13 +251,13 @@ function loadLevel(world: World) {
       levelString = window.localStorage[`zym.objects.${levelId}`];
       if (levelString) {
         level = new Level().load(levelString);
-        world.levels.push(level);
+        world.items.push(level);
         // TODO Save the world?
       }
     }
     if (!level) {
       // Another safety net, or just for kick off.
-      level = world.levels[0];
+      level = world.items[0];
       window.localStorage['zym.levelId'] = level.id;
     }
   }
@@ -272,6 +272,11 @@ function loadWorld() {
     let worldString = window.localStorage[`zym.objects.${worldId}`];
     if (worldString) {
       let encodedWorld = JSON.parse(worldString);
+      if (encodedWorld.levels) {
+        // Update to generic form.
+        encodedWorld.items = encodedWorld.levels;
+        delete encodedWorld.levels;
+      }
       world.decode(encodedWorld);
     } else {
       // Save the world for next time.

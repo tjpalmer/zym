@@ -2,72 +2,86 @@ import {Game, GenericPartType, Grid, Id, Part, PartType, createId} from './';
 import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
 
-export class World {
+export interface EncodedItem<TypeString extends string> {
 
-  constructor() {
+  id: Id;
+
+  name: string;
+
+  type: TypeString;
+
+}
+
+interface Encodable<Item> {
+
+  // TODO Awesome TypeScript type definition for encoded item.
+  decode(encoded: any): Item;
+
+  encode(): any;
+
+  excluded: boolean;
+
+  id: Id;
+
+}
+
+export class ItemList<Item extends Encodable<Item>> {
+
+  constructor(itemType: {new(): Item}) {
     this.id = createId();
-    this.levels.push(new Level());
+    this.items.push(new itemType());
+    this.itemType = itemType;
   }
 
-  decode(encoded: EncodedWorld<Id>) {
+  decode(encoded: EncodedItemList<Id>) {
     this.id = encoded.id;
-    this.levels = encoded.levels.map(levelId => {
+    this.items = encoded.items.map(levelId => {
       let levelString = window.localStorage[`zym.objects.${levelId}`];
       if (levelString) {
-        return new Level().decode(JSON.parse(levelString));
+        return new this.itemType().decode(JSON.parse(levelString));
       }
-    }).filter(level => level) as Array<Level>;
-    if (!this.levels.length) {
+    }).filter(item => item) as Array<Item>;
+    if (!this.items.length) {
       // Always keep one level.
-      this.levels.push(new Level());
+      this.items.push(new this.itemType());
     }
     // TODO Sanitize names?
     this.name = encoded.name;
     return this;
   }
 
-  encode(): EncodedWorld<Id> {
+  encode(): EncodedItemList<Id> {
     // This presumes that all individual levels have already been saved under
     // their own ids.
     return {
-      levels: this.levels.map(level => level.id),
+      items: this.items.map(item => item.id),
       ...this.encodeMeta(),
     }
   }
 
-  encodeExpanded(): EncodedWorld<EncodedLevel> {
+  encodeExpanded(): EncodedItemList<EncodedLevel> {
     // Intended for full export.
     return {
-      levels: this.levels.map(level => level.encode()),
+      items: this.items.map(item => item.encode()),
       ...this.encodeMeta(),
     }
   }
 
-  encodeMeta(): WorldMeta {
+  encodeMeta(): EncodedItem<'Zone'> {
     return {
       id: this.id,
       name: this.name,
-      type: 'World',
+      type: 'Zone',
     }
   }
 
   id: Id;
 
-  levels = new Array<Level>();
+  items = new Array<Item>();
+
+  itemType: {new(): Item};
 
   name = 'Zone';
-
-  numberLevels() {
-    let number = 1;
-    for (let level of this.levels) {
-      if (level.excluded) {
-        level.number = undefined;
-      } else {
-        level.number = number;
-        ++number;
-      }
-    }
-  }
 
   save() {
     window.localStorage[`zym.objects.${this.id}`] =
@@ -76,7 +90,27 @@ export class World {
 
 }
 
-export class Level {
+export class World extends ItemList<Level> {
+
+  constructor() {
+    super(Level);
+  }
+
+  numberLevels() {
+    let number = 1;
+    for (let item of this.items) {
+      if (item.excluded) {
+        item.number = undefined;
+      } else {
+        item.number = number;
+        ++number;
+      }
+    }
+  }
+
+}
+
+export class Level implements Encodable<Level> {
 
   static tileCount = new Vector2(40, 20);
 
@@ -250,7 +284,7 @@ export class Level {
 
 }
 
-export interface EncodedLevel {
+export interface EncodedLevel extends EncodedItem<'Level'> {
 
   // Totally okay to leave off for included levels.
   excluded?: boolean;
@@ -261,22 +295,11 @@ export interface EncodedLevel {
 
   tiles: string;
 
-  type: 'Level';
-
 }
 
-export interface WorldMeta {
+export interface EncodedItemList<ItemRepresentation>
+    extends EncodedItem<'World' | 'Zone'> {
 
-  id: Id;
-
-  name: string;
-
-  type: 'World';
-
-}
-
-export interface EncodedWorld<LevelRepresentation> extends WorldMeta {
-
-  levels: Array<LevelRepresentation>;
+  items: Array<ItemRepresentation>;
 
 }

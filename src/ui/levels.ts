@@ -12,7 +12,7 @@ export class Levels implements Dialog {
     this.list = this.itemTemplate.parentNode as HTMLElement;
     this.list.removeChild(this.itemTemplate);
     this.selectedLevel = game.level;
-    game.world.levels.forEach(level => this.addItem(level));
+    game.world.items.forEach(level => this.addItem(level));
     this.updateNumbers();
     this.content = dialogElement;
     window.setTimeout(() => this.scrollIntoView(), 0);
@@ -59,7 +59,7 @@ export class Levels implements Dialog {
 
   addLevel() {
     let level = new Level();
-    this.game.world.levels.push(level);
+    this.game.world.items.push(level);
     this.game.world.save();
     this.addItem(level);
     this.updateNumbers();
@@ -186,13 +186,13 @@ export class Levels implements Dialog {
   }
 
   updateNumbers() {
-    let {levels} = this.game.world;
+    let {items} = this.game.world;
     this.game.world.numberLevels();
     let numberElements =
       [...this.list.querySelectorAll('.number')] as Array<HTMLElement>;
     // Build the numbers.
     numberElements.forEach((numberElement, index) => {
-      let level = levels[index];
+      let level = items[index];
       numberElement.innerText = (level.number || '') as string;
       // TODO This makes things flicker sometimes.
       // TODO Or just cave and make this a table?
