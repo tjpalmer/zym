@@ -122,10 +122,12 @@ body {
   margin-top: 0.08em;
 }
 
+.dialog .copy,
+.dialog .delete,
 .dialog .fa.load,
 .dialog .fa.paste,
 .dialog .fa.redo,
-.dialog .fa.zap {
+.dialog .unclip {
   margin-left: 0.4em;
 }
 
