@@ -1,60 +1,13 @@
-import {Dialog, Game, Level, load} from '../';
+import {EditorList} from './';
+import {Dialog, Encodable, Game, Level, load} from '../';
 
-export class Levels implements Dialog {
+export class Levels extends EditorList<Level> {
 
   // TODO Generalize all this to zone lists, too!
   constructor(game: Game) {
-    this.game = game;
-    let dialogElement = load(require('./levels.html'));
-    this.titleBar = dialogElement.querySelector('.title') as HTMLElement;
-    this.buildTitleBar();
-    this.itemTemplate = dialogElement.querySelector('.item') as HTMLElement;
-    this.list = this.itemTemplate.parentNode as HTMLElement;
-    this.list.removeChild(this.itemTemplate);
-    this.selectedLevel = game.level;
-    game.world.items.forEach(level => this.addItem(level));
+    super(game, require('./levels.html'));
+    this.selectedValue = game.level;
     this.updateNumbers();
-    this.content = dialogElement;
-    window.setTimeout(() => this.scrollIntoView(), 0);
-  }
-
-  addItem(level: Level) {
-    let item = this.itemTemplate.cloneNode(true) as HTMLElement;
-    if (level.id == this.game.level.id) {
-      item.classList.add('selected');
-    }
-    item.dataset['level'] = level.id;
-    item.addEventListener('mouseenter', () => {
-      this.hoverLevel = level;
-      this.showLevel(level);
-    });
-    item.addEventListener('mouseleave', () => {
-      if (level == this.hoverLevel) {
-        this.hoverLevel = undefined;
-        // TODO Timeout before this to avoid flicker?
-        this.showLevel(this.selectedLevel);
-      }
-    });
-    let nameElement = item.querySelector('.name') as HTMLElement;
-    this.makeEditable(nameElement, 'Level', () => level.name, text => {
-      level.name = text;
-      level.save();
-    });
-    let nameBox = item.querySelector('.nameBox') as HTMLElement;
-    nameBox.addEventListener('click', () => {
-      for (let other of this.list.querySelectorAll('.name')) {
-        if (other != nameElement) {
-          (other as HTMLElement).contentEditable = 'false';
-        }
-      }
-      this.selectLevel(level);
-    });
-    let edit = item.querySelector('.edit') as HTMLElement;
-    edit.addEventListener('click', () => {
-      this.selectLevel(level);
-      this.game.hideDialog();
-    });
-    this.list.appendChild(item);
   }
 
   addLevel() {
@@ -74,72 +27,17 @@ export class Levels implements Dialog {
     });
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
-    this.on('exclude', () => this.excludeLevel());
+    this.on('exclude', () => this.excludeValue());
     this.on('save', () => this.saveWorld());
   }
 
-  content: HTMLElement;
-
-  excludeLevel() {
-    this.selectedLevel.excluded = !this.selectedLevel.excluded;
-    this.selectedLevel.save();
+  excludeValue() {
+    super.excludeValue();
     this.updateNumbers();
   }
 
-  game: Game;
-
-  getButton(name: string) {
-    return this.titleBar.querySelector(`.${name}`) as HTMLElement;
-  }
-
-  getSelectedItem() {
-    return this.content.querySelector(
-      `[data-level="${this.selectedLevel.id}"]`
-    ) as HTMLElement;
-  }
-
-  makeEditable(
-    field: HTMLElement,
-    defaultText: string,
-    get: () => string,
-    set: (text: string) => void,
-  ) {
-    field.spellcheck = false;
-    field.innerText = get().trim() || defaultText;
-    field.addEventListener('blur', () => {
-      let text = field.innerText.trim();
-      if (get() != text) {
-        set(text);
-      }
-      if (!text) {
-        field.innerText = 'Level';
-      }
-    });
-    field.addEventListener('click', () => {
-      field.contentEditable = 'plaintext-only';
-    });
-    field.addEventListener('keydown', event => {
-      switch (event.key) {
-        case 'Enter': {
-          field.contentEditable = 'false';
-          field.blur();
-          break;
-        }
-        case 'Escape': {
-          field.innerText = get();
-          field.contentEditable = 'false';
-          break;
-        }
-        default: {
-          return;
-        }
-      }
-      event.cancelBubble = true;
-    });
-  }
-
-  on(name: string, action: () => void) {
-    this.getButton(name).addEventListener('click', action);
+  get outsideSelectedValue(): Level {
+    return this.game.level;
   }
 
   saveWorld() {
@@ -152,28 +50,12 @@ export class Levels implements Dialog {
     link.click();
   }
 
-  scrollIntoView() {
-    let {list} = this;
-    let item = this.getSelectedItem();
-    // This automatically limits to top and bottom of scroll area.
-    // Other than that, try to center.
-    let top = item.offsetTop;
-    top -= list.offsetHeight / 2;
-    top += item.offsetHeight / 2;
-    list.scrollTop = top;
-  }
-
-  selectLevel(level: Level) {
-    for (let old of this.content.querySelectorAll('.selected')) {
-      old.classList.remove('selected');
-    }
-    this.showLevel(level);
-    this.selectedLevel = level;
-    this.getSelectedItem().classList.add('selected');
+  selectValue(level: Level) {
+    super.selectValue(level);
     window.localStorage['zym.levelId'] = level.id;
   }
 
-  showLevel(level: Level) {
+  showValue(level: Level) {
     // TODO Extract all this into a setLevel on game or something.
     this.game.level = level;
     let editState = this.game.edit.editState;
@@ -216,15 +98,9 @@ export class Levels implements Dialog {
     });
   }
 
-  private hoverLevel: Level | undefined = undefined;
-
-  private itemTemplate: HTMLElement;
-
-  private list: HTMLElement;
-
-  private selectedLevel: Level;
-
-  private titleBar: HTMLElement;
+  get values() {
+    return this.game.world.items;
+  }
 
 }
 

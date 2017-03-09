@@ -12,7 +12,7 @@ export interface EncodedItem<TypeString extends string> {
 
 }
 
-interface Encodable<Item> {
+export interface Encodable<Item> {
 
   // TODO Awesome TypeScript type definition for encoded item.
   decode(encoded: any): Item;
@@ -22,6 +22,10 @@ interface Encodable<Item> {
   excluded: boolean;
 
   id: Id;
+
+  name: string;
+
+  save(): void;
 
 }
 
