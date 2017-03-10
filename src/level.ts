@@ -29,7 +29,7 @@ export interface Encodable<Item> {
 
 }
 
-export class ItemList<Item extends Encodable<Item>> {
+export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
 
   constructor(itemType: {new(): Item}) {
     this.id = createId();
@@ -37,12 +37,12 @@ export class ItemList<Item extends Encodable<Item>> {
     this.itemType = itemType;
   }
 
-  decode(encoded: EncodedItemList<Id>) {
+  decode(encoded: EncodedItemList<Id, TypeString>) {
     this.id = encoded.id;
-    this.items = encoded.items.map(levelId => {
-      let levelString = window.localStorage[`zym.objects.${levelId}`];
-      if (levelString) {
-        return new this.itemType().decode(JSON.parse(levelString));
+    this.items = encoded.items.map(id => {
+      let itemString = window.localStorage[`zym.objects.${id}`];
+      if (itemString) {
+        return new this.itemType().decode(JSON.parse(itemString));
       }
     }).filter(item => item) as Array<Item>;
     if (!this.items.length) {
@@ -54,7 +54,7 @@ export class ItemList<Item extends Encodable<Item>> {
     return this;
   }
 
-  encode(): EncodedItemList<Id> {
+  encode(): EncodedItemList<Id, TypeString> {
     // This presumes that all individual levels have already been saved under
     // their own ids.
     return {
@@ -63,7 +63,7 @@ export class ItemList<Item extends Encodable<Item>> {
     }
   }
 
-  encodeExpanded(): EncodedItemList<EncodedLevel> {
+  encodeExpanded(): EncodedItemList<EncodedLevel, TypeString> {
     // Intended for full export.
     return {
       items: this.items.map(item => item.encode()),
@@ -71,11 +71,11 @@ export class ItemList<Item extends Encodable<Item>> {
     }
   }
 
-  encodeMeta(): EncodedItem<'Tower'> {
+  encodeMeta(): EncodedItem<TypeString> {
     return {
       id: this.id,
       name: this.name,
-      type: 'Tower',
+      type: this.typeString,
     }
   }
 
@@ -92,9 +92,11 @@ export class ItemList<Item extends Encodable<Item>> {
       JSON.stringify(this.encode());
   }
 
+  typeString: TypeString;
+
 }
 
-export class City extends ItemList<Tower> {
+export class City extends ItemList<Tower, 'City'> {
 
   constructor() {
     super(Tower);
@@ -102,9 +104,12 @@ export class City extends ItemList<Tower> {
 
   name = 'City';
 
+  typeString: 'City' = 'City';
+
 }
 
-export class Tower extends ItemList<Level> implements Encodable<Tower> {
+export class Tower extends ItemList<Level, 'Tower' | 'World' | 'Zone'>
+    implements Encodable<Tower> {
 
   constructor() {
     super(Level);
@@ -125,6 +130,8 @@ export class Tower extends ItemList<Level> implements Encodable<Tower> {
       }
     }
   }
+
+  typeString: 'Tower' = 'Tower';
 
 }
 
@@ -196,7 +203,7 @@ export class Level implements Encodable<Level> {
       id: this.id,
       name: this.name,
       tiles: rows.join('\n'),
-      type: 'Level',
+      type: this.typeString,
     } as EncodedLevel;
     // Actually keep this one optional.
     if (this.excluded) {
@@ -300,6 +307,8 @@ export class Level implements Encodable<Level> {
     theme.buildDone(game);
   }
 
+  typeString: 'Level' = 'Level';
+
 }
 
 export interface EncodedLevel extends EncodedItem<'Level'> {
@@ -315,8 +324,8 @@ export interface EncodedLevel extends EncodedItem<'Level'> {
 
 }
 
-export interface EncodedItemList<ItemRepresentation>
-    extends EncodedItem<'Tower' | 'World' | 'Zone'> {
+export interface EncodedItemList<ItemRepresentation, TypeString extends string>
+    extends EncodedItem<TypeString> {
 
   items: Array<ItemRepresentation>;
 
