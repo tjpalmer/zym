@@ -267,7 +267,8 @@ function loadLevel(world: World) {
 // Move to static in World.
 function loadWorld() {
   let world = new World();
-  let worldId = window.localStorage['zym.worldId'];
+  let worldId =
+    window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
   if (worldId) {
     let worldString = window.localStorage[`zym.objects.${worldId}`];
     if (worldString) {
@@ -287,5 +288,6 @@ function loadWorld() {
     world.save();
     window.localStorage[`zym.worldId`] = world.id;
   }
+  window.localStorage[`zym.towerId`] = world.id;
   return world;
 }

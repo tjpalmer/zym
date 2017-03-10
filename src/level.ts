@@ -85,7 +85,7 @@ export class ItemList<Item extends Encodable<Item>> {
 
   itemType: {new(): Item};
 
-  name = 'Zone';
+  name: string;
 
   save() {
     window.localStorage[`zym.objects.${this.id}`] =
@@ -94,11 +94,25 @@ export class ItemList<Item extends Encodable<Item>> {
 
 }
 
-export class World extends ItemList<Level> {
+export class City extends ItemList<World> {
+
+  constructor() {
+    super(World);
+  }
+
+  name = 'City';
+
+}
+
+export class World extends ItemList<Level> implements Encodable<World> {
 
   constructor() {
     super(Level);
   }
+
+  excluded = false;
+
+  name = 'Tower';
 
   numberLevels() {
     let number = 1;
