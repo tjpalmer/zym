@@ -71,11 +71,11 @@ export class ItemList<Item extends Encodable<Item>> {
     }
   }
 
-  encodeMeta(): EncodedItem<'Zone'> {
+  encodeMeta(): EncodedItem<'Tower'> {
     return {
       id: this.id,
       name: this.name,
-      type: 'Zone',
+      type: 'Tower',
     }
   }
 
@@ -94,17 +94,17 @@ export class ItemList<Item extends Encodable<Item>> {
 
 }
 
-export class City extends ItemList<World> {
+export class City extends ItemList<Tower> {
 
   constructor() {
-    super(World);
+    super(Tower);
   }
 
   name = 'City';
 
 }
 
-export class World extends ItemList<Level> implements Encodable<World> {
+export class Tower extends ItemList<Level> implements Encodable<Tower> {
 
   constructor() {
     super(Level);
@@ -316,7 +316,7 @@ export interface EncodedLevel extends EncodedItem<'Level'> {
 }
 
 export interface EncodedItemList<ItemRepresentation>
-    extends EncodedItem<'World' | 'Zone'> {
+    extends EncodedItem<'Tower' | 'World' | 'Zone'> {
 
   items: Array<ItemRepresentation>;
 

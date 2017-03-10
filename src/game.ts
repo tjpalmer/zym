@@ -1,4 +1,4 @@
-import {Control, EditMode, Level, PlayMode, Stage, Theme, World} from './';
+import {Control, EditMode, Level, PlayMode, Stage, Theme, Tower} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -68,8 +68,8 @@ export class Game {
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
-    this.world = loadWorld();
-    this.level = loadLevel(this.world);
+    this.tower = loadTower();
+    this.level = loadLevel(this.tower);
     // TODO Extract some setup to graphics modes?
     // Renderer.
     let canvas = body.querySelector('.stage') as HTMLCanvasElement;
@@ -222,72 +222,72 @@ export class Game {
 
   theme: Theme;
 
-  world: World;
+  tower: Tower;
 
 }
 
-// TODO Move to World.
-function loadLevel(world: World) {
+// TODO Move to Tower.
+function loadLevel(tower: Tower) {
   let level: Level | undefined = undefined;
   // Check for direct content, for backward compatibility with early testing.
   // TODO Remove old "level" logic once all is done?
   let levelString = window.localStorage['zym.level'];
   if (levelString) {
     level = new Level().load(levelString);
-    world.items.push(level);
+    tower.items.push(level);
     window.localStorage['zym.levelId'] = level.id;
     window.localStorage.removeItem('zym.level');
-    world.save();
-    // TODO Save the world and the level correctly?
+    tower.save();
+    // TODO Save the tower and the level correctly?
   } else {
     let levelId = window.localStorage['zym.levelId'];
     if (levelId) {
-      // Should already be loaded in the world.
-      level = world.items.find(level => level.id == levelId);
+      // Should already be loaded in the tower.
+      level = tower.items.find(level => level.id == levelId);
     }
     if (!level) {
-      // Safety net, in case it's unlisted in the world.
+      // Safety net, in case it's unlisted in the tower.
       // TODO Helper function on objects id key.
       levelString = window.localStorage[`zym.objects.${levelId}`];
       if (levelString) {
         level = new Level().load(levelString);
-        world.items.push(level);
-        // TODO Save the world?
+        tower.items.push(level);
+        // TODO Save the tower?
       }
     }
     if (!level) {
       // Another safety net, or just for kick off.
-      level = world.items[0];
+      level = tower.items[0];
       window.localStorage['zym.levelId'] = level.id;
     }
   }
   return level;
 }
 
-// Move to static in World.
-function loadWorld() {
-  let world = new World();
-  let worldId =
+// Move to static in Tower.
+function loadTower() {
+  let tower = new Tower();
+  let towerId =
     window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
-  if (worldId) {
-    let worldString = window.localStorage[`zym.objects.${worldId}`];
-    if (worldString) {
-      let encodedWorld = JSON.parse(worldString);
-      if (encodedWorld.levels) {
+  if (towerId) {
+    let towerString = window.localStorage[`zym.objects.${towerId}`];
+    if (towerString) {
+      let encodedTower = JSON.parse(towerString);
+      if (encodedTower.levels) {
         // Update to generic form.
-        encodedWorld.items = encodedWorld.levels;
-        delete encodedWorld.levels;
+        encodedTower.items = encodedTower.levels;
+        delete encodedTower.levels;
       }
-      world.decode(encodedWorld);
+      tower.decode(encodedTower);
     } else {
-      // Save the world for next time.
-      world.save();
+      // Save the tower for next time.
+      tower.save();
     }
   } else {
-    // Save the world for next time.
-    world.save();
-    window.localStorage[`zym.worldId`] = world.id;
+    // Save the tower for next time.
+    tower.save();
+    window.localStorage[`zym.worldId`] = tower.id;
   }
-  window.localStorage[`zym.towerId`] = world.id;
-  return world;
+  window.localStorage[`zym.towerId`] = tower.id;
+  return tower;
 }

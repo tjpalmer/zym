@@ -1,15 +1,15 @@
 import {EditorList} from "./";
-import {World} from "../";
+import {Tower} from "../";
 
-export class Towers extends EditorList<World> {
+export class Towers extends EditorList<Tower> {
 
   buildTitleBar(): void {
     throw new Error('Method not implemented.');
   }
 
-  outsideSelectedValue: World;
+  outsideSelectedValue: Tower;
 
-  showValue(value: World): void {
+  showValue(value: Tower): void {
     throw new Error('Method not implemented.');
   }
 

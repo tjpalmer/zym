@@ -3,7 +3,6 @@ import {Dialog, Encodable, Game, Level, load} from '../';
 
 export class Levels extends EditorList<Level> {
 
-  // TODO Generalize all this to zone lists, too!
   constructor(game: Game) {
     super(game, require('./levels.html'));
     this.selectedValue = game.level;
@@ -12,23 +11,23 @@ export class Levels extends EditorList<Level> {
 
   addLevel() {
     let level = new Level();
-    this.game.world.items.push(level);
-    this.game.world.save();
+    this.game.tower.items.push(level);
+    this.game.tower.save();
     this.addItem(level);
     this.updateNumbers();
   }
 
   buildTitleBar() {
-    let {world} = this.game;
+    let {tower} = this.game;
     let nameElement = this.getButton('name');
-    this.makeEditable(nameElement, 'Zone', () => world.name, text => {
-      world.name = text;
-      world.save();
+    this.makeEditable(nameElement, 'Tower', () => tower.name, text => {
+      tower.name = text;
+      tower.save();
     });
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
     this.on('exclude', () => this.excludeValue());
-    this.on('save', () => this.saveWorld());
+    this.on('save', () => this.saveTower());
   }
 
   excludeValue() {
@@ -40,13 +39,13 @@ export class Levels extends EditorList<Level> {
     return this.game.level;
   }
 
-  saveWorld() {
+  saveTower() {
     let link = window.document.createElement('a');
-    let data = JSON.stringify(this.game.world.encodeExpanded());
+    let data = JSON.stringify(this.game.tower.encodeExpanded());
     // TODO Zip it first?
     link.href = `data:application/json,${encodeURIComponent(data)}`;
-    // TODO Base file name on zone name, but need to sanitize first!
-    link.setAttribute('download', 'Zone.zym');
+    // TODO Base file name on tower name, but need to sanitize first!
+    link.setAttribute('download', 'Tower.zym');
     link.click();
   }
 
@@ -68,8 +67,8 @@ export class Levels extends EditorList<Level> {
   }
 
   updateNumbers() {
-    let {items} = this.game.world;
-    this.game.world.numberLevels();
+    let {items} = this.game.tower;
+    this.game.tower.numberLevels();
     let numberElements =
       [...this.list.querySelectorAll('.number')] as Array<HTMLElement>;
     // Build the numbers.
@@ -99,7 +98,7 @@ export class Levels extends EditorList<Level> {
   }
 
   get values() {
-    return this.game.world.items;
+    return this.game.tower.items;
   }
 
 }
