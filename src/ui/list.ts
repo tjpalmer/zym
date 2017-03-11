@@ -1,6 +1,6 @@
 import {Dialog, Encodable, Game, load} from '../';
 
-export abstract class EditorList<Value extends Encodable<Value>>
+export abstract class EditorList<Value extends Encodable>
     implements Dialog {
 
   constructor(game: Game, templateText: string) {

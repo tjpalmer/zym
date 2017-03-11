@@ -1,4 +1,6 @@
-import {Control, EditMode, Level, PlayMode, Stage, Theme, Tower} from './';
+import {
+  Control, EditMode, Level, PlayMode, Stage, Theme, Tower, Zone
+} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -68,7 +70,8 @@ export class Game {
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
-    this.tower = loadTower();
+    this.zone = loadZone();
+    this.tower = loadTower(this.zone);
     this.level = loadLevel(this.tower);
     // TODO Extract some setup to graphics modes?
     // Renderer.
@@ -224,48 +227,39 @@ export class Game {
 
   tower: Tower;
 
+  zone: Zone;
+
 }
 
 // TODO Move to Tower.
 function loadLevel(tower: Tower) {
   let level: Level | undefined = undefined;
   // Check for direct content, for backward compatibility with early testing.
-  // TODO Remove old "level" logic once all is done?
-  let levelString = window.localStorage['zym.level'];
-  if (levelString) {
-    level = new Level().load(levelString);
-    tower.items.push(level);
+  let levelId = window.localStorage['zym.levelId'];
+  if (levelId) {
+    // Should already be loaded in the tower.
+    level = tower.items.find(level => level.id == levelId);
+  }
+  if (!level) {
+    // Safety net, in case it's unlisted in the tower.
+    // TODO Helper function on objects id key.
+    let levelString = window.localStorage[`zym.objects.${levelId}`];
+    if (levelString) {
+      level = new Level().load(levelString);
+      tower.items.push(level);
+      // TODO Save the tower?
+    }
+  }
+  if (!level) {
+    // Another safety net, or just for kick off.
+    level = tower.items[0];
     window.localStorage['zym.levelId'] = level.id;
-    window.localStorage.removeItem('zym.level');
-    tower.save();
-    // TODO Save the tower and the level correctly?
-  } else {
-    let levelId = window.localStorage['zym.levelId'];
-    if (levelId) {
-      // Should already be loaded in the tower.
-      level = tower.items.find(level => level.id == levelId);
-    }
-    if (!level) {
-      // Safety net, in case it's unlisted in the tower.
-      // TODO Helper function on objects id key.
-      levelString = window.localStorage[`zym.objects.${levelId}`];
-      if (levelString) {
-        level = new Level().load(levelString);
-        tower.items.push(level);
-        // TODO Save the tower?
-      }
-    }
-    if (!level) {
-      // Another safety net, or just for kick off.
-      level = tower.items[0];
-      window.localStorage['zym.levelId'] = level.id;
-    }
   }
   return level;
 }
 
-// Move to static in Tower.
-function loadTower() {
+// Move to Zone?
+function loadTower(zone: Zone) {
   let tower = new Tower();
   let towerId =
     window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
@@ -275,6 +269,7 @@ function loadTower() {
       let encodedTower = JSON.parse(towerString);
       if (encodedTower.levels) {
         // Update to generic form.
+        // TODO(tjp): Remove this once all converted?
         encodedTower.items = encodedTower.levels;
         delete encodedTower.levels;
       }
@@ -286,8 +281,32 @@ function loadTower() {
   } else {
     // Save the tower for next time.
     tower.save();
-    window.localStorage[`zym.worldId`] = tower.id;
   }
-  window.localStorage[`zym.towerId`] = tower.id;
+  if (zone.items.length == 1 && !zone.items[0].id) {
+    zone.items[0].fromTower(tower);
+    zone.save();
+  }
+  window.localStorage['zym.towerId'] = tower.id;
   return tower;
+}
+
+function loadZone() {
+  let zone = new Zone();
+  let zoneId = window.localStorage['zym.zoneId'];
+  if (zoneId) {
+    let zoneString = window.localStorage[`zym.objects.${zoneId}`];
+    if (zoneString) {
+      let encodedZone = JSON.parse(zoneString);
+      // TODO(tjp): We don't really want to decode all towers at once.
+      // TODO(tjp): Some option for lazy or such????
+      zone.decode(encodedZone);
+    } else {
+      zone.save();
+    }
+  } else {
+    zone.save();
+  }
+  console.log(zone);
+  window.localStorage['zym.zoneId'] = zone.id;
+  return zone;
 }

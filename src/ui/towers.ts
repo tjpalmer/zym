@@ -1,5 +1,5 @@
-import {EditorList} from "./";
-import {Tower} from "../";
+import {EditorList} from './';
+import {Tower} from '../';
 
 export class Towers extends EditorList<Tower> {
 

@@ -2,20 +2,35 @@ import {Game, GenericPartType, Grid, Id, Part, PartType, createId} from './';
 import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
 
-export interface EncodedItem<TypeString extends string> {
+export interface EncodedItem {
+
+  // Totally okay to leave off for included items.
+  excluded?: boolean;
 
   id: Id;
 
   name: string;
 
-  type: TypeString;
+  type: string;
 
 }
 
-export interface Encodable<Item> {
+function encodeMeta(item: EncodedItem) {
+  let meta: EncodedItem = {
+    id: item.id,
+    name: item.name,
+    type: item.type,
+  };
+  if (item.excluded) {
+    meta.excluded = true;
+  }
+  return meta;
+}
+
+export interface Encodable {
 
   // TODO Awesome TypeScript type definition for encoded item.
-  decode(encoded: any): Item;
+  decode(encoded: any): this;
 
   encode(): any;
 
@@ -29,7 +44,7 @@ export interface Encodable<Item> {
 
 }
 
-export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
+export class ItemList<Item extends Encodable> {
 
   constructor(itemType: {new(): Item}) {
     this.id = createId();
@@ -37,12 +52,12 @@ export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
     this.itemType = itemType;
   }
 
-  decode(encoded: EncodedItemList<Id, TypeString>) {
+  decode(encoded: EncodedItemList<Id>) {
     this.id = encoded.id;
     this.items = encoded.items.map(id => {
       let itemString = window.localStorage[`zym.objects.${id}`];
       if (itemString) {
-        return new this.itemType().decode(JSON.parse(itemString));
+        return this.decodeItem(itemString);
       }
     }).filter(item => item) as Array<Item>;
     if (!this.items.length) {
@@ -54,7 +69,11 @@ export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
     return this;
   }
 
-  encode(): EncodedItemList<Id, TypeString> {
+  decodeItem(itemString: string) {
+    return new this.itemType().decode(JSON.parse(itemString));
+  }
+
+  encode(): EncodedItemList<Id> {
     // This presumes that all individual levels have already been saved under
     // their own ids.
     return {
@@ -63,7 +82,7 @@ export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
     }
   }
 
-  encodeExpanded(): EncodedItemList<EncodedLevel, TypeString> {
+  encodeExpanded(): EncodedItemList<EncodedItem> {
     // Intended for full export.
     return {
       items: this.items.map(item => item.encode()),
@@ -71,12 +90,8 @@ export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
     }
   }
 
-  encodeMeta(): EncodedItem<TypeString> {
-    return {
-      id: this.id,
-      name: this.name,
-      type: this.typeString,
-    }
+  encodeMeta(): EncodedItem {
+    return encodeMeta(this);
   }
 
   id: Id;
@@ -92,24 +107,61 @@ export class ItemList<Item extends Encodable<Item>, TypeString extends string> {
       JSON.stringify(this.encode());
   }
 
-  typeString: TypeString;
+  type: string;
 
 }
 
-export class City extends ItemList<Tower, 'City'> {
+export class Zone extends ItemList<TowerInfo> {
 
   constructor() {
-    super(Tower);
+    super(TowerInfo);
   }
 
-  name = 'City';
+  name = 'Zone';
 
-  typeString: 'City' = 'City';
+  type = 'Zone';
 
 }
 
-export class Tower extends ItemList<Level, 'Tower' | 'World' | 'Zone'>
-    implements Encodable<Tower> {
+export class TowerInfo implements Encodable {
+  // Prevents loading up levels beneath here.
+
+  decode(encoded: any): this {
+    return encoded;
+  }
+
+  encode() {
+    return {items: this.items, ...encodeMeta(this)};
+  }
+
+  excluded = false;
+
+  fromTower(tower: Tower) {
+    let encoded = tower.encode();
+    this.excluded = !!encoded.excluded;
+    this.id = encoded.id;
+    this.items = encoded.items;
+    this.name = encoded.name;
+  }
+
+  id: Id;
+
+  items = new Array<Id>();
+
+  name = 'Tower';
+
+  save() {
+    // TODO(tjp): Allow saving from here.
+    throw new Error('Method not implemented.');
+  }
+
+  type = 'Tower';
+
+}
+
+export class Tower extends ItemList<Level> implements Encodable {
+  // TODO Should we only load up individual levels past encoded form when
+  // TODO looking at specific levels?
 
   constructor() {
     super(Level);
@@ -131,11 +183,11 @@ export class Tower extends ItemList<Level, 'Tower' | 'World' | 'Zone'>
     }
   }
 
-  typeString: 'Tower' = 'Tower';
+  type = 'Tower';
 
 }
 
-export class Level implements Encodable<Level> {
+export class Level implements Encodable {
 
   static tileCount = new Vector2(40, 20);
 
@@ -311,21 +363,13 @@ export class Level implements Encodable<Level> {
 
 }
 
-export interface EncodedLevel extends EncodedItem<'Level'> {
-
-  // Totally okay to leave off for included levels.
-  excluded?: boolean;
-
-  id: Id;
-
-  name: string;
+export interface EncodedLevel extends EncodedItem {
 
   tiles: string;
 
 }
 
-export interface EncodedItemList<ItemRepresentation, TypeString extends string>
-    extends EncodedItem<TypeString> {
+export interface EncodedItemList<ItemRepresentation> extends EncodedItem {
 
   items: Array<ItemRepresentation>;
 
