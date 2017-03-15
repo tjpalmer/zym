@@ -1,33 +1,37 @@
-import {EditorList} from './';
-import {Dialog, Encodable, Game, Level, load} from '../';
+import {EditorList, Towers} from './';
+import {
+  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Tower, load,
+} from '../';
 
-export class Levels extends EditorList<Level> {
+export class Levels extends EditorList<LevelRaw> {
 
   constructor(game: Game) {
     super(game, require('./levels.html'));
-    this.selectedValue = game.level;
     this.updateNumbers();
   }
 
   addLevel() {
-    let level = new Level();
-    this.game.tower.items.push(level);
-    this.game.tower.save();
+    let level = new Level().encode();
+    this.tower.items.push(level);
+    this.tower.save();
     this.addItem(level);
     this.updateNumbers();
   }
 
   buildTitleBar() {
+    // First time through, we haven't yet set our own tower.
     let {tower} = this.game;
     let nameElement = this.getButton('name');
     this.makeEditable(nameElement, 'Tower', () => tower.name, text => {
-      tower.name = text;
-      tower.save();
+      this.game.tower.name = text;
+      this.tower.name = text;
+      this.tower.save();
     });
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
     this.on('exclude', () => this.excludeValue());
     this.on('save', () => this.saveTower());
+    this.on('towers', () => this.showTowers());
   }
 
   excludeValue() {
@@ -35,13 +39,18 @@ export class Levels extends EditorList<Level> {
     this.updateNumbers();
   }
 
-  get outsideSelectedValue(): Level {
-    return this.game.level;
+  init() {
+    this.tower = new Tower().load(this.game.tower.id);
+    this.selectedValue = this.game.level.encode();
+  }
+
+  get outsideSelectedValue(): LevelRaw {
+    return this.game.level.encode();
   }
 
   saveTower() {
     let link = window.document.createElement('a');
-    let data = JSON.stringify(this.game.tower.encodeExpanded());
+    let data = JSON.stringify(this.tower.encodeExpanded());
     // TODO Zip it first?
     link.href = `data:application/json,${encodeURIComponent(data)}`;
     // TODO Base file name on tower name, but need to sanitize first!
@@ -49,26 +58,25 @@ export class Levels extends EditorList<Level> {
     link.click();
   }
 
-  selectValue(level: Level) {
+  selectValue(level: LevelRaw) {
     super.selectValue(level);
     window.localStorage['zym.levelId'] = level.id;
   }
 
-  showValue(level: Level) {
-    // TODO Extract all this into a setLevel on game or something.
-    this.game.level = level;
-    let editState = this.game.edit.editState;
-    if (!editState.history.length) {
-      // Make sure we have at least one history item.
-      editState.pushHistory(true);
-    }
-    editState.trackChange();
-    level.updateStage(this.game, true);
+  showTowers() {
+    this.game.hideDialog();
+    this.game.showDialog(new Towers(this.game));
   }
 
+  showValue(level: LevelRaw) {
+    this.game.showLevel(level);
+  }
+
+  tower: Tower;
+
   updateNumbers() {
-    let {items} = this.game.tower;
-    this.game.tower.numberLevels();
+    let {items} = this.tower;
+    ItemList.numberItems(items);
     let numberElements =
       [...this.list.querySelectorAll('.number')] as Array<HTMLElement>;
     // Build the numbers.
@@ -98,7 +106,7 @@ export class Levels extends EditorList<Level> {
   }
 
   get values() {
-    return this.game.tower.items;
+    return this.tower.items;
   }
 
 }

@@ -1,10 +1,12 @@
-import {Dialog, Encodable, Game, load} from '../';
+import {Dialog, Encodable, Game, ItemMeta, Raw, load} from '../';
 
-export abstract class EditorList<Value extends Encodable>
-    implements Dialog {
+export abstract class EditorList<
+  Value extends ItemMeta  // , Value extends Encodable<RawItem>
+> implements Dialog {
 
   constructor(game: Game, templateText: string) {
     this.game = game;
+    this.init();
     let dialogElement = load(templateText);
     this.titleBar = dialogElement.querySelector('.title') as HTMLElement;
     this.buildTitleBar();
@@ -37,7 +39,7 @@ export abstract class EditorList<Value extends Encodable>
     this.makeEditable(
       nameElement, this.defaultValueName, () => value.name, text => {
         value.name = text;
-        value.save();
+        Raw.save(value);
       }
     );
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
@@ -65,7 +67,7 @@ export abstract class EditorList<Value extends Encodable>
 
   excludeValue() {
     this.selectedValue.excluded = !this.selectedValue.excluded;
-    this.selectedValue.save();
+    Raw.save(this.selectedValue);
   }
 
   game: Game;
@@ -79,6 +81,8 @@ export abstract class EditorList<Value extends Encodable>
       `[data-value="${this.selectedValue.id}"]`
     ) as HTMLElement;
   }
+
+  abstract init(): void;
 
   list: HTMLElement;
 
@@ -148,6 +152,7 @@ export abstract class EditorList<Value extends Encodable>
     this.showValue(value);
     this.selectedValue = value;
     this.getSelectedItem().classList.add('selected');
+    // console.log(`selected ${value.id}`);
   }
 
   abstract showValue(value: Value): void;

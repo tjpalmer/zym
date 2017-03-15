@@ -1,8 +1,10 @@
-import {Game, GenericPartType, Grid, Id, Part, PartType, createId} from './';
+import {
+  Game, GenericPartType, Grid, Id, Part, PartType, Ref, createId,
+} from './';
 import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
 
-export interface EncodedItem {
+export interface ItemMeta {
 
   // Totally okay to leave off for included items.
   excluded?: boolean;
@@ -15,165 +17,92 @@ export interface EncodedItem {
 
 }
 
-function encodeMeta(item: EncodedItem) {
-  let meta: EncodedItem = {
-    id: item.id,
-    name: item.name,
-    type: item.type,
-  };
-  if (item.excluded) {
-    meta.excluded = true;
-  }
-  return meta;
+export interface NumberedItem extends ItemMeta {
+
+  number?: number;
+
 }
 
-export interface Encodable {
+export interface ListRaw<Item> extends ItemMeta {
 
-  // TODO Awesome TypeScript type definition for encoded item.
-  decode(encoded: any): this;
+  items: Array<Ref<Item>>;
 
-  encode(): any;
+}
+
+export interface LevelRaw extends NumberedItem {
+
+  tiles: string;
+
+}
+
+export type TowerRaw = ListRaw<LevelRaw>;
+
+export type ZoneRaw = ListRaw<TowerRaw>;
+
+export class Raw {
+
+  private constructor() {}
+
+  static encodeMeta(item: ItemMeta) {
+    let meta: ItemMeta = {
+      id: item.id,
+      name: item.name,
+      type: item.type,
+    };
+    if (item.excluded) {
+      meta.excluded = true;
+    }
+    return meta;
+  }
+
+  static load<Item extends ItemMeta>(ref: Ref<Item>) {
+    let text = window.localStorage[`zym.objects.${ref}`];
+    if (text) {
+      // TODO Sanitize names?
+      return JSON.parse(text) as Item;
+    }
+    // else undefined
+  }
+
+  static save(raw: ItemMeta) {
+    console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
+    window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
+  }
+
+}
+
+export abstract class Encodable<RawItem extends ItemMeta> implements ItemMeta {
+
+  // Implied: abstract decode(raw: undefined): never;
+  abstract decode(raw: RawItem): this;
+
+  abstract encode(): RawItem;
 
   excluded: boolean;
 
   id: Id;
 
-  name: string;
-
-  save(): void;
-
-}
-
-export class ItemList<Item extends Encodable> {
-
-  constructor(itemType: {new(): Item}) {
-    this.id = createId();
-    this.items.push(new itemType());
-    this.itemType = itemType;
-  }
-
-  decode(encoded: EncodedItemList<Id>) {
-    this.id = encoded.id;
-    this.items = encoded.items.map(id => {
-      let itemString = window.localStorage[`zym.objects.${id}`];
-      if (itemString) {
-        return this.decodeItem(itemString);
-      }
-    }).filter(item => item) as Array<Item>;
-    if (!this.items.length) {
-      // Always keep one level.
-      this.items.push(new this.itemType());
-    }
-    // TODO Sanitize names?
-    this.name = encoded.name;
+  load(id: Id): this {
+    this.decode(Raw.load(id) as RawItem);
     return this;
   }
-
-  decodeItem(itemString: string) {
-    return new this.itemType().decode(JSON.parse(itemString));
-  }
-
-  encode(): EncodedItemList<Id> {
-    // This presumes that all individual levels have already been saved under
-    // their own ids.
-    return {
-      items: this.items.map(item => item.id),
-      ...this.encodeMeta(),
-    }
-  }
-
-  encodeExpanded(): EncodedItemList<EncodedItem> {
-    // Intended for full export.
-    return {
-      items: this.items.map(item => item.encode()),
-      ...this.encodeMeta(),
-    }
-  }
-
-  encodeMeta(): EncodedItem {
-    return encodeMeta(this);
-  }
-
-  id: Id;
-
-  items = new Array<Item>();
-
-  itemType: {new(): Item};
 
   name: string;
 
   save() {
-    window.localStorage[`zym.objects.${this.id}`] =
-      JSON.stringify(this.encode());
+    Raw.save(this.encode());
   }
 
   type: string;
 
 }
 
-export class Zone extends ItemList<TowerInfo> {
+export abstract class ItemList<Item extends ItemMeta>
+    extends Encodable<ListRaw<Item>> {
 
-  constructor() {
-    super(TowerInfo);
-  }
-
-  name = 'Zone';
-
-  type = 'Zone';
-
-}
-
-export class TowerInfo implements Encodable {
-  // Prevents loading up levels beneath here.
-
-  decode(encoded: any): this {
-    return encoded;
-  }
-
-  encode() {
-    return {items: this.items, ...encodeMeta(this)};
-  }
-
-  excluded = false;
-
-  fromTower(tower: Tower) {
-    let encoded = tower.encode();
-    this.excluded = !!encoded.excluded;
-    this.id = encoded.id;
-    this.items = encoded.items;
-    this.name = encoded.name;
-  }
-
-  id: Id;
-
-  items = new Array<Id>();
-
-  name = 'Tower';
-
-  save() {
-    // TODO(tjp): Allow saving from here.
-    throw new Error('Method not implemented.');
-  }
-
-  type = 'Tower';
-
-}
-
-export class Tower extends ItemList<Level> implements Encodable {
-  // TODO Should we only load up individual levels past encoded form when
-  // TODO looking at specific levels?
-
-  constructor() {
-    super(Level);
-  }
-
-  excluded = false;
-
-  name = 'Tower';
-
-  numberLevels() {
+  static numberItems(items: Array<NumberedItem>) {
     let number = 1;
-    for (let item of this.items) {
+    for (let item of items) {
       if (item.excluded) {
         item.number = undefined;
       } else {
@@ -183,11 +112,61 @@ export class Tower extends ItemList<Level> implements Encodable {
     }
   }
 
-  type = 'Tower';
+  decode(encoded: ListRaw<Item>) {
+    this.id = encoded.id;
+    this.items = encoded.items.
+      map(id => Raw.load<Item>(id)).
+      filter(item => item) as Array<Item>;
+    this.name = encoded.name;
+    return this;
+  }
+
+  encode(): ListRaw<Item> {
+    // This presumes that all individual levels have already been saved under
+    // their own ids.
+    return {
+      items: this.items.map(item => item.id),
+      ...Raw.encodeMeta(this),
+    }
+  }
+
+  encodeExpanded(): ItemMeta & {items: Array<Item>} {
+    // Intended for full export.
+    return {
+      items: this.items,
+      ...Raw.encodeMeta(this),
+    }
+  }
+
+  excluded = false;
+
+  id = createId();
+
+  items = new Array<Item>();
+
+  name = this.type;
+
+  abstract get type(): string;
 
 }
 
-export class Level implements Encodable {
+export class Zone extends ItemList<TowerRaw> {
+
+  get type() {
+    return 'Zone';
+  }
+
+}
+
+export class Tower extends ItemList<LevelRaw> {
+
+  get type() {
+    return 'Tower';
+  }
+
+}
+
+export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
   static tileCount = new Vector2(40, 20);
 
@@ -196,6 +175,7 @@ export class Level implements Encodable {
   static pixelCount = Level.tileCount.clone().multiply(Level.tileSize);
 
   constructor({id, tiles}: {id?: Id, tiles?: Grid<PartType>} = {}) {
+    super();
     this.id = id || createId();
     if (tiles) {
       this.tiles = tiles;
@@ -216,7 +196,7 @@ export class Level implements Encodable {
     this.tiles = level.tiles.copy();
   }
 
-  decode(encoded: EncodedLevel) {
+  decode(encoded: LevelRaw) {
     this.excluded = !!encoded.excluded;
     // Id. Might be missing for old saved levels.
     // TODO Not by now, surely? Try removing checks?
@@ -240,7 +220,7 @@ export class Level implements Encodable {
     return this;
   }
 
-  encode(): EncodedLevel {
+  encode(): LevelRaw {
     let point = new Vector2();
     let rows: Array<string> = [];
     for (let i = Level.tileCount.y - 1 ; i >= 0; --i) {
@@ -251,17 +231,11 @@ export class Level implements Encodable {
       }
       rows.push(row.join(''));
     }
-    let encoded = {
-      id: this.id,
-      name: this.name,
+    let raw = {
       tiles: rows.join('\n'),
-      type: this.typeString,
-    } as EncodedLevel;
-    // Actually keep this one optional.
-    if (this.excluded) {
-      encoded.excluded = true;
-    }
-    return encoded;
+      ...Raw.encodeMeta(this),
+    } as LevelRaw;
+    return raw;
   }
 
   equals(other: Level): boolean {
@@ -277,10 +251,11 @@ export class Level implements Encodable {
 
   id: Id;
 
-  load(text: string) {
-    if (text) {
-      this.decode(JSON.parse(text));
-    } else {
+  load(id: Id) {
+    try {
+      super.load(id);
+    } catch (e) {
+      // TODO Is this catch really a good idea?
       this.tiles.items.fill(None);
     }
     // For convenience.
@@ -292,11 +267,6 @@ export class Level implements Encodable {
   // Starting from 1, undefined for excluded levels.
   // Lazily applied.
   number?: number;
-
-  save() {
-    window.localStorage[`zym.objects.${this.id}`] =
-      JSON.stringify(this.encode());
-  }
 
   tiles: Grid<PartType>;
 
@@ -359,18 +329,8 @@ export class Level implements Encodable {
     theme.buildDone(game);
   }
 
-  typeString: 'Level' = 'Level';
-
-}
-
-export interface EncodedLevel extends EncodedItem {
-
-  tiles: string;
-
-}
-
-export interface EncodedItemList<ItemRepresentation> extends EncodedItem {
-
-  items: Array<ItemRepresentation>;
+  get type() {
+    return 'Level';
+  }
 
 }

@@ -72,8 +72,7 @@ Parts.inventory.filter(part => nonEnders.indexOf(part) < 0).forEach(part => {
   // Add it to things.
   Parts.inventory.push(Ender);
   Parts.charParts.set(Ender.char, Ender);
-  // TODO Comment out log.
-  console.log(
-    part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name
-  );
+  // console.log(
+  //   part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name
+  // );
 });

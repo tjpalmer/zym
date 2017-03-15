@@ -59,7 +59,7 @@ export class EditMode extends Mode {
     }
   }
 
-  // TODO Histories by level id.
+  // TODO Limit the total number of editStates?
   editStates: {[levelId: string]: EditState} = {};
 
   get editState() {
@@ -68,6 +68,8 @@ export class EditMode extends Mode {
     if (!editState) {
       this.editStates[id] = editState = new EditState(this);
     }
+    // Level object sometimes changes out, so update each time.
+    editState.level = this.game.level;
     return editState;
   }
 
@@ -183,6 +185,7 @@ export class EditMode extends Mode {
   }
 
   showLevels() {
+    this.saveAll();
     this.game.showDialog(new Levels(this.game));
   }
 
@@ -207,6 +210,7 @@ export class EditMode extends Mode {
   }
 
   togglePlay() {
+    this.saveAll();
     // Sometimes things get confused, and clearing the action might help.
     // We can't directly read keyboard state.
     this.game.control.clear();
@@ -314,16 +318,6 @@ class EditState {
   saveLevel() {
     this.level.save();
     this.saveNeeded = false;
-    // Show saved long enough to let people notice.
-    // TODO Replace all this with onbeforeunload to handle potential problems.
-    // TODO Could possibly wait out even longer than 3 seconds if we do that.
-    // TODO Besides, in Electron we might have more control, anyway.
-    // this.showSaveState('saved');
-    // window.setTimeout(() => {
-    //   if (this.showingCommand('saved')) {
-    //     this.showSaveState('none');
-    //   }
-    // }, 1e3);
   }
 
   saveLevelMaybe() {

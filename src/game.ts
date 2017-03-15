@@ -1,5 +1,6 @@
 import {
-  Control, EditMode, Level, PlayMode, Stage, Theme, Tower, Zone
+  Control, EditMode, ItemMeta, Level, LevelRaw, ListRaw, PlayMode, Raw, Stage,
+  Theme, Tower, Zone,
 } from './';
 import {
   // TODO Clean out unused.
@@ -213,6 +214,19 @@ export class Game {
     pane.style.display = 'block';
   }
 
+  showLevel(level: LevelRaw) {
+    // TODO Something here is messing with different level objects vs edit state.
+    this.level = new Level().decode(level);
+    let editState = this.edit.editState;
+    if (!editState.history.length) {
+      // Make sure we have at least one history item.
+      editState.pushHistory(true);
+    }
+    // This trackChange is just to enable/disable undo/redo.
+    editState.trackChange(true);
+    this.level.updateStage(this, true);
+  }
+
   showingDialog() {
     let pane = this.body.querySelector('.pane') as HTMLElement;
     let style = window.getComputedStyle(pane);
@@ -225,55 +239,47 @@ export class Game {
 
   theme: Theme;
 
-  tower: Tower;
+  tower: ItemMeta;
 
-  zone: Zone;
+  zone: ItemMeta;
 
 }
 
-// TODO Move to Tower.
-function loadLevel(tower: Tower) {
-  let level: Level | undefined = undefined;
-  // Check for direct content, for backward compatibility with early testing.
+// TODO Simplify.
+function loadLevel(towerMeta: ItemMeta) {
   let levelId = window.localStorage['zym.levelId'];
+  let level = new Level();
   if (levelId) {
-    // Should already be loaded in the tower.
-    level = tower.items.find(level => level.id == levelId);
+    level = new Level().load(levelId);
+  } else {
+    level.save();
   }
-  if (!level) {
-    // Safety net, in case it's unlisted in the tower.
-    // TODO Helper function on objects id key.
-    let levelString = window.localStorage[`zym.objects.${levelId}`];
-    if (levelString) {
-      level = new Level().load(levelString);
-      tower.items.push(level);
-      // TODO Save the tower?
-    }
-  }
-  if (!level) {
-    // Another safety net, or just for kick off.
-    level = tower.items[0];
-    window.localStorage['zym.levelId'] = level.id;
+  let tower = new Tower().load(towerMeta.id);
+  if (!tower.items.some(item => item.id == level!.id)) {
+    // This level isn't in the current tower. Add it.
+    // TODO Make sure we keep tower and level selection in sync!
+    tower.items.push(level.encode());
+    tower.save();
   }
   return level;
 }
 
-// Move to Zone?
-function loadTower(zone: Zone) {
+// TODO Simplify.
+export function loadTower(zoneMeta: ItemMeta) {
   let tower = new Tower();
   let towerId =
     window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
   if (towerId) {
-    let towerString = window.localStorage[`zym.objects.${towerId}`];
-    if (towerString) {
-      let encodedTower = JSON.parse(towerString);
-      if (encodedTower.levels) {
+    let rawTower = Raw.load<ListRaw<Level>>(towerId);
+    if (rawTower) {
+      if ((rawTower as any).levels) {
         // Update to generic form.
         // TODO(tjp): Remove this once all converted?
-        encodedTower.items = encodedTower.levels;
-        delete encodedTower.levels;
+        rawTower.items = (rawTower as any).levels;
+        delete (rawTower as any).levels;
+        Raw.save(rawTower);
       }
-      tower.decode(encodedTower);
+      tower.decode(rawTower);
     } else {
       // Save the tower for next time.
       tower.save();
@@ -282,31 +288,33 @@ function loadTower(zone: Zone) {
     // Save the tower for next time.
     tower.save();
   }
-  if (zone.items.length == 1 && !zone.items[0].id) {
-    zone.items[0].fromTower(tower);
+  let zone = new Zone().load(zoneMeta.id);
+  if (!zone.items.some(item => item.id == tower!.id)) {
+    // This level isn't in the current tower. Add it.
+    // TODO Make sure we keep tower and level selection in sync!
+    zone.items.push(tower.encode());
     zone.save();
   }
+  // This might save the new id or just overwrite. TODO Be more precise?
   window.localStorage['zym.towerId'] = tower.id;
-  return tower;
+  return Raw.encodeMeta(tower);
 }
 
+// TODO Simplify.
 function loadZone() {
   let zone = new Zone();
   let zoneId = window.localStorage['zym.zoneId'];
   if (zoneId) {
-    let zoneString = window.localStorage[`zym.objects.${zoneId}`];
-    if (zoneString) {
-      let encodedZone = JSON.parse(zoneString);
-      // TODO(tjp): We don't really want to decode all towers at once.
-      // TODO(tjp): Some option for lazy or such????
-      zone.decode(encodedZone);
+    let rawZone = Raw.load<ListRaw<Tower>>(zoneId);
+    if (rawZone) {
+      zone.decode(rawZone);
     } else {
       zone.save();
     }
   } else {
     zone.save();
   }
-  console.log(zone);
+  // This might save the new id or just overwrite. TODO Be more precise?
   window.localStorage['zym.zoneId'] = zone.id;
-  return zone;
+  return Raw.encodeMeta(zone);
 }
