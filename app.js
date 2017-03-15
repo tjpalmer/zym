@@ -5,7 +5,7 @@ webpackJsonp([1],[
 	"use strict";
 	const _1 = __webpack_require__(1);
 	const gold_1 = __webpack_require__(4);
-	__webpack_require__(46);
+	__webpack_require__(49);
 	__webpack_require__(8);
 	window.onload = main;
 	function main() {
@@ -40,7 +40,7 @@ webpackJsonp([1],[
 	__export(__webpack_require__(20));
 	__export(__webpack_require__(36));
 	__export(__webpack_require__(38));
-	__export(__webpack_require__(41));
+	__export(__webpack_require__(43));
 
 
 /***/ },
@@ -100,8 +100,12 @@ webpackJsonp([1],[
 	function __export(m) {
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
-	__export(__webpack_require__(39));
+	// Dependencies.
 	__export(__webpack_require__(40));
+	// Others.
+	__export(__webpack_require__(39));
+	__export(__webpack_require__(41));
+	__export(__webpack_require__(42));
 
 
 /***/ },
@@ -285,7 +289,7 @@ webpackJsonp([1],[
 	    constructor(game) {
 	        super(game);
 	        this.active = false;
-	        // TODO Histories by level id.
+	        // TODO Limit the total number of editStates?
 	        this.editStates = {};
 	        this.namedEnderTools = new Map(parts_1.Parts.inventory.filter(type => type.ender).map(type => [type.base.name.toLowerCase(), new _1.PartTool(this, type)]));
 	        this.namedTools = new Map(parts_1.Parts.inventory.filter(type => !type.ender).map(type => [type.name.toLowerCase(), new _1.PartTool(this, type)]));
@@ -337,6 +341,8 @@ webpackJsonp([1],[
 	        if (!editState) {
 	            this.editStates[id] = editState = new EditState(this);
 	        }
+	        // Level object sometimes changes out, so update each time.
+	        editState.level = this.game.level;
 	        return editState;
 	    }
 	    enable(command, enabled) {
@@ -431,6 +437,7 @@ webpackJsonp([1],[
 	        return element.style.display != 'none';
 	    }
 	    showLevels() {
+	        this.saveAll();
 	        this.game.showDialog(new ui_1.Levels(this.game));
 	    }
 	    showSaveState(state) {
@@ -452,6 +459,12 @@ webpackJsonp([1],[
 	        return point;
 	    }
 	    togglePlay() {
+	        this.saveAll();
+	        // Sometimes things get confused, and clearing the action might help.
+	        // We can't directly read keyboard state.
+	        this.game.control.clear();
+	        this.game.control.keyAction.clear();
+	        // Now toggle mode.
 	        this.game.mode = this.game.mode == this.game.play ?
 	            this.game.edit : this.game.play;
 	        this.game.level.updateStage(this.game, true);
@@ -534,16 +547,6 @@ webpackJsonp([1],[
 	    saveLevel() {
 	        this.level.save();
 	        this.saveNeeded = false;
-	        // Show saved long enough to let people notice.
-	        // TODO Replace all this with onbeforeunload to handle potential problems.
-	        // TODO Could possibly wait out even longer than 3 seconds if we do that.
-	        // TODO Besides, in Electron we might have more control, anyway.
-	        // this.showSaveState('saved');
-	        // window.setTimeout(() => {
-	        //   if (this.showingCommand('saved')) {
-	        //     this.showSaveState('none');
-	        //   }
-	        // }, 1e3);
 	    }
 	    saveLevelMaybe() {
 	        if (this.saveNeeded) {
@@ -636,8 +639,9 @@ webpackJsonp([1],[
 	        // Load the current level.
 	        // TODO Define what "current level" means.
 	        // TODO An encoding more human-friendly than JSON.
-	        this.world = loadWorld();
-	        this.level = loadLevel(this.world);
+	        this.zone = loadZone();
+	        this.tower = loadTower(this.zone);
+	        this.level = loadLevel(this.tower);
 	        // TODO Extract some setup to graphics modes?
 	        // Renderer.
 	        let canvas = body.querySelector('.stage');
@@ -747,6 +751,18 @@ webpackJsonp([1],[
 	        dialogBox.appendChild(dialog.content);
 	        pane.style.display = 'block';
 	    }
+	    showLevel(level) {
+	        // TODO Something here is messing with different level objects vs edit state.
+	        this.level = new _1.Level().decode(level);
+	        let editState = this.edit.editState;
+	        if (!editState.history.length) {
+	            // Make sure we have at least one history item.
+	            editState.pushHistory(true);
+	        }
+	        // This trackChange is just to enable/disable undo/redo.
+	        editState.trackChange(true);
+	        this.level.updateStage(this, true);
+	    }
 	    showingDialog() {
 	        let pane = this.body.querySelector('.pane');
 	        let style = window.getComputedStyle(pane);
@@ -754,63 +770,81 @@ webpackJsonp([1],[
 	    }
 	}
 	exports.Game = Game;
-	// TODO Move to World.
-	function loadLevel(world) {
-	    let level = undefined;
-	    // Check for direct content, for backward compatibility with early testing.
-	    // TODO Remove old "level" logic once all is done?
-	    let levelString = window.localStorage['zym.level'];
-	    if (levelString) {
-	        level = new _1.Level().load(levelString);
-	        world.levels.push(level);
-	        window.localStorage['zym.levelId'] = level.id;
-	        window.localStorage.removeItem('zym.level');
-	        world.save();
+	// TODO Simplify.
+	function loadLevel(towerMeta) {
+	    let levelId = window.localStorage['zym.levelId'];
+	    let level = new _1.Level();
+	    if (levelId) {
+	        level = new _1.Level().load(levelId);
 	    }
 	    else {
-	        let levelId = window.localStorage['zym.levelId'];
-	        if (levelId) {
-	            // Should already be loaded in the world.
-	            level = world.levels.find(level => level.id == levelId);
-	        }
-	        if (!level) {
-	            // Safety net, in case it's unlisted in the world.
-	            // TODO Helper function on objects id key.
-	            levelString = window.localStorage[`zym.objects.${levelId}`];
-	            if (levelString) {
-	                level = new _1.Level().load(levelString);
-	                world.levels.push(level);
-	            }
-	        }
-	        if (!level) {
-	            // Another safety net, or just for kick off.
-	            level = world.levels[0];
-	            window.localStorage['zym.levelId'] = level.id;
-	        }
+	        level.save();
+	    }
+	    let tower = new _1.Tower().load(towerMeta.id);
+	    if (!tower.items.some(item => item.id == level.id)) {
+	        // This level isn't in the current tower. Add it.
+	        // TODO Make sure we keep tower and level selection in sync!
+	        tower.items.push(level.encode());
+	        tower.save();
 	    }
 	    return level;
 	}
-	// Move to static in World.
-	function loadWorld() {
-	    let world = new _1.World();
-	    let worldId = window.localStorage['zym.worldId'];
-	    if (worldId) {
-	        let worldString = window.localStorage[`zym.objects.${worldId}`];
-	        if (worldString) {
-	            let encodedWorld = JSON.parse(worldString);
-	            world.decode(encodedWorld);
+	// TODO Simplify.
+	function loadTower(zoneMeta) {
+	    let tower = new _1.Tower();
+	    let towerId = window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
+	    if (towerId) {
+	        let rawTower = _1.Raw.load(towerId);
+	        if (rawTower) {
+	            if (rawTower.levels) {
+	                // Update to generic form.
+	                // TODO(tjp): Remove this once all converted?
+	                rawTower.items = rawTower.levels;
+	                delete rawTower.levels;
+	                _1.Raw.save(rawTower);
+	            }
+	            tower.decode(rawTower);
 	        }
 	        else {
-	            // Save the world for next time.
-	            world.save();
+	            // Save the tower for next time.
+	            tower.save();
 	        }
 	    }
 	    else {
-	        // Save the world for next time.
-	        world.save();
-	        window.localStorage[`zym.worldId`] = world.id;
+	        // Save the tower for next time.
+	        tower.save();
 	    }
-	    return world;
+	    let zone = new _1.Zone().load(zoneMeta.id);
+	    if (!zone.items.some(item => item.id == tower.id)) {
+	        // This level isn't in the current tower. Add it.
+	        // TODO Make sure we keep tower and level selection in sync!
+	        zone.items.push(tower.encode());
+	        zone.save();
+	    }
+	    // This might save the new id or just overwrite. TODO Be more precise?
+	    window.localStorage['zym.towerId'] = tower.id;
+	    return _1.Raw.encodeMeta(tower);
+	}
+	exports.loadTower = loadTower;
+	// TODO Simplify.
+	function loadZone() {
+	    let zone = new _1.Zone();
+	    let zoneId = window.localStorage['zym.zoneId'];
+	    if (zoneId) {
+	        let rawZone = _1.Raw.load(zoneId);
+	        if (rawZone) {
+	            zone.decode(rawZone);
+	        }
+	        else {
+	            zone.save();
+	        }
+	    }
+	    else {
+	        zone.save();
+	    }
+	    // This might save the new id or just overwrite. TODO Be more precise?
+	    window.localStorage['zym.zoneId'] = zone.id;
+	    return _1.Raw.encodeMeta(zone);
 	}
 
 
@@ -1240,7 +1274,7 @@ webpackJsonp([1],[
 	        this.tileOpacities = new Uint8Array(6);
 	        this.game = game;
 	        let image = new Image();
-	        image.src = __webpack_require__(47);
+	        image.src = __webpack_require__(50);
 	        this.image = image;
 	        let scaled = this.prepareImage(image);
 	        this.texture = new three_1.Texture(scaled);
@@ -1652,65 +1686,97 @@ webpackJsonp([1],[
 	const _1 = __webpack_require__(1);
 	const parts_1 = __webpack_require__(3);
 	const three_1 = __webpack_require__(2);
-	class World {
+	class Raw {
+	    constructor() { }
+	    static encodeMeta(item) {
+	        let meta = {
+	            id: item.id,
+	            name: item.name,
+	            type: item.type,
+	        };
+	        if (item.excluded) {
+	            meta.excluded = true;
+	        }
+	        return meta;
+	    }
+	    static load(ref) {
+	        let text = window.localStorage[`zym.objects.${ref}`];
+	        if (text) {
+	            // TODO Sanitize names?
+	            return JSON.parse(text);
+	        }
+	        // else undefined
+	    }
+	    static save(raw) {
+	        // console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
+	        window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
+	    }
+	}
+	exports.Raw = Raw;
+	class Encodable {
+	    load(id) {
+	        this.decode(Raw.load(id));
+	        return this;
+	    }
+	    save() {
+	        Raw.save(this.encode());
+	    }
+	}
+	exports.Encodable = Encodable;
+	class ItemList extends Encodable {
 	    constructor() {
-	        this.levels = new Array();
-	        this.name = 'Zone';
+	        super(...arguments);
+	        this.excluded = false;
 	        this.id = _1.createId();
-	        this.levels.push(new Level());
+	        this.items = new Array();
+	        this.name = this.type;
+	    }
+	    static numberItems(items) {
+	        let number = 1;
+	        for (let item of items) {
+	            if (item.excluded) {
+	                item.number = undefined;
+	            }
+	            else {
+	                item.number = number;
+	                ++number;
+	            }
+	        }
 	    }
 	    decode(encoded) {
 	        this.id = encoded.id;
-	        this.levels = encoded.levels.map(levelId => {
-	            let levelString = window.localStorage[`zym.objects.${levelId}`];
-	            if (levelString) {
-	                return new Level().decode(JSON.parse(levelString));
-	            }
-	        }).filter(level => level);
-	        if (!this.levels.length) {
-	            // Always keep one level.
-	            this.levels.push(new Level());
-	        }
-	        // TODO Sanitize names?
+	        this.items = encoded.items.
+	            map(id => Raw.load(id)).
+	            filter(item => item);
 	        this.name = encoded.name;
 	        return this;
 	    }
 	    encode() {
 	        // This presumes that all individual levels have already been saved under
 	        // their own ids.
-	        return Object.assign({ levels: this.levels.map(level => level.id) }, this.encodeMeta());
+	        return Object.assign({ items: this.items.map(item => item.id) }, Raw.encodeMeta(this));
 	    }
 	    encodeExpanded() {
 	        // Intended for full export.
-	        return Object.assign({ levels: this.levels.map(level => level.encode()) }, this.encodeMeta());
-	    }
-	    encodeMeta() {
-	        return {
-	            id: this.id,
-	            name: this.name,
-	            type: 'World',
-	        };
-	    }
-	    numberLevels() {
-	        let number = 1;
-	        for (let level of this.levels) {
-	            if (level.excluded) {
-	                level.number = undefined;
-	            }
-	            else {
-	                level.number = number;
-	                ++number;
-	            }
-	        }
-	    }
-	    save() {
-	        window.localStorage[`zym.objects.${this.id}`] =
-	            JSON.stringify(this.encode());
+	        return Object.assign({ items: this.items }, Raw.encodeMeta(this));
 	    }
 	}
-	exports.World = World;
-	class Level {
+	exports.ItemList = ItemList;
+	class Zone extends ItemList {
+	    get type() {
+	        return 'Zone';
+	    }
+	}
+	exports.Zone = Zone;
+	class Tower extends ItemList {
+	    get type() {
+	        return 'Tower';
+	    }
+	}
+	exports.Tower = Tower;
+	class Level extends Encodable {
 	    constructor({ id, tiles } = {}) {
+	        super();
 	        this.excluded = false;
 	        this.name = 'Level';
 	        this.id = id || _1.createId();
@@ -1765,17 +1831,8 @@ webpackJsonp([1],[
 	            }
 	            rows.push(row.join(''));
 	        }
-	        let encoded = {
-	            id: this.id,
-	            name: this.name,
-	            tiles: rows.join('\n'),
-	            type: 'Level',
-	        };
-	        // Actually keep this one optional.
-	        if (this.excluded) {
-	            encoded.excluded = true;
-	        }
-	        return encoded;
+	        let raw = Object.assign({ tiles: rows.join('\n') }, Raw.encodeMeta(this));
+	        return raw;
 	    }
 	    equals(other) {
 	        for (let i = 0; i < this.tiles.items.length; ++i) {
@@ -1785,19 +1842,16 @@ webpackJsonp([1],[
 	        }
 	        return true;
 	    }
-	    load(text) {
-	        if (text) {
-	            this.decode(JSON.parse(text));
+	    load(id) {
+	        try {
+	            super.load(id);
 	        }
-	        else {
+	        catch (e) {
+	            // TODO Is this catch really a good idea?
 	            this.tiles.items.fill(parts_1.None);
 	        }
 	        // For convenience.
 	        return this;
-	    }
-	    save() {
-	        window.localStorage[`zym.objects.${this.id}`] =
-	            JSON.stringify(this.encode());
 	    }
 	    // For use from the editor.
 	    updateStage(game, reset = false) {
@@ -1858,6 +1912,9 @@ webpackJsonp([1],[
 	            }
 	        }
 	        theme.buildDone(game);
+	    }
+	    get type() {
+	        return 'Level';
 	    }
 	}
 	Level.tileCount = new three_1.Vector2(40, 20);
@@ -2434,7 +2491,7 @@ webpackJsonp([1],[
 	        // Ignore.
 	    }
 	    getOther(x, y) {
-	        let isEnemy = (part) => part instanceof Enemy && part != this;
+	        let isEnemy = (part) => part instanceof Enemy && part != this && !part.dead;
 	        return this.partAt(x, y, isEnemy);
 	    }
 	    releaseTreasure() {
@@ -2459,7 +2516,7 @@ webpackJsonp([1],[
 	    solid(other, edge) {
 	        // Enemies block entrance to each other, but not exit from.
 	        // Just a touch of safety precaution.
-	        return other instanceof Enemy && !!edge;
+	        return other instanceof Enemy && !other.dead && !!edge;
 	    }
 	    surface(other) {
 	        return other instanceof Enemy || other instanceof _1.Hero;
@@ -3202,8 +3259,9 @@ webpackJsonp([1],[
 	    // Add it to things.
 	    Parts.inventory.push(Ender);
 	    Parts.charParts.set(Ender.char, Ender);
-	    // TODO Comment out log.
-	    console.log(part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name);
+	    // console.log(
+	    //   part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name
+	    // );
 	});
 
 
@@ -4263,163 +4321,76 @@ webpackJsonp([1],[
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	const _1 = __webpack_require__(1);
-	class Levels {
+	const _1 = __webpack_require__(5);
+	const _2 = __webpack_require__(1);
+	class Levels extends _1.EditorList {
 	    constructor(game) {
-	        this.hoverLevel = undefined;
-	        this.game = game;
-	        let dialogElement = _1.load(__webpack_require__(44));
-	        this.titleBar = dialogElement.querySelector('.title');
-	        this.buildTitleBar();
-	        this.itemTemplate = dialogElement.querySelector('.item');
-	        this.list = this.itemTemplate.parentNode;
-	        this.list.removeChild(this.itemTemplate);
-	        this.selectedLevel = game.level;
-	        game.world.levels.forEach(level => this.addItem(level));
+	        super(game, __webpack_require__(46));
 	        this.updateNumbers();
-	        this.content = dialogElement;
-	        window.setTimeout(() => this.scrollIntoView(), 0);
-	    }
-	    addItem(level) {
-	        let item = this.itemTemplate.cloneNode(true);
-	        if (level.id == this.game.level.id) {
-	            item.classList.add('selected');
-	        }
-	        item.dataset['level'] = level.id;
-	        item.addEventListener('mouseenter', () => {
-	            this.hoverLevel = level;
-	            this.showLevel(level);
-	        });
-	        item.addEventListener('mouseleave', () => {
-	            if (level == this.hoverLevel) {
-	                this.hoverLevel = undefined;
-	                // TODO Timeout before this to avoid flicker?
-	                this.showLevel(this.selectedLevel);
-	            }
-	        });
-	        let nameElement = item.querySelector('.name');
-	        nameElement.innerText = level.name.trim() || 'Level';
-	        nameElement.addEventListener('blur', () => {
-	            let text = nameElement.innerText.trim();
-	            if (level.name != text) {
-	                level.name = text;
-	                level.save();
-	            }
-	            if (!text) {
-	                nameElement.innerText = 'Level';
-	            }
-	        });
-	        nameElement.addEventListener('click', () => {
-	            nameElement.contentEditable = 'plaintext-only';
-	        });
-	        nameElement.addEventListener('keydown', event => {
-	            switch (event.key) {
-	                case 'Enter': {
-	                    nameElement.contentEditable = 'false';
-	                    nameElement.blur();
-	                    break;
-	                }
-	                case 'Escape': {
-	                    nameElement.innerText = level.name;
-	                    nameElement.contentEditable = 'false';
-	                    break;
-	                }
-	                default: {
-	                    return;
-	                }
-	            }
-	            event.cancelBubble = true;
-	        });
-	        let nameBox = item.querySelector('.nameBox');
-	        nameBox.addEventListener('click', () => {
-	            for (let other of this.list.querySelectorAll('.name')) {
-	                if (other != nameElement) {
-	                    other.contentEditable = 'false';
-	                }
-	            }
-	            this.selectLevel(level);
-	        });
-	        let edit = item.querySelector('.edit');
-	        edit.addEventListener('click', () => {
-	            this.selectLevel(level);
-	            this.game.hideDialog();
-	        });
-	        this.list.appendChild(item);
 	    }
 	    addLevel() {
-	        let level = new _1.Level();
-	        this.game.world.levels.push(level);
-	        this.game.world.save();
+	        let level = new _2.Level().encode();
+	        this.tower.items.push(level);
+	        this.tower.save();
 	        this.addItem(level);
 	        this.updateNumbers();
 	    }
 	    buildTitleBar() {
-	        this.getButton('name').innerText = this.game.world.name.trim() || 'Zone';
+	        // First time through, we haven't yet set our own tower.
+	        let { tower } = this.game;
+	        let nameElement = this.getButton('name');
+	        this.makeEditable(nameElement, 'Tower', () => tower.name, text => {
+	            this.game.tower.name = text;
+	            this.tower.name = text;
+	            this.tower.save();
+	        });
 	        this.on('add', () => this.addLevel());
 	        // this.on('close', () => this.game.hideDialog());
-	        this.on('exclude', () => this.excludeLevel());
-	        this.on('save', () => this.saveWorld());
+	        this.on('exclude', () => this.excludeValue());
+	        this.on('save', () => this.saveTower());
+	        this.on('towers', () => this.showTowers());
 	    }
-	    excludeLevel() {
-	        this.selectedLevel.excluded = !this.selectedLevel.excluded;
-	        this.selectedLevel.save();
+	    enterSelection() {
+	        this.game.hideDialog();
+	    }
+	    excludeValue() {
+	        super.excludeValue();
 	        this.updateNumbers();
 	    }
-	    getButton(name) {
-	        return this.titleBar.querySelector(`.${name}`);
+	    init() {
+	        this.tower = new _2.Tower().load(this.game.tower.id);
+	        this.selectedValue = this.game.level.encode();
 	    }
-	    getSelectedItem() {
-	        return this.content.querySelector(`[data-level="${this.selectedLevel.id}"]`);
+	    get outsideSelectedValue() {
+	        return this.game.level.encode();
 	    }
-	    on(name, action) {
-	        this.getButton(name).addEventListener('click', action);
-	    }
-	    saveWorld() {
+	    saveTower() {
 	        let link = window.document.createElement('a');
-	        let data = JSON.stringify(this.game.world.encodeExpanded());
+	        let data = JSON.stringify(this.tower.encodeExpanded());
 	        // TODO Zip it first?
 	        link.href = `data:application/json,${encodeURIComponent(data)}`;
-	        // TODO Base file name on zone name, but need to sanitize first!
-	        link.setAttribute('download', 'Zone.zym');
+	        // TODO Base file name on tower name, but need to sanitize first!
+	        link.setAttribute('download', 'Tower.zym');
 	        link.click();
 	    }
-	    scrollIntoView() {
-	        let { list } = this;
-	        let item = this.getSelectedItem();
-	        // This automatically limits to top and bottom of scroll area.
-	        // Other than that, try to center.
-	        let top = item.offsetTop;
-	        top -= list.offsetHeight / 2;
-	        top += item.offsetHeight / 2;
-	        list.scrollTop = top;
-	    }
-	    selectLevel(level) {
-	        for (let old of this.content.querySelectorAll('.selected')) {
-	            old.classList.remove('selected');
-	        }
-	        this.showLevel(level);
-	        this.selectedLevel = level;
-	        this.getSelectedItem().classList.add('selected');
+	    selectValue(level) {
+	        super.selectValue(level);
 	        window.localStorage['zym.levelId'] = level.id;
 	    }
-	    showLevel(level) {
-	        // TODO Extract all this into a setLevel on game or something.
-	        this.game.level = level;
-	        let editState = this.game.edit.editState;
-	        if (!editState.history.length) {
-	            // Make sure we have at least one history item.
-	            editState.pushHistory(true);
-	        }
-	        editState.trackChange();
-	        level.updateStage(this.game, true);
+	    showTowers() {
+	        this.game.hideDialog();
+	        this.game.showDialog(new _1.Towers(this.game));
+	    }
+	    showValue(level) {
+	        this.game.showLevel(level);
 	    }
 	    updateNumbers() {
-	        let { levels } = this.game.world;
-	        this.game.world.numberLevels();
+	        let { items } = this.tower;
+	        _2.ItemList.numberItems(items);
 	        let numberElements = [...this.list.querySelectorAll('.number')];
 	        // Build the numbers.
 	        numberElements.forEach((numberElement, index) => {
-	            let level = levels[index];
+	            let level = items[index];
 	            numberElement.innerText = (level.number || '');
 	            // TODO This makes things flicker sometimes.
 	            // TODO Or just cave and make this a table?
@@ -4442,6 +4413,9 @@ webpackJsonp([1],[
 	            });
 	        });
 	    }
+	    get values() {
+	        return this.tower.items;
+	    }
 	}
 	exports.Levels = Levels;
 
@@ -4452,9 +4426,138 @@ webpackJsonp([1],[
 
 	"use strict";
 	const _1 = __webpack_require__(1);
+	class EditorList {
+	    constructor(game, templateText) {
+	        this.hoverValue = undefined;
+	        this.game = game;
+	        this.init();
+	        let dialogElement = _1.load(templateText);
+	        this.titleBar = dialogElement.querySelector('.title');
+	        this.buildTitleBar();
+	        this.itemTemplate = dialogElement.querySelector('.item');
+	        this.list = this.itemTemplate.parentNode;
+	        this.list.removeChild(this.itemTemplate);
+	        this.values.forEach(value => this.addItem(value));
+	        this.content = dialogElement;
+	        window.setTimeout(() => this.scrollIntoView(), 0);
+	    }
+	    addItem(value) {
+	        let item = this.itemTemplate.cloneNode(true);
+	        if (value.id == this.outsideSelectedValue.id) {
+	            item.classList.add('selected');
+	        }
+	        item.dataset['value'] = value.id;
+	        item.addEventListener('mouseenter', () => {
+	            this.hoverValue = value;
+	            this.showValue(value);
+	        });
+	        item.addEventListener('mouseleave', () => {
+	            if (value == this.hoverValue) {
+	                this.hoverValue = undefined;
+	                // TODO Timeout before this to avoid flicker?
+	                this.showValue(this.selectedValue);
+	            }
+	        });
+	        let nameElement = item.querySelector('.name');
+	        this.makeEditable(nameElement, this.defaultValueName, () => value.name, text => {
+	            value.name = text;
+	            _1.Raw.save(value);
+	        });
+	        let nameBox = item.querySelector('.nameBox');
+	        nameBox.addEventListener('click', () => {
+	            for (let other of this.list.querySelectorAll('.name')) {
+	                if (other != nameElement) {
+	                    other.contentEditable = 'false';
+	                }
+	            }
+	            this.selectValue(value);
+	        });
+	        let edit = item.querySelector('.edit');
+	        edit.addEventListener('click', () => {
+	            this.selectValue(value);
+	            this.enterSelection();
+	        });
+	        this.list.appendChild(item);
+	    }
+	    excludeValue() {
+	        this.selectedValue.excluded = !this.selectedValue.excluded;
+	        _1.Raw.save(this.selectedValue);
+	    }
+	    getButton(name) {
+	        return this.titleBar.querySelector(`.${name}`);
+	    }
+	    getSelectedItem() {
+	        return this.content.querySelector(`[data-value="${this.selectedValue.id}"]`);
+	    }
+	    makeEditable(field, defaultText, get, set) {
+	        field.spellcheck = false;
+	        field.innerText = get().trim() || defaultText;
+	        field.addEventListener('blur', () => {
+	            let text = field.innerText.trim();
+	            if (get() != text) {
+	                set(text);
+	            }
+	            if (!text) {
+	                field.innerText = this.defaultValueName;
+	            }
+	        });
+	        field.addEventListener('click', () => {
+	            field.contentEditable = 'plaintext-only';
+	        });
+	        field.addEventListener('keydown', event => {
+	            switch (event.key) {
+	                case 'Enter': {
+	                    field.contentEditable = 'false';
+	                    field.blur();
+	                    break;
+	                }
+	                case 'Escape': {
+	                    field.innerText = get();
+	                    field.contentEditable = 'false';
+	                    break;
+	                }
+	                default: {
+	                    return;
+	                }
+	            }
+	            event.cancelBubble = true;
+	        });
+	    }
+	    on(name, action) {
+	        this.getButton(name).addEventListener('click', action);
+	    }
+	    scrollIntoView() {
+	        let { list } = this;
+	        let item = this.getSelectedItem();
+	        // This automatically limits to top and bottom of scroll area.
+	        // Other than that, try to center.
+	        let top = item.offsetTop;
+	        top -= list.offsetHeight / 2;
+	        top += item.offsetHeight / 2;
+	        list.scrollTop = top;
+	    }
+	    selectValue(value) {
+	        for (let old of this.content.querySelectorAll('.selected')) {
+	            old.classList.remove('selected');
+	        }
+	        this.showValue(value);
+	        this.selectedValue = value;
+	        this.getSelectedItem().classList.add('selected');
+	        // console.log(`selected ${value.id}`);
+	    }
+	}
+	exports.EditorList = EditorList;
+
+
+/***/ },
+/* 41 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const _1 = __webpack_require__(1);
 	class Report {
 	    constructor(game, message) {
-	        let content = this.content = _1.load(__webpack_require__(45));
+	        let content = this.content = _1.load(__webpack_require__(47));
 	        // Hide extras.
 	        for (let row of content.querySelectorAll('.timeRow')) {
 	            row.style.display = 'none';
@@ -4490,7 +4593,77 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 41 */
+/* 42 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const _1 = __webpack_require__(5);
+	const _2 = __webpack_require__(1);
+	class Towers extends _1.EditorList {
+	    constructor(game) {
+	        super(game, __webpack_require__(48));
+	    }
+	    addTower() {
+	        let tower = new _2.Tower().encode();
+	        let level = new _2.Level().encode();
+	        _2.Raw.save(level);
+	        tower.items.push(level.id);
+	        _2.Raw.save(tower);
+	        this.zone.items.push(tower);
+	        this.zone.save();
+	        this.addItem(tower);
+	    }
+	    buildTitleBar() {
+	        this.on('add', () => this.addTower());
+	    }
+	    enterSelection() {
+	        this.game.hideDialog();
+	        this.game.showDialog(new _1.Levels(this.game));
+	    }
+	    getLevel(tower) {
+	        if (tower.id == this.originalTower.id) {
+	            return this.originalLevel;
+	        }
+	        else {
+	            // TODO Track the last level selected in the editor for each tower?
+	            return _2.Raw.load(tower.items[0]);
+	        }
+	    }
+	    init() {
+	        this.originalLevel = this.game.level.encode();
+	        this.originalTower = Object.assign({}, this.game.tower);
+	        this.zone = new _2.Zone().load(this.game.zone.id);
+	        this.selectedValue = this.outsideSelectedValue;
+	    }
+	    get outsideSelectedValue() {
+	        return this.zone.items.find(item => item.id == this.game.tower.id);
+	    }
+	    selectValue(tower) {
+	        super.selectValue(tower);
+	        if (tower.id != window.localStorage['zym.towerId']) {
+	            let level = this.getLevel(tower);
+	            window.localStorage['zym.towerId'] = tower.id;
+	            window.localStorage['zym.levelId'] = level.id;
+	            this.game.tower = _2.loadTower(this.game.zone);
+	        }
+	    }
+	    showValue(tower) {
+	        if (tower.id == this.game.tower.id) {
+	            // Already good to go.
+	            return;
+	        }
+	        this.game.tower = tower;
+	        this.game.showLevel(this.getLevel(tower));
+	    }
+	    get values() {
+	        return this.zone.items;
+	    }
+	}
+	exports.Towers = Towers;
+
+
+/***/ },
+/* 43 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -4664,8 +4837,8 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 42 */,
-/* 43 */
+/* 44 */,
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(6)();
@@ -4673,31 +4846,37 @@ webpackJsonp([1],[
 	
 	
 	// module
-	exports.push([module.id, "body{align-content:stretch;align-items:stretch;background:#111;bottom:0;color:#fff;cursor:default;display:flex;font-family:sans-serif;left:0;margin:0;position:fixed;right:0;top:0}.clipboard{background:#000;opacity:.75;pointer-events:none;position:absolute}.clipboard canvas{image-rendering:pixelated}.commands .changing,.commands .saved{display:none}.commands .play,.commands .redo,.commands .showLevels,.status .pause{margin-bottom:.5em}[contenteditable]:focus{outline:1px solid #fff}[contenteditable]::selection{background-color:#fff;color:#000}.dialog{bottom:.5em;border:.1em solid #fff;border-radius:.2em;display:inline-block;left:25%;min-width:50%;padding:.5em;position:absolute;right:25%;text-align:left;top:.5em}.dialog .content{counter-reset:dialogContentCounter;margin-top:.5em;overflow:auto}.dialog .content .item{display:flex;position:relative}.dialog .content .item .edit{margin-right:.3em}.dialog .content .item .fa{display:none;padding:.1em 0}.dialog .content .item .highlight{background:#fff;display:none;opacity:.2;pointer-events:none}.dialog .content .item:hover .highlight,.dialog .content:not(:hover) .item.selected .highlight{display:block}.dialog .content .item:hover .fa{display:inline}.dialog .content .item .name{margin-left:.3em}.dialog .content .item .nameBox{display:flex;flex:1;padding:.1em .2em}.dialog .content .number{padding-right:.2em;text-align:right}.dialog .contentBox{flex:1;position:relative}.dialog .fa{margin-left:.8em;margin-top:.08em}.dialog .fa.paste,.dialog .fa.redo,.dialog .fa.zap{margin-left:.4em}.dialog .title{border-bottom:.1em solid #fff;display:flex;flex:0;padding-bottom:.4em}.dialog .title .name{flex:1}.dialogInner{display:flex;flex-direction:column;padding:.5em}.disabled{opacity:.4}.editMode .status{display:none}.fill{bottom:0;left:0;position:absolute;right:0;top:0}.fill.relative{position:relative}.pane{display:none}.pane .dialogBox{font-size:2em;padding:.5em;text-align:center}.panel{display:inline-block}.panel>*{border:.1em solid transparent;font-size:2em;padding:.1em}.panelBox{flex:0;min-width:4em}.playMode .commands,.playMode .toolbox{display:none}.right{text-align:right}.scoreTimeRow>*{padding-top:1em}.selector{border:.2em solid #fff;border-radius:.2em;display:none;height:10em;pointer-events:none;position:absolute;width:10em}.shade{opacity:.65}.shade,.stage{background:#000}.stage{display:none;margin-bottom:auto;margin-top:auto;position:absolute}.status.other{visibility:hidden}table{margin-top:1em}.timeRow td,.timeRow th{text-align:right}.timeRow th{font-weight:400;padding-right:.5em}.toolbox .ender{margin-top:.5em}.toolbox input{display:none}.toolbox label{border:.1em solid transparent;display:block;margin-bottom:-.1em;position:relative}.toolbox label.ender{margin-bottom:0}.toolbox>label canvas{display:block}.toolbox>label:hover .toolMenu,.toolMenu:hover{display:flex}.toolbox i{position:relative;text-align:center;top:50%;transform:translateY(-50%)}.toolbox i,.toolbox i *{display:block}.toolbox .selected{border:.1em solid #fff;border-radius:.2em}.toolbox .toolMenu label{display:block;padding:.1em}.toolbox .toolMenu label canvas{display:block}.toolMenu{background:#111;display:none;margin-left:1em;margin-top:-.2em;position:absolute;padding:.1em .1em .2em .3em;top:0;z-index:1}.view{flex:1;position:relative}", ""]);
+	exports.push([module.id, "body{align-content:stretch;align-items:stretch;background:#111;bottom:0;color:#fff;cursor:default;display:flex;font-family:sans-serif;left:0;margin:0;position:fixed;right:0;top:0}.clipboard{background:#000;opacity:.75;pointer-events:none;position:absolute}.clipboard canvas{image-rendering:pixelated}.commands .changing,.commands .saved{display:none}.commands .play,.commands .redo,.commands .showLevels,.status .pause{margin-bottom:.5em}[contenteditable]:focus{outline:1px solid #fff}[contenteditable]::selection{background-color:#fff;color:#000}.dialog{bottom:.5em;border:.1em solid #fff;border-radius:.2em;display:inline-block;left:25%;min-width:50%;padding:.5em;position:absolute;right:25%;text-align:left;top:.5em}.dialog .content{counter-reset:dialogContentCounter;margin-top:.5em;overflow:auto}.dialog .content .item{display:flex;position:relative}.dialog .content .item .edit{margin-right:.3em}.dialog .content .item .fa{display:none;padding:.1em 0}.dialog .content .item .highlight{background:#fff;display:none;opacity:.2;pointer-events:none}.dialog .content .item:hover .highlight,.dialog .content:not(:hover) .item.selected .highlight{display:block}.dialog .content .item:hover .fa{display:inline}.dialog .content .item .name{margin-left:.3em;padding-right:.05em}.dialog .content .item .nameBox{display:flex;flex:1;padding:.1em .2em}.dialog .content .number{padding-right:.2em;text-align:right}.dialog .contentBox{flex:1;position:relative}.dialog .fa{margin-left:.8em;margin-top:.08em}.dialog .copy,.dialog .delete,.dialog .fa.load,.dialog .fa.paste,.dialog .fa.redo,.dialog .unclip{margin-left:.4em}.dialog .title{border-bottom:.1em solid #fff;display:flex;flex:0;padding-bottom:.4em}.dialog .title .name{padding-right:.05em}.dialog .title .nameBox{flex:1}.dialogInner{display:flex;flex-direction:column;padding:.5em}.disabled{opacity:.4}.editMode .status{display:none}.fill{bottom:0;left:0;position:absolute;right:0;top:0}.fill.relative{position:relative}.pane{display:none}.pane .dialogBox{font-size:2em;padding:.5em;text-align:center}.panel{display:inline-block}.panel>*{border:.1em solid transparent;font-size:2em;padding:.1em}.panelBox{flex:0;min-width:4em}.playMode .commands,.playMode .toolbox{display:none}.right{text-align:right}.scoreTimeRow>*{padding-top:1em}.selector{border:.2em solid #fff;border-radius:.2em;display:none;height:10em;pointer-events:none;position:absolute;width:10em}.shade{opacity:.65}.shade,.stage{background:#000}.stage{display:none;margin-bottom:auto;margin-top:auto;position:absolute}.status.other{visibility:hidden}table{margin-top:1em}.timeRow td,.timeRow th{text-align:right}.timeRow th{font-weight:400;padding-right:.5em}.toolbox .ender{margin-top:.5em}.toolbox input{display:none}.toolbox label{border:.1em solid transparent;display:block;margin-bottom:-.1em;position:relative}.toolbox label.ender{margin-bottom:0}.toolbox>label canvas{display:block}.toolbox>label:hover .toolMenu,.toolMenu:hover{display:flex}.toolbox i{position:relative;text-align:center;top:50%;transform:translateY(-50%)}.toolbox i,.toolbox i *{display:block}.toolbox .selected{border:.1em solid #fff;border-radius:.2em}.toolbox .toolMenu label{display:block;padding:.1em}.toolbox .toolMenu label canvas{display:block}.toolMenu{background:#111;display:none;margin-left:1em;margin-top:-.2em;position:absolute;padding:.1em .1em .2em .3em;top:0;z-index:1}.view{flex:1;position:relative}", ""]);
 	
 	// exports
 
 
 /***/ },
-/* 44 */
+/* 46 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"dialog levels\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=name>Zone</span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Level\"></i> <i class=\"fa fa-ban exclude\" title=\"Exclude Level\"></i> <i class=\"fa fa-trash zap disabled\" title=\"Delete Level\"></i> <i class=\"fa fa-download save\" title=\"Save Zone\"></i> <i class=\"fa fa-level-up worlds disabled\" title=\"List Zones\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-files-o copy disabled\"></i> <i class=\"fa fa-pencil edit\"></i> </div> </div> </div> </div> </div> ";
+	module.exports = "<div class=\"dialog levels\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=nameBox> <span class=name>Tower</span> </span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Marked Clipboard Level(s)\"></i> <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\" title=\"Unmark Clipboard Selections\"></i> <i class=\"fa fa-ban exclude\" title=\"Exclude Level\"></i> <i class=\"fa fa-trash delete disabled\" title=\"Delete Level\"></i> <i class=\"fa fa-download save\" title=\"Export Tower to File\"></i> <i class=\"fa fa-arrow-up towers\" title=\"List Towers\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i> <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i> <i class=\"fa fa-arrow-right edit\" title=\"Edit Level\"></i> </div> </div> </div> </div> </div> ";
 
 /***/ },
-/* 45 */
+/* 47 */
 /***/ function(module, exports) {
 
 	module.exports = "<div class=\"dialog report\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=endMessage>...</div> <table> <tr class=\"startTimeRow timeRow\"> <th>Begin time:</th><td class=startTime></td> </tr> <tr class=\"stopTimeRow timeRow\"> <th>End time:</th><td class=stopTime></td> </tr> <tr class=\"scoreTimeRow timeRow\"> <th>Score time:</th><td class=scoreTime></td> </tr> </table> </div> </div> ";
 
 /***/ },
-/* 46 */
+/* 48 */
+/***/ function(module, exports) {
+
+	module.exports = "<div class=\"dialog towers\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=nameBox> <span class=name>Towers</span> </span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Marked Clipboard Tower(s)\"></i> <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\" title=\"Unmark Clipboard Selections\"></i> <i class=\"fa fa-ban exclude disabled\" title=\"Exclude Tower\"></i> <i class=\"fa fa-trash delete disabled\" title=\"Delete Tower\"></i> <i class=\"fa fa-upload load disabled\" title=\"Import Tower\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i> <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i> <i class=\"fa fa-arrow-right edit\" title=\"List Levels\"></i> </div> </div> </div> </div> </div> ";
+
+/***/ },
+/* 49 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(43);
+	var content = __webpack_require__(45);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(7)(content, {});
@@ -4717,7 +4896,7 @@ webpackJsonp([1],[
 	}
 
 /***/ },
-/* 47 */
+/* 50 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAADICAYAAACZBDirAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAAEZ0FNQQAAsY8L/GEFAAAACXBIWXMAAA7EAAAOxAGVKw4bAAA6KElEQVR4Xu2dX6glyX3fz91XicDEoI2DsGDWiwiJsOJZIrKCPIi7D5ZjFgIzCk5Yh0BmHqSx8YM0IWbByGvY0UIUtNLDvU/ygkwyA0kE9oqwgx+CtEGxxshWQhBox8SY7M7D7uIggaOXk/rUqd+5v65T/7qrq8+599bnUrf79O90d3VX1bd/9e/00ep4vV7FePRotbp61X0I0O3dftntj55yH9qwNn//wfz9PfP3d80fyGeWv2P+OtN5wi2H2IQ1IUa3d3u3uw/LgOAdub9/av468zAUQD9h3/cSudu7vdvdB4Nvb8j/MH94g/z9e/PXmYczAdQJC6HE13S7W3F0u1txXDZ7Y7oH2IZwFTiXuN3uViJ0u1uJcNHtDegeYBt2BVAnbiihu92tGLrdrSguu70R3QNsw0YAffcedOJ2u1tRdLtbMVx2+wJ0D7ANQw8wl6jd7lYidLtbiXDR7Q3pHmAbehtgiG53KxG63a0sR/cA2/DE1r2XRPUTt9s3y24fLoXLbl+I7gG2IT8TJDPSfX0lPlL+1GSWm8p+ZD7r72O/daxO/+BoZeLjPmxYv3G0evBgMyD/KRMVYiufWR4fv2W2P7V6663w8qKDRxCDmQKfMX8pKFCdBF5+HFBQPmohfftMkHaEBVCeelAggA9X77tPq9XD99W6CSee/RljP3Hr2E/9DCYi6OKwfuspK3TPPWc/bjH6ZrffuuU2XFIoIP/T/AlUlQS2f9H8hZB9KEidBCEBHFE+ahEB9L0+0rkLYD3DNkD7RFOJO8LdR9gI6BHC5iN2CNktiN9Vo2wSB3V+BE+k+o03NsvOGQgZfxQULYgatssfaLHsFFBRPmrpbYBtOBNAnbAwInHx+m6apQS4duWKWzuzQ8hu4fxW/NwT1Ts/tdkjV1vzvcHLDoXjRfUHvmcnoid08RvJxPJBUwyBmlJovRTSs7cBzs+0XuAA11y4aYSN4IONqu+pCSG7BfFDBAPnl7yCF9g9wF1oH+KPNr9cu18Xv0pGlo8HDx7Y9m6Wev3u3bvuG3m6B9iGXQHUiVuY0HhzEvD2JAhio3qMCPr2LdoDBHV+6c/AC+we4BCp/vJHQZG/EHq77xUeLPdceNUFnNyNo7s8I8sHIvfw4UPb7GOXan0MpG33AOdnI4C+ew+F4ieUtAFCzG5B/K6E3Ts8wN4GGEcEMNUGeC5B+B678AMX5LO0p7QWyIryce3atdWdO3dsZ+DN+/dtYJ1thFJ4cHUPcH6GHuBI0RPw5qT9L9TGp+2Ctm9B/N537p0Xl94GGIfCkWsDhPPo/a0f3lmt//LO6rt//MJqfcUs//oFG1798+dsWFQgJ5SP4+NjW91lJMTDl1/eBLPOths3brhv5ekeYBsWbQOk/e97Ibs8YRG/hAcIvQ0wTKoN8Dx7hEemCkn4xGuvrY4+bJYfec2u3zaZgLAXgRxZPmy11zgB2yqwWx9D9wDbcLS6+tamYimJupO46YF2tk1vsxoE4dN22wmyWbXYcYAI4Pb8uHcyUhDBu2Weln0cYAwKQ0rgGAeIPeb9nZtxZAgT4iWQkTQR+9pVM//722+v/sHP/qxdyme4/a/M0xQxBL2/8MA9eSeWD6rAdonwBdZzQojg9XGA7Zh1JggzPUC26ZkgYgNt384EYQygoAafykwQLYB4gP5MEB+GGNjtoYGsCj3TRF7/IJ9ZIsZkUjJyaHl6qkriPdemc0P17rFNf9akbIVIAaGKhAcI8pkl3iCFhc+h5Weu/Bu7Twiqas9ce899CmDyBwPVY5B9Hjw4e5iFuJV5gun85TNH/ExOsesxnroVP39R+TDZL5W/cg/wXPp2AawFAfQDXqEE0iARTAZdm2rtNpjsvg3G0xvY9X5iH5xX2eX8Zuuams7AZoLRt/XJif68iasst0EfX4eRx8+Ge3c24eT6Jvjb9Xdl+x2rzmefddDfTQQT/bXxAne2G3Fbv7h6cWe7H0gflpI+erlNH5aSFwbLE3v/+Mz98pfcP/OgsGkSW9pjJYLELxQG8QuGs/iFgp++JycnNuhtgzwjweWd7b1IBPPtqvxVm749pMOwDdA+0c48tV13P05pLzDoKvAW7QEyHAbU+U2GSSJeYHL+r1yfXKN3fJPbbMDDnETqfuHt6aC/y2eB7YST625DGXhzlHX+xrYRGbGz6eMvt8jwJH/p4N5x2/0l4CkzFCS2LAVPkIA/SdiBZwmBuEn+Uei01el78+bNbcCjJ+htAyrKR23+qknfTpwzAdQJCyMSt6QX2GenF1hnWgqXd/6UrhWRuT6OTy/zpHGGWsDgkbneO8fug4Pz6cB3uC+yr2wXsN+8trpnbiiBghNaF6gSTe0lDInfQGRC4qc6q0LiJ4WcJoJUMF6gDYhbaF3QTSjBWqN+gCpxFmQEAej0DcVJhy0V5QOq8pehJn07cRbrBdYFym+/tuhMG+kJFiZ7aELg+ihrNU/o6D2jjU/bEDYRv9OAryx2BWWP9iKWev2B2n1OD5C0GohMSPxkuJKBe+eL35hCrmdH6PUxHuKixNI6QW3+6h5gG3YFUCduYULjzUmwXfwuCGzXBYoCtuMVag8wMhZQmPIE3RK5vton9BZPvAbEbBIPbXf3B5Gzmmi+YpdqXTOXByjiF/UARfwiHqCIX2khR+Rs1dOsSxVU1g+SSP7JUZu/ugfYho0AUqJ8RiQuUHgIsTZATdCe8QApYC2Z/IT2q78CAmaqsEGwpVD2q8aZPjaHoTnq+subwDrbCMJcHqCIX9QDFPGLeIAifqWFnLbAOWZKNGWG8jE5fzm6B9iGoQc4MlEFvDmaoySAbuMTu0AVWNstvgfoxYUCVo0+ZuD4k5/QHEvcsxC37p/ZRNyk+ivDYHw7mO8wXMJ6fCY8NF8lyOdTUxUWzqsHWDpTgnZBYRA3QQ930nnJgfAIUwTIMrF8QFX+MnQPsA2LtQHqdj8K2wBbok0OEQIeoGZ0Bub4GWqf0Ku7Ro10CKHFTYNAYvPET7Dayi1iqdY1c3iAWvyCHqAWv4AHqMVvTCG31V5z/m0V2K1r6AQhEK9B3AQ6QQjEU+clhxafKQI0YEL56B7gYZJ/J0gGGqzJqhJOTeaVAGLXHiCFTexbtOipwhViUgbW1xW4xslPaI6FgPn4HRxaFEOdH2zTwYGXVyKAUz0EvC3SgvThrHppsScj7kYW7X1TSwNm46ytTsxH1vWyBLw8K3pmfSuAbh2IH3EJBQsns3EJhbO4hEIR9vgGyTOBvFNC9wAPk9lmguhhCsB2xI+ZIL4NxG5ngughDIKr0jBTg0zjwxOVgpedCTICabIL6VNrGNIiZQ1xGxOH9ZqJrKvVj370tgnvbNdv3/66XU+xZgpZDBOfoy+79cuKrlr7lJQPsrfJp61mgnz45MN2W4yf/vSnq8ePH6+efPLJ1Q++ftsI/73Vi//5z+xn2X6ely+99JK70mnM+k4QPDuQhytlWN4JIjYNT/HtO0FCImiqXku+EwQBJIMcPVP+Kx1B9Ng+c/1bItPetPgJpSKoxW+zfGe7Dr4Ivvrmj1e3n/2g+xQRQBUXBDAmkke33cpFJiSAY8qHE8Cp+VcE0Pf6qBKz/fVrr6/u3btnPenQUjsBs+XvC8SwDdA+0VTiBjy3GFrg/HIbEr9BDSQifqnza+dOD5gF/3MpZI4qED4tflSNtegxu8Ob4aHF7wNf/LENQO+v7kReM/Hr29/ehOefd1uNCB3dGIifJiR+777zrvsUgHjoW/5Dt4RveeEyiJ9PRfkgSyKGhDnbAMfMtKnO3xeQMwHUCQsjEjfXCxxiYA8+ZdNPVq1xflV3bNUXTq5fW52aDEOIjV6J4gufiJ/gD4Zmlog3UwThE3ESEdxiRO/olZ9frd58cxM+//mBCD799G+4tTNPMFX9/fWv/YlbU/jJrcXPcfT6Jqw+uvl8qagoH0CWbNEGGJq9ooNA/oZJ+fsCs0gvcKi9eeAVhjxA1SkyJcNM4eaUcWe+8OWQ3guuX+VExO9n/tbPpD20Z5/diF8ALYIh8ct6f5qA+M0BnvlJce/DATOhfLTyADt17AqgTtzChMabk2CHMLgghJo5BsUg5AGqsYBTMsxYbt2v6Pnw75PfRSto8QsgAhUVqk9+0q2E0W1/PrT7vff2uzZ85bO/6LYG0OKHt1fA3MK2czxqbgTaIglTf9F5DiaUD2jlAZZC/sb76wzZCKDv3sOIxAU8OgJiN1pKMh5giAm13Cy2emC8wFG9wLqND4GLiZ+gxU+dCGHSywGvvLLx/r7znU3gcwA8v1TVF+ELil8oqQvFD2hyYEDzHCKI+DEIevs7gQhf7hedWzND+TgkD3AfoxwOlaEHODJRhVwbYKhYDLzCmAeYgAzVgklPSdr7dJsfIqcbWqgmI4wifuTAQC6MiuA3v7kRPQmybW5SVd+PmsL7m5sQYg4R3BE/Q/Yn75dkYvmAfXuAnTCLtAGGqsCD2SAhD1DJ5lJtgPDwUcXj0Z8FgggifgzqRfwiwgfZ6i+Cp0NLfO+PHl/GA+oQABFM/cLzFHvunSB7YUL5OBQPsCp/X0AWmQkSqqkMOkECcze1bC6VzyVzVPeSidARqCIjihHhE3QHSFQEWyDJLd5foOrL4ykUNHhv0na380Oihlr79p0fXtWXzh1+WJplKFRTWT6EQ/AAZ8vfF4hZZoKEZnoAPlz8eZ+326px0DvcQG2reiZIqPotcP0yfD9Et3d7QfmIITOlYhTZjUeYmimy73eGoC4M+OY2Uhz155KB4K0JV4FtwppQyM6PGxgQN543qQxgrz0lQEb8YvJs9M0SE7ki8YuRu/5u7/aU3YOZUBIQLQlSJ6i1w6G3EUpxnOoBt2IogH7Cmps8BV2BiXmHYL+X8PBSPcHc0NmfHrnr7/ZuT9kT5EZJ1NpbjxOMzUQqBYdFnJl9Nd2GOBNAnbAwInGnzATZkvIAXU9w7IZRBaaqGyK2PUru+rvdrTi63a3kyZWPWjs09QAzM5FKwGHB+4M5PUB5Nw7iGlrP0bwXONkGwr8CDzB1w5pUgXPX3+1uJcJltweIlQ+h1r7ITJHETKQc4o8gTnN7gDybaE9kqdf1O3Ni7AqgTtzChOZpJIGnlQTIVoELPMAQJQ4emcEn2zOYu/5udyuGbncraVLlA2rtsEgbYGYmUopWbYCl78yJsRFA9vApTFwh10YRJeUBBodQb5jq4OmfgtqSu/5udyuKbncrZeTKR629qQdYOBMpRas2wNJ35sQYeoAjE1XgaYQ3JwF4WkG2CpzyAE1yS7vBIuSuv9vdSoTLbo+QKh9Qa4emHiAD7ytnIrVqA2Q4Dc8nQuqdOTGatwFW9QIbD1CeGovSuqB0u1uJcN7tAWLlQ6i1N28D1LOQRoofNG0DrKgCH62uvrWRGEnUncTF6Y4j4/1ikGjJI+ABJkSQG0aj5pSnBpmBJ2ISmYUSu/6r7nf7un24FC67fYbyUWM3LoId8Ox7fQjiIQ2E9ssvgjjHQOhjV8G8fme1uu+m8ev1B35yeVTPBDlkigQwVQX3rl+mEMVmtZXYUz9Jvv7ePZMhbow7/oj41yJDi2I97Dl7kML4OxnaEqrdlHxnNAve3ymQxy/1TBDm2kdeNZG0OcJVYJuwJhSQauOT9gpIZCNLyJ7bpxmJ60/9rPjB/OR4JP7MsU2Nj8QWnIfr8H9iPUTqOxw7dfwtifv/xvqmDSFStllJxG9fLNILXIE8E5vMBJEfJdbIj5BkGHqAfqLi7md+lgoBZIoOPVQacf31+4A5UcofW3/a2Ef8Dl2O0R5g5vrx0CDlwcGi9hHxr/XgmthHxP8v/mhz/fBzn9q9Rzn7JEbEbx8s5QEyE+ToOy9sPtARUtgOqD0+AgJIG+CsHmAI0oaGwNg7uh1nAhhKXLvMC6DMSxSx4xlMQ639VZjNJit+K35L7ofmpEbk+KylKWefwigBzFy/vFMB+FUNv5pK9fTa1bPv+L8wzf72x1aNh5TaX74T2l8Y7F8Yf+15yft3NWLfvo83YL9j4oaHF9qfl/AQ5Dv6fRQQPX9B/HUW12fVWbvkO5MovL/7QgSwaRsg09+YASIwJKZQBEUAW7UBbgVQ0kNA/Iz+vHVn81C8+sxzq0ff2/S+6PVZe4Hx+vhhhFAv1cp4dytqy/ywJp6e3bjB/simvHoRu1nUil+M3/6P/9utJYhcf8k7Qya9V2RuIvFHnHLwKsW9E4n/Z42H96u/+wX3KUzJd6qZUD5ac2lngvgvHJOuYGqkzkvgR3Zx0ljqdR7UuwKoD1aY0IxJksCYJQmCfYbyJrHPmaBEcAu/Rcep/q0J2PnlYW2fiaLfh4tc/5h3hoS+W/pOhpD3B7It5D0OiMTf98hS+N4dsH9pG2DoXLIt5D0OiMT/YDjQ+C3SBniAM0EGBMa+bGssZl3ynqzDRgB99x5GJm5upLoVtq+aoERwC+1+bAOxz9gWKDAL5Lf/yUfcJ0Xh9SNOsXeGsE2qrzli+5egq9lbCuNPZsALDAkQAiXV1xyh/UPbQlBN3iET/1CM/KptyXcmM0P5aM1lnQkSRDlf0ixzcuXq6ub9+zawzjbC0AOcmKi5kerb6iziJqj3T4Squ62qwEkKrj8lcCXi15SC+KcErkT8mnJgorLDAcevqQdIWx+iJ0G2jQAPsMVMEAvv4xHvT8TPeRS8p4bqrv09xZdf3gSzzrYbN27M2wZIiI1U90n29u47nyWuX35WPETKJtTuX0Qq/glPrcSLq92/iEj8v/apG6vf/60vuU+7cPZ/ab7zQ/OdgJ85HwcohJd5JsgW5flpyJe2WY6lWofm7wQB5/lu+GUjfrxkx+dbbvk3r66Ovuzt05IR1y8CJQOSNbKtROBq9t+xj4m/S/RQNVS2yXdCzLH/jr0w/uyl9/QHPevP/nerqCwfS3GpxwGCHu6i2pPw8my+M+uS/2Qd+kwQPc7Lx7t+EalYe13Kzhg+ZnlAaDZIzg7B44+Ifw2M4ZPxe3pdyNmjFMa/zwQJQx5fYhzgVGQYTLOZIBlSEzWoCoerwDZhTSigdCYIJLLSYhT1BCeuv3YmSO3+RUTiz1g8GYwcApser+czx/4p+5bE/e8zQcJceg8wAT/Igtj5S2qps8wEif3iC1lRD4jgRCl/TOy575Xie4CIH6+cHPQE6yd85vprZnKIDXL7Q/ExRsRfxCvmnaXsWvhy+0PxMUbEv88E2WUpD/BgZ4Jk0DPVGKOsl+jTbDNB/OvgJDszQRjb9zonNZ/dOojoWbthrulwvgAyCPq9t99dfeWzv+i2GCSDZ65/jpkgwFCZ0A8esD8eoPQkx/aHwfkL4689L2kL0YhdtsfsDB2QdhUNbYAMopaeZH8sYPT8BfEvmeVR8p1JFN7ffSECeGlngmQQB80XP5mqO1svMAcUOIngss9G3Bj796rZZtYROaRpK09iZ5C03TA/eH4D8YsRuf7amSC5cYLYSs6RJRJ/xCtHaiYI++eG0ZScI0sk/n0mSJxLOxOkgJD4ie7uCqBO3MKEllkgnMAqqzmJzATZenu/ZD9uxgJ6ImfXET+aE5kN0mgmSBGR65eZHCUCF5vJkRI/Iba/nDfkfQ6IxF9mcqQESgTO9+5A9s/Bd3zvD+S8A+8vRCT+B8OBxm+RNsBDnwkSISR+4rBtBNB372Fk4nJwAgffyd5UaWWGB7D0BY5tfIfZIvK9pRhx/QhUqLNCV19zhAQsKWoGafOrmQkCCFTIy8t5d5qQgCVFzSBtfqEhNLn4S6wYB3j8D5+xHp5fteU7eH8P/tv3tmMFq6u/wgzlozV9Jkgc7QGK+IU9wImJWjQTRKbBCXh8jm01GNx35moHHEXh9Yc6KGIdG4tSGP9QB0WsY2NRDkxUdjjg+DX1AGnrQ/QkyLYRkL2azQTJkPcAfSYkNM91QmgmyE6b3m1zM77s1g07dhkU3YDRP4jgoBNCBiHLeDyNbOM7usNCqN0fZP8sgfjTCSFeWm4gs+6wEGr3h5yXuMWLv1Ta2Vtmg4QGQsssECA28cp+JQcohH0mSJyQ+IkH2PydINteYH7yivY98xQYeHwOGwn+RexTIDPwRBSCw2By7wRx1x8SLam2pmxC7f4C3x3YCuMfEq2UoPliVbu/wHcHtkz8jzP5j2quL4Y+VVXhwvu7L8jjzXuBK9h3LzDip2el+VyqmSAigIOhMHqcl493/SJUKXEC3874ParI2i7bIGcXxE5749Y2Iv5TYfyeX0XW23J2n4GtMP6XdSYIQsYfVdzQ8jPmD6Hjc58JMp5wFdgmrAmNSGSpZoj4FZG4/tRsjZRNqN2/iEj8qZoiPjGwxaqvMMf+KfuWxP2/bDNBEDK8u9hS4HOzNsAZkOfdPnqBUyw+E4Te36U6OHwP8Ne/9id2GRwIDZnrl5kYvmcmpOxiE/zv5OygvxP0ADPxF/FKeWYQsvvCF/L4NLljBD3ATPz7TJBdpAqMAPaZIOOZZSZISgBpI0SC7EncYGf5tZczaTpDZbegfQy+AAaRDJ65/uhMDAfV0z4TpM8EWZpF2gDP8UyQHLP0AkuXsobGR9jKjxM/xvjRIbIVRYX9zPecvQVTe4GhZJZGyUDpGNhKzpElEv/UIGihzwQpYGT5WAIEDzHkr88EKWdXAHXiFia0HvMnyEwQsMImMz3cgGgRQcF+hxcj/aEJ2I0Q+gJZS1E7YOT6ZSYHAhVqq2ObCFxoJofsnyO2vwhjyPscEIm/ngkSGwgtAud7d9BngjgONH6LtAGe05kgKTYC6Lv3UJG4Z5UdB0NgRPwCWKHjOzITxJ26lRcobYFbRlw/AhVqn2NbicBBSMCSoqaYYyZIqH2ObSUCByEBS4qaIjRkJhd/YpWb5SExT80WmczM5aMFTT1AqrvneCZIiqEHODFRZSaIZuAV8v4PX/z8d4IgkIq5O0pGe38eug0uNFC5tR2BzQ6ETsRft8HpdaG1HYHNiuSBicoOBxy/ph4gbX2IngTZNgKeufuaCZJiljZAoMjSFkjbnz8TxIoZnp0iKnARL7EGPf6PADteoMa7fgQJ8aFqKtVTGZMHsi52vusLWs3+QqmX6McfQUJ8qJpK9VR7YrIudr7rC1rN/kJWAAUv/lSeZQaInDU0E0SOLjNCZmiNDHOAQti8DRDB02Ekh9oGuMhMEHsC2vdcFTf4ThCD/QWYPzx7UtRCZuCJmKRgpL8WK0RIf9b4NhGs2v012AfbC+KvxQoR0p81vk0Eq3Z/DfbB9j4TpAryePNe4AoOvRf4Us0ECaLHefl41y/iFBImSNkZw9ffCRJgofhPpnH8RMCajePb8/0VAWTc312Xpa+/vPl8uMNg7I0xYWb8pEgkTTOKhsEkrj/UAyykbELt/kVE4k+1VA9G9sEWqroKc+yfsm9J3P+DoEH8FunFFfZwf/XzsEkb4L07w1BI9UyQHBxcfDA50Uw13CzaA9SdING5wJnrl5kYIe8MUvbgLA6P1HeithHxF/GKeWcpuxa+3P7gfydqGxH/vdA4fot6gHu4v9oDvPr+Jg8/eP/GvB6gFjyuSeCF6RmazwSREWEqGawk8bm1EJK5vvrmT+y6dIL4fOU//f3NSub6dacEnRR+NZfqaW4miIwTTO0fG0sYPb9k8Ez8tedFG5zfPid22R6y63GCvp22PYJ8RzpLhOj5C+O/NxrHTwSwWRteZfzvuWS7frJa3XdipddvDJN5BxHAR6fD/HvHaOEsAijiJ9cjPHrfbDMh1B6lmK0XuAjG+pmwpkNE4ZLIotfn4PazH7RB3gfihyCR65fByClKvtOcSPxlMHKK1EyQxWiV/+aiQfwWmckhjIw/2mlFzCz1+oO0tuwHhI9QyK4A6ptTeKNk2ptGT4+zoiaix3g/eoMRQrvBeYTM/EAgeWkSy30RuX7xzHLwnZAI4tGV7u97fyDb7BCZVFthJP7imeXgOyERxKMr3d/3/kC24fklRTYS/4OhUfwWawMcGX9EzmqK+apoi6yPQeffjFM2HrkOHanEbwBqNgLIFfnMmLjbWR4ifmDWpQpshdCbKrcoBddPu5sIWygBZRvfibXxCan9c1BN3jl+Qfxpd9PT0XxEoPhOrI1PCO0f2haCavLO8Vvnv1oWiF9TD7Ai/leNb3Nsaq+0YNB7S2CdbYRSpAmY/Nt8HGCh+MHQA5yYqHrerzB4Jwg/f6/fCcK6GgtohVCLo2HuqrDAu4Gjg6Az11/qwe2NTPxLPbi9MbOozE7D+C3iAU6IP50V6CfhockaBPl8aqrCpehn3qy9wDdcfhXvT2tRgVcxWxugrvKGqsQyv1dIdoCY787VQULvL0GET88EGSOEMpsDZDyeRrbZKmpgFkft/oIcI0kg/nRCiJemBysLso3v6A4LoXZ/ochTbCg0s9AgfgfdBmg0xYoeS7U+BjUIYH4PkN5ehG+k+MGsM0Gk5Udnf9lmT0JVOPVeEL4UsU2BzMQTNUnhSP+QaG2rvQmbULs/8L2d7YXxD4lWStB8oardH/jezvYDn2nROn7k0aa9wJXxP3bNUdfvrFb3nbOl1x/4h/OQXmC8Psnn5GEEcZZe4EoWmQnidG1xigRQj5Py8a5fJ2CImJ0xfLYNUdllG+TswGeZKTI4/oj4T4UxfKFxfbItZ4fQdywLxL+KyviJwMXG+X3xyjfsthCnRqxuXok3iOfsD1fvr66tArUxR+3xD8Feq5/hKrBNWBNmAgkiG9m5vueBxPX3mSB1+6fsWxL3/yCYEL9UGx9CJYFCLUGeczk743Cx+Ut5G5rsu9k2/viHbq+h+UwQDSda0hMc7QFmrh8vDHZ6YR0pu9gE/ztj7APbiPiLeAU9MUPK7gtfyOPTpOwD24j474XK+JV4gBRs3lsr8IigMkABPzEeUKmdtne95Htj9hfOk313wNU4qmeClGBPgPfHUJcvc9LNttZiOEoAM9cfnYnhoPqamgmCgEkPcW7/0FCa6PkL4689L9rhQm18ui3PH8uHgEkPcW7/0FCa6PkL479e/+PVrVt/OzjGcE6I58nJ/1kdHf3BZkNh/GKIAMba+BDAkDfDT8rhwSEAOTseny9+0jZfsv95ttfmhupeYKbCxZAsbyVIxvm5AdCtxc+HXmDpCY72/gqB60eUQgOcfWLfQ/xK968eShOIP6Ik4wBTxL6H+JXuXz2URsX/5OTEit+f/un/XX3sYx9bff/7/8h+Zjvrwto8x3UoRY7FkuNxDs4l24OMKB9CrpeXRweBgk3wSdlD4ue3jdUcHw7dPpVdAdSJOyGhfciKNjsifjLIGREMtAfq94CUZ+EymAqnp8NFCVw/3hseWek4QL7rV2n3ORME7w2PrHQcIN/1q7R4XqX7h7w02YbnN2YmyF/91b8z+/6K/fi5z/2X1S/8wt+wAsVxvvvdf2a3w9GR8fVVKIVjcyyOybE5h2zn3DsE7m8JqTZAxsxKYEytBCFnD4mflu7c/ufdXsNGAH33HkYkLjffRxLAZkWZCQIigniECjv97ZdMYCqcEcJFPcTM9fvVUb/6Cv42fx9Nyf4xdDV7Syb+fnV0W/1U+Nv8fTQl+8fQ1ewtmfjfunVr9fGP/9fV48f/z1aDWUdQ2V4Lx+BYm2P+yvb4g2NXlg/IeYCIF4Gzhu5kyq49QBE//87UHB8O3T6VoQc4MlGFkBqj1sJ2JoiGbRrxEAmeOC5G4vp1G1xooHJru4AHGBXXRPx1G1yoJ7a1XUAoo+IaiP8XvvC/7JLq6Ve/+olioZ3CJz7xjdWHPvShrUjLubdMLB+Q7AU25Yc7JgF0+cnZEYaUB1h7/EO311DdBjiVHQ/vW27JT+b74rg03vUjSAgP1VCpisqYPZB1sdtqqidoNftrijxFL/4IEsKBpyNVUe2JybrY+a4vaDX7a4oEzIs/4odX9vTTf2D31+eei1HnmFA+lmgD1OLHUlNzfDh0+1Rmmwnit/pI9me7PQFtfrzz1ygf4sc2XwRpu57rfSBAZuOJm6RgpLwWKwRIf9b4NhGr2v0FbP62kvjrwpwq3L5NxKp2fwGbvy0X/+9//xtWmOD3fu/jq1/7te/vrNfypS/9na23p49r4+t+xDN1f1OQB1O9wB9e/U6ySsfdTNkRA3pDY+T2P+92X3fGkp8JwmzoGNhzI/X1OCqfkuN3u/sQoNv3b6+cCVI71S01CsMfP9eK9XrzkPjRj9424Z3t+u3bX7frh0y4CmwT1oQYOXuO2uN3e7cfsj1Aqg2wFsYBhkLKM5wLLX6CrL/66r+wy0NmKIB+wpqbOCBnz1F7/G7v9kO2J8i1AdaCJ0igSUp3gLTm6OjGVvDE+xMOyQNcr2+uVt/+9iY8/7zbqgVQJyyEEl8zIvEttcfvdrfi6Ha34ti3PUNLDxDw+IR0q+T8PP30b7i1M+/voKq/RvSOXvn51erNNzfh85/fiuC0XuCRib9D7fG73a1E6Ha3EqG1PUBrD3DfaBE82La/Z5/diJ9iVwB14oYS2rOXTIUbMPL4O3S7WzF0u1tR7NseobUHeAjodsCD5JOfdCtnbATQd+9BJ27OnqP2+N3uVhTd7lYM+7YXcNE9QMDzO0jv75VXNt7fd76zCXx2DD3AXKKOTPQdao/f7W4lQre7lQit7Qlae4C6JrZkJ8i54Jvf3IieBNlm6G2AIbrdrUTodrdSTmsPUIa+0AGydCfIuQDB08HxxNa9l0T1Ezdj57e6klQev9u73XKo9kJaeYAMdqatPRQ6eWRWWqfTaQAeX8uZIJ06wlXgTqczK5ehFxh4Be15ogtgp7MAl6EXGPF7953Ne7cPjexMEH4CPPU7bp1OZzqXxQOE7CsnRnDPSBKBn2wJrReRmglS+s6FTqcznYvuAbb0/uiH4iXqLPX6g9TvZIUIzQQpfedCp9OZzkX3AG8/+8HVe2+/a0PynTsjQeQeve/Ej6VaH01gJgg/BkkvsA3vvPPc2lSDt5976KGHumA8vrXx+NbGA7Tr+vOLqxeD+/RwFl4+Xq1NVdfeuDfe2ATW2UYI7bMTnn9+barBZ4HPBGN7Ysl3LnQ6l5XL1AY4J/werVR9H97dBPl8aqrCRTDwOTUTZIl3LnQ6l5nL0AvcilmqwHoWiBM/eELET4MI8m6ETqczD90DnAZe3iwCGGHZd4I8OBp+Nvuv33rK9upwGt6WSGzkM8sZXv3a6ewNPL59zgRJ/Vwd01hvZuwXvfiFB0JbYTMhRs4eA/FDBAP7y6tieSvcc89t1judi8I+PUDmC0tA1CRIa3/OfpEZCqAvTOYmDMjZcyB+8hpEUPu/ZTaLL/rGG5tlp3NR2HcbIG+HI+DRhYQtZz/vHMY7QRA/qTJ7++MByjuBuwfYuWjs1QM0wsakCQlwTb1cPGc/96Rmgtj/PjlxGyt+AuKHCAb2xwMEvMDuAXYuGvv2ABnXQeBF6gSfnP1C0OKdIKPQHiCo/XsbYOcis08PEG9OAt6eBCFnvzDs/Z0giN8V5955+/c2wM5FprcB7hEGPx/EO0EQv/fD7l1vA+xcZHob4B5h4HNqJsgOrYQQ8bMiuLt/bwPsXGR6G+Ce0bNAnPhB9TtBsuj9Mx4g9DbAzkVkXx6gjOeTcGq8PQmQs190qHS6lrdppEaaM7DymWvvuU+GA5wJwk9LHBnVbbV8S1zbRjwlT44Irc+/b15//fXV48ePV08++eSk5UsvveSOlObYLQWTNYvA49vnTJBLxb07m+WNu5tlAbMIIK/jC0F7wqkWPPAGQ4sA+l4f5faiTYXjR2bhVuSiau05Wp9/3/aWiAC+wYBaw9HRqV3mEAH0vT6qxF0AZ0TET7To1v3NMsNsAiieIC41kEV3BDAwE2T93nNbj49gnCbbBnhR5gK3fs3A6Wm6IF701xzkrn9O/uKP7rm11ernPnXDraXpHuAGZmIcfeeFzQc6IlQ7HNTarQBqR2xpAZR1BFA0ayCAeiiMGgwtAngZPMDO+cT5FhbayQSTPbPs2wOU92ZcN87zfVeW9PqNJZ4fTD9jBobAkBQtYrV23/uTn4q5m0+hcC9wK/pMkM455rPGA/zV3/2C+zSOffYC43vgTLDU66PfqVFLYCbGgBp7QFNKWFYA+0yQziVlX73As75To5bQOzk0tXYYeWHLCCB33C6NyvWZIJ1zRqhPsaT6q9mXB3j1ymp1fI22YFP1fXkTWGcbYRGoruK9BWZiWGrsUv31YRjPzfwFziaA0gkCm766AH0mSOeSsi8PkM5E6/GZMPmdGrXQVodoSZBtQq0dZ0rc25HMJoB0hBBoW432W/SZIJ1zzNc+dWP1+7/1JfdpHHttA0QblEbI+qIgWDr41Nrp8NChkOpe4O9duZIcNX4qw15E9KwHeOYjrte3ei9w5+DxB0JDSTFD8FK9wB96887q009+YPX64584yy419m/+8w/a5XVTU7zv6vJ6/cGuL3K+OLkeH/JCFfg03dMzyzCYGOdhJkhrpF0zBE/izESOLK2Pv2+aX58/UF/DCciIMWaw6/wvXx3k//uN46c7JRuQ0geGzOXeSZK1m9uTvH8Z/ZilCizVXz/seIZkNkTQ3ngTFJKRL2IvMNfE5fpLEmgOOF4ozHX8fcO1tLx/O3BwQowGdvK/pFs2/489vpQ5f/lomQySe+dIrR1G3T/FrJ0gBCq30U4Qbrw3E0S4yL3AXBsJ5C/nhHtH4N5NuX+xdyYcAkvcP4svHCp/WhrauSadhkGmHl+Gn/nLBan9PcKcvej+BZi1E0QIep0kjL7xXuKRoVFvuGgeYKjwzi3ycu9g9P0zohd7Z8IhsMT9GwgHhMRFM7Oda0p6MDXHD4mfDEdbgNrfIyz5vcLs/YswmwAWIQngJ56BjA1jFfw8ECq8BynyuZH4e2Lx+xfInwMa2Lm2Yg9m7PFD4hcZjtYKRuQRpv4eYc4+6v4plhVASQBBJRQZG8Yq+HkgVHjHJNJilIy03wOL3j8tHiGhaWTn2oo8mCnHD4nfgh4g3poEvDkJQq0diu+fxzICKO65JAB4iScKDgcpDhVI4WUphXdMIjWHwaWpkfh7pvn986uPoPNna7tB8n/Qg6k9vvYAt2Nxl82AtW18OXvy/iWYtRNE6DNBhkjhZSmFd0wilSAPDxh9bAaWpkba75kl7p/FE6UdGtol/yc9mKnH37MHiLeWasOrtUPR/QswaycIAYUOdoLA9umzm1BkcBir4OeBUOEdk0gl6MSfdGw9yv6AxA+WuH8DpgqNMMHONRZ7MGOPHxK/hT3A2ja+nH3U/VOYItNngrREriNG7fW1Pv6+aX59O/nTFw83B6SRPZv/784Qv+R4v7YZhJIeqrIKiFqN/cSoV/L+ZS6vWgBRXE4UHYmtR7IzDtCbCWKfTAl01RoPU39mMKQeKT7F3lofuD8xuHw8mxpaH3/fNL++3EyQTP6sJVt+ajPonq+vNbX3b7YqMBkxWwdPzARJIaPA8TYRMX8keK29NdwTLtdfkkBzIPfdD3Mdf99wLS3v3w4cnLAgReVnLvZwfa2Zev9mE0BcTtSYEK2DJ2aC5JBeIAgJV629JdwbEshfzom+92PaQIQ+E8TgC8OI/FkL15QtP7Xs8fpaM/X+LecBcuOlMRZG3HzpBYJQL1CtvTWhwjt3Jue+C6M9iD4TZCgMsLA4cE1TPJhiJl4f7xQhICyh9UNh6v1b1gNE/BDBCZmLxlAaVHmHS6yXqMbeklDhbZLJa+kzQTbswTMqKj9zMfL60E6aG1jq9cXfKZJg6v1btg1Qe4BQmBB4awTaM22vkvHoCEKtvTWhwts8k0+hzwQZ5skFhbCo/MzByOs7qHeKJJh6/5bxALljdmliKQMwR2Yuab9DxGJtfDDV3hIpvCyl8DbN5GPpM0HcimJB8YNk+aml4voO4p0iBUy9f8t6gBMHYOKt0dygmxzw6IRae2uk8LKUwjt3JifhhdHHZuBznwmyuOhpispPLROuj+Ek1uMzYW/vFClg6v1btg0wMRMkBw8b2u8YyhJr46uxtyRUeOfO5DrxJx1bzwI5IPGDJe7fgD0IYVH5mYuR13ceqsBT758pMvMMhPYzJBFi++5Idr5IS5xApTSObbPbrFpsJ8Zm1YKw1dj53BK5DzFqB7q2Pv6+aX59uZkgmfxZS7b87Pn6jt3g4kN9p0jt/ZtNAKMjsStngpx3uD8xuHw8mxpaH3/fNL9/amaQD4Plb/He2RuutPukbEJuJoYUmhBjy4e8I1fFKXt9bj1Gbv/sOztedR9CmMs7+rJbn0hWfzIXuGwb4MSZIOcd7gmX6y9JoDmQ++6HuY6/b7iWlvdPZgoRKLQStjWH0Mu32fbQfIOlhFKIPCFGzi7n441ogpzfxHuw3ZC9vgy5/XP2Hbi0xOVNoUh/AizbBlgxE+Q8w70hgfzlnOh7P6UN6bLPBJGZQjgMwYIroiNB8q72ABEeT3wG+MLm5/+cXc4N2PzXQSbKU/b6MuT2Lzo+0dNR/KFbzgB5Iqs/AZbzAElYPQ4wkVgXjVDhnSJSKbjvwpgnoGWPM0FCswv0OrS+f3qUgDvl7igB8qsO9AKY/SyIoM7Pd443QaOFDfT3IWX3hY+gxU9sAnFT5y+6vgS5/YuO711eqfiF8oSfP4A8cfgeIOKHCPqJf8EJFd7RIrUEe5oJQtmnOstSr8tMgyXuH51lBEYIDEYJ+OImXaGIX+il29I9ip0Xc4fI5X9t94UvRuaY0esrJLf/qOOP9Pxy+QOK9CfAsm2A2gOEXEa4IIQK75hEWow9zAQpmWnQ+v7hrUjAm5Gwg45UCLGH9hV0ng/l/5Dd/14qHgFb8fVFyO2fsw/Q4ve6WyYonYlSpD8BlvEAibFdmlhOnAlynpHCy1IK75hEas4eZ4KUzDRY4v4VtWEJscIN2iYeouR/jc7/KbtuYxQF0PjVX4F4KA901PUFyO2ftIeKeoH4QelMlKT+JFjWA9zDT3EfAlJ4WUrhHZNIJZDwwuhjM/B5TzNBGK5gn+gmxGYatL5/eCs0J0kAvJkttLeJ8JjvWnT1FxHCrm2h6nHuoR+zc37d5sd5dPWa/ULi6MheX4bc/sXHn9DpUZI/oEh/AizbBlgxE+Q8Eyq8YxKpBJ34k46tZ4EsJH6CLbtkaleGZV1Y4v4hJ4RkG5YInAbxYzgMtpjw+UwVwrumxBMELYJi87/jKLq+BLn9Rx2/0PsTcvkDivQngCkyhz0T5Lwj9yFG7Uj/1sdvTW6mwYnJzC2vz59p5DOYKSSCUyJyQm4mRu6dHrnywbAbfziMYOJ7YuJafH0BcveHO5Kyn/ymWxHvzxM/BChFLn+84fJ/VH8yt282AYyOxO4zQaJw+Xg2NbQ+fo7c+a8+4zJFAAbOXlvFvQXstCu1pHomyOnL7kMAewPix5/FrsuPtAeq+NbOBKllXTkTJDsTxeS/pP5kLnDZNsA+E2SwJIHmQO67H+Y6fg7Olbo+3sOCmPlLeZtgzt4aziVBZjEQtp6NCItGqr4huHhCjBZ2iaOJ99wzQWaHqCcuz6ck/kX6E2DZNsA+E2SwnBN978e0gQg1M0Fy18cv8ODJ+UshZ18CzkfAYQgKAwKjQyjv+sLkf6e1PRQnR/b6loDo6SiO6BTJxZ88l9WfAMt5gCRcnwmyXU4RqRTcd2HME9BSORMkd31kXF/cdCtwzt6aol5M8qsOtMKb/bZoYQI/f7e0i/cnELcZZ4LMghf9MeJXEn/y3OF7gIhfnwli789okVqCiTNBctcXEjfdNJOzL0G0F3PsTBDI5e8W9sw+0evbBxOGw+TiX6Q/AZZtA+wzQbbiMCaRFmPiTJDc9YXELeYBhuytwZuQgLchYQd/7EUInadzQtXCHohj8fUtgRa/wuEwJfEv0p8Ay3iA4r4jfn0myFYkDobKmSC569MenohbzAMM2ZeA8xM4b7aNzCt8O9VT0Pm7pd2v/grEccaZIFUEoj92LGAu/kn9SbCsB9hngmzFYUwilUDCC6OPzcDnipkguesj46Y8vJy9NXgTyTam3EwQIfdQb2Vnu1TNA2SvbykmVH2hJP5F+hNg2TbAPhNkKw5jEqkEnfiTjq1ngYwQP8hdX0jcWAo5+xIUtZGJ+OVoJXRCyN54JsisjPT+IBf/Iv0JYIpMnwnSErkPMc77TJDc+a/96yur1Hg+MnPK3vqdLeTEVJUwOxOkdqZHrf2EQtZuJkgt68qZILn0OcnpTyb/zyaAjLy+e2OzjV9s2I7EHjETJDfTKGc/RLg/Mbh8PKcaWh8/x77PX8u+Z0rMirQHXqCZIDmy+pO5wFnbAIVoFaxgJsjJyT23FiZnb0WinGehasrl+ksSaA6k+uuHuY6fg3O1vD7h5s2b5snuPK4JxPYvmWkQRQZGxzojWtsFsZt4X7SZICUU6U+AWdsAESdCtA6emQlyqOIHJuaTRZB7QwL5yznhSUjg3o9pA5mDJa4P7tzJiECG1P60QRJwGEYJg54nHHonSGu7xitPmsnXNye+8E3sFAlBnsvqT4Cjezc35fq6qWzfd+6iXr+RaSQQF/TRqaufGh4+eri6Y7TKuqBSBcYlsEtTMvRgaNcrfHJ9uL9fzc3ZW2OvgvYMk2hHr28+I4o5uD94RL44kEjckto2Ojm+rHPP5Ql4YtKxdRtg6+sT8N6Ehw8f2jCG2P5UEUPekLRNHrvdsuVDC5P0xurOiJZ27f2Bsueur3kboFSBXdS2OPGjLNWQ1Z9M/rMeoFRXWOp1/Zv7s5CZCXIz84TP2ZvyaRNoTvmouelmvUT8hJA4jHHTD52lrq+lB0jxIYR6GUeVDxEfIy56HN6WVvZImRL4JiF0fYszo+dXyxMlv7lPu8kJ7kSCW/c3uSHpnSVmgsj+h4h5yFjhW33OBCWCpYTEgeXBQMsCgac14UUXClni+k5P63yV1P4yy4AgswwIUPpOCotsdPvu0NoOgYilrm9xtPhVen+aIv0J8ETJb+4/ZXL28fFxUgQpAHDt6rXdzE+OsUtTQhIzQU7v3rVeXugCuMCUvTkI31dNUCJYiogDSxGHg/EAEb7HLvzABfl8VmtMstT13TXpjxc3tvorpPaPtZGVvpNiixaWUEad2x7rHOF7ykPcaxvgblGfVfwgqT8JnqC72D7RTEj/5n5aBCkAQjTzF8wEQeRS5Owt2FZ3ET9hhBsv4sBSxGFMIpVAW4gw5tjrh3dW67+8s/ruH7+wWl8xy79+wYZX//w5G0pY4voERKyG0P54Q2i9BMBbgqLygQjheYk4IUxavFrbcSawEwKkrm9RGlZ9i/QnwKYNkHun7qGs+yCCtyKtiqLAEM38BTNBcGFT5OxLMabxNiQOYxKpBDoiCBx3zLGPjCAQPvHaa6ujD5vlR16z67dNJAklLHF9wlTvT4jtj69ECLYBpsoH4sQxESdfmKC1XaBDRAeP1PUtzszeHxTpT4Cj46uuF9jc59Bv7j9wWiXjpx48eGAzkbSp6J5H8bhJI77O9jEzQXSbbiidc/ZW2BtE2xge4C+PFz/uQ4zaXtLZjs/1Uf0VCpvcWl+f5tq1swwwRQhD+5MTU0d6RHOHIVc+9ga9wxUzQT725o9Xn37yA6vXH//Ebdmlxv65+x/crIj355WdMZ2JIbL6k8l/R+srV1XlaQjd5zdzv8nf7e7TLt3e7d1+uHYGhlsBZEXQvUM8OU7MAbq924Vu73bhvNh5x4z84IZeMg5yOxMk10vU7d3e7d1+Hu0h8WMJVgBRzVQvUbd3e7d3+3m1h8RPeiG2HiDth4RYL1G3d3u3d/t5tIfED08Rehtgt3d7t282GC6iXbcBivhJ739vA3R0e7d3+8W0aw8Qu/YAexugodu7vdsvrl3Ej6X2AKG3ATq6vdu7/WLaQ+InHuCR+bAOuZQCB+32ON3e7d0eZ992xDD+zpnV6v8DIUcBCAIkOAYAAAAASUVORK5CYII="
