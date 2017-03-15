@@ -12,6 +12,10 @@ export class Towers extends EditorList<TowerRaw> {
 
   addTower() {
     let tower = new Tower().encode();
+    let level = new Level().encode();
+    Raw.save(level);
+    tower.items.push(level.id);
+    Raw.save(tower);
     this.zone.items.push(tower);
     this.zone.save();
     this.addItem(tower);
