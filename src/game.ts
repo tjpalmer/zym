@@ -1,4 +1,7 @@
-import {Control, EditMode, Level, PlayMode, Stage, Theme, World} from './';
+import {
+  Control, EditMode, ItemMeta, Level, LevelRaw, ListRaw, PlayMode, Raw, Stage,
+  Theme, Tower, Zone,
+} from './';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -68,8 +71,9 @@ export class Game {
     // Load the current level.
     // TODO Define what "current level" means.
     // TODO An encoding more human-friendly than JSON.
-    this.world = loadWorld();
-    this.level = loadLevel(this.world);
+    this.zone = loadZone();
+    this.tower = loadTower(this.zone);
+    this.level = loadLevel(this.tower);
     // TODO Extract some setup to graphics modes?
     // Renderer.
     let canvas = body.querySelector('.stage') as HTMLCanvasElement;
@@ -210,6 +214,19 @@ export class Game {
     pane.style.display = 'block';
   }
 
+  showLevel(level: LevelRaw) {
+    // TODO Something here is messing with different level objects vs edit state.
+    this.level = new Level().decode(level);
+    let editState = this.edit.editState;
+    if (!editState.history.length) {
+      // Make sure we have at least one history item.
+      editState.pushHistory(true);
+    }
+    // This trackChange is just to enable/disable undo/redo.
+    editState.trackChange(true);
+    this.level.updateStage(this, true);
+  }
+
   showingDialog() {
     let pane = this.body.querySelector('.pane') as HTMLElement;
     let style = window.getComputedStyle(pane);
@@ -222,65 +239,82 @@ export class Game {
 
   theme: Theme;
 
-  world: World;
+  tower: ItemMeta;
+
+  zone: ItemMeta;
 
 }
 
-// TODO Move to World.
-function loadLevel(world: World) {
-  let level: Level | undefined = undefined;
-  // Check for direct content, for backward compatibility with early testing.
-  // TODO Remove old "level" logic once all is done?
-  let levelString = window.localStorage['zym.level'];
-  if (levelString) {
-    level = new Level().load(levelString);
-    world.levels.push(level);
-    window.localStorage['zym.levelId'] = level.id;
-    window.localStorage.removeItem('zym.level');
-    world.save();
-    // TODO Save the world and the level correctly?
+// TODO Simplify.
+function loadLevel(towerMeta: ItemMeta) {
+  let levelId = window.localStorage['zym.levelId'];
+  let level = new Level();
+  if (levelId) {
+    level = new Level().load(levelId);
   } else {
-    let levelId = window.localStorage['zym.levelId'];
-    if (levelId) {
-      // Should already be loaded in the world.
-      level = world.levels.find(level => level.id == levelId);
-    }
-    if (!level) {
-      // Safety net, in case it's unlisted in the world.
-      // TODO Helper function on objects id key.
-      levelString = window.localStorage[`zym.objects.${levelId}`];
-      if (levelString) {
-        level = new Level().load(levelString);
-        world.levels.push(level);
-        // TODO Save the world?
-      }
-    }
-    if (!level) {
-      // Another safety net, or just for kick off.
-      level = world.levels[0];
-      window.localStorage['zym.levelId'] = level.id;
-    }
+    level.save();
+  }
+  let tower = new Tower().load(towerMeta.id);
+  if (!tower.items.some(item => item.id == level!.id)) {
+    // This level isn't in the current tower. Add it.
+    // TODO Make sure we keep tower and level selection in sync!
+    tower.items.push(level.encode());
+    tower.save();
   }
   return level;
 }
 
-// Move to static in World.
-function loadWorld() {
-  let world = new World();
-  let worldId = window.localStorage['zym.worldId'];
-  if (worldId) {
-    let worldString = window.localStorage[`zym.objects.${worldId}`];
-    if (worldString) {
-      let encodedWorld = JSON.parse(worldString);
-      world.decode(encodedWorld);
+// TODO Simplify.
+export function loadTower(zoneMeta: ItemMeta) {
+  let tower = new Tower();
+  let towerId =
+    window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
+  if (towerId) {
+    let rawTower = Raw.load<ListRaw<Level>>(towerId);
+    if (rawTower) {
+      if ((rawTower as any).levels) {
+        // Update to generic form.
+        // TODO(tjp): Remove this once all converted?
+        rawTower.items = (rawTower as any).levels;
+        delete (rawTower as any).levels;
+        Raw.save(rawTower);
+      }
+      tower.decode(rawTower);
     } else {
-      // Save the world for next time.
-      world.save();
+      // Save the tower for next time.
+      tower.save();
     }
   } else {
-    // Save the world for next time.
-    world.save();
-    window.localStorage[`zym.worldId`] = world.id;
+    // Save the tower for next time.
+    tower.save();
   }
-  return world;
+  let zone = new Zone().load(zoneMeta.id);
+  if (!zone.items.some(item => item.id == tower!.id)) {
+    // This level isn't in the current tower. Add it.
+    // TODO Make sure we keep tower and level selection in sync!
+    zone.items.push(tower.encode());
+    zone.save();
+  }
+  // This might save the new id or just overwrite. TODO Be more precise?
+  window.localStorage['zym.towerId'] = tower.id;
+  return Raw.encodeMeta(tower);
+}
+
+// TODO Simplify.
+function loadZone() {
+  let zone = new Zone();
+  let zoneId = window.localStorage['zym.zoneId'];
+  if (zoneId) {
+    let rawZone = Raw.load<ListRaw<Tower>>(zoneId);
+    if (rawZone) {
+      zone.decode(rawZone);
+    } else {
+      zone.save();
+    }
+  } else {
+    zone.save();
+  }
+  // This might save the new id or just overwrite. TODO Be more precise?
+  window.localStorage['zym.zoneId'] = zone.id;
+  return Raw.encodeMeta(zone);
 }

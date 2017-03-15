@@ -70,6 +70,8 @@ export class Group<Item> {
 
 export type Id = string;
 
+export type Ref<Item> = Id;
+
 export class Ring<Item> {
   // A circular queue with push and shift functions.
   // TODO Keep this or ditch it?

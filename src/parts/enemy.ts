@@ -243,7 +243,8 @@ export class Enemy extends Runner {
   }
 
   getOther(x: number, y: number) {
-    let isEnemy = (part: Part) => part instanceof Enemy && part != this;
+    let isEnemy = (part: Part) =>
+      part instanceof Enemy && part != this && !part.dead;
     return this.partAt(x, y, isEnemy);
   }
 
@@ -274,7 +275,7 @@ export class Enemy extends Runner {
   solid(other: Part, edge?: Edge): boolean {
     // Enemies block entrance to each other, but not exit from.
     // Just a touch of safety precaution.
-    return other instanceof Enemy && !!edge;
+    return other instanceof Enemy && !other.dead && !!edge;
   }
 
   // TODO They still get stuck when clumped in hordes after making this
