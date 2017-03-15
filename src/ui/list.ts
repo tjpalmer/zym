@@ -54,7 +54,7 @@ export abstract class EditorList<
     let edit = item.querySelector('.edit') as HTMLElement;
     edit.addEventListener('click', () => {
       this.selectValue(value);
-      this.game.hideDialog();
+      this.enterSelection();
     });
     this.list.appendChild(item);
   }
@@ -64,6 +64,8 @@ export abstract class EditorList<
   content: HTMLElement;
 
   defaultValueName: string;
+
+  abstract enterSelection(): void;
 
   excludeValue() {
     this.selectedValue.excluded = !this.selectedValue.excluded;

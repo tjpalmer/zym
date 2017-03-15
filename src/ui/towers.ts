@@ -21,6 +21,11 @@ export class Towers extends EditorList<TowerRaw> {
     this.on('add', () => this.addTower());
   }
 
+  enterSelection() {
+    this.game.hideDialog();
+    this.game.showDialog(new Levels(this.game));
+  }
+
   getLevel(tower: TowerRaw) {
     if (tower.id == this.originalTower.id) {
       return this.originalLevel;

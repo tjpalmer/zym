@@ -34,6 +34,10 @@ export class Levels extends EditorList<LevelRaw> {
     this.on('towers', () => this.showTowers());
   }
 
+  enterSelection() {
+    this.game.hideDialog();
+  }
+
   excludeValue() {
     super.excludeValue();
     this.updateNumbers();

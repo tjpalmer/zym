@@ -65,7 +65,7 @@ export class Raw {
   }
 
   static save(raw: ItemMeta) {
-    console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
+    // console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
     window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
   }
 
