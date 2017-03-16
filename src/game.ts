@@ -10,8 +10,18 @@ import {
   Vector3, WebGLRenderer,
 } from 'three';
 
-export interface Dialog {
+export class Dialog {
+
+  constructor(game: Game) {
+    this.game = game;
+  }
+
   content: HTMLElement;  
+
+  game: Game;
+
+  onKey(event: KeyboardEvent, down: boolean) {}
+
 }
 
 export interface PointEvent {
@@ -108,10 +118,13 @@ export class Game {
 
   control: Control;
 
+  dialog?: Dialog;
+
   edit: EditMode;
 
   hideDialog() {
     (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';
+    this.dialog = undefined;
   }
 
   level: Level;
@@ -212,6 +225,7 @@ export class Game {
     }
     dialogBox.appendChild(dialog.content);
     pane.style.display = 'block';
+    this.dialog = dialog;
   }
 
   showLevel(level: LevelRaw) {
@@ -297,6 +311,7 @@ export function loadTower(zoneMeta: ItemMeta) {
   }
   // This might save the new id or just overwrite. TODO Be more precise?
   window.localStorage['zym.towerId'] = tower.id;
+  delete window.localStorage['zym.worldId'];
   return Raw.encodeMeta(tower);
 }
 

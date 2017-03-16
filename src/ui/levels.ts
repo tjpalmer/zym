@@ -16,6 +16,8 @@ export class Levels extends EditorList<LevelRaw> {
     this.tower.save();
     this.addItem(level);
     this.updateNumbers();
+    // Select the new.
+    this.selectValue(level);
   }
 
   buildTitleBar() {

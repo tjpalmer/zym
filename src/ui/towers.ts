@@ -19,6 +19,8 @@ export class Towers extends EditorList<TowerRaw> {
     this.zone.items.push(tower);
     this.zone.save();
     this.addItem(tower);
+    // Select the new.
+    this.selectValue(tower);
   }
 
   buildTitleBar() {

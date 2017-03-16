@@ -1,8 +1,9 @@
 import {Dialog, Game, formatTime, load} from '../';
 
-export class Report implements Dialog {
+export class Report extends Dialog {
 
   constructor(game: Game, message: string) {
+    super(game);
     let content = this.content = load(require('./report.html'));
     // Hide extras.
     for (let row of content.querySelectorAll('.timeRow')) {
@@ -33,6 +34,13 @@ export class Report implements Dialog {
 
   field(name: string) {
     return this.content.querySelector(`.${name}`) as HTMLElement;
+  }
+
+  onKey(event: KeyboardEvent, down: boolean) {
+    if (down && event.key == 'Enter') {
+      this.game.edit.togglePlay();
+      this.game.hideDialog();
+    }
   }
 
   show(name: string, display = 'table-row') {

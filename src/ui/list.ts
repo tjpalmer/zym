@@ -2,9 +2,10 @@ import {Dialog, Encodable, Game, ItemMeta, Raw, load} from '../';
 
 export abstract class EditorList<
   Value extends ItemMeta  // , Value extends Encodable<RawItem>
-> implements Dialog {
+> extends Dialog {
 
   constructor(game: Game, templateText: string) {
+    super(game);
     this.game = game;
     this.init();
     let dialogElement = load(templateText);
