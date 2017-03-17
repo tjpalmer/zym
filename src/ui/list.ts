@@ -40,6 +40,7 @@ export abstract class EditorList<
     this.makeEditable(
       nameElement, this.defaultValueName, () => value.name, text => {
         value.name = text;
+        // console.log('saving', value);
         Raw.save(value);
       }
     );
@@ -98,8 +99,10 @@ export abstract class EditorList<
     field.spellcheck = false;
     field.innerText = get().trim() || defaultText;
     field.addEventListener('blur', () => {
+      // console.log('Blur!');
       let text = field.innerText.trim();
       if (get() != text) {
+        // console.log('Set!');
         set(text);
       }
       if (!text) {
@@ -110,6 +113,7 @@ export abstract class EditorList<
       field.contentEditable = 'plaintext-only';
     });
     field.addEventListener('keydown', event => {
+      console.log('Down!');
       switch (event.key) {
         case 'Enter': {
           field.contentEditable = 'false';

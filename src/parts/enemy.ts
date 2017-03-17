@@ -327,7 +327,7 @@ export class Enemy extends Runner {
       }
     }
     if (this.dazed) {
-      if (this.caughtTime < this.game.stage.time - 3) {
+      if (this.caughtTime < this.game.stage.time - 1.4) {
         this.dazed = false;
       } else {
         this.move.setScalar(0);
