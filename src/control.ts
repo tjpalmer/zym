@@ -7,6 +7,13 @@ export class RunnerAction {
 
   burnRight = false;
 
+  active() {
+    return (
+      this.burnLeft || this.burnRight ||
+      this.down || this.left || this.right || this.up
+    );
+  }
+
   clear() {
     this.burnLeft = this.burnRight = false;
     this.left = this.right = this.up = this.down = false;

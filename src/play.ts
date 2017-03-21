@@ -17,12 +17,19 @@ export class PlayMode extends Mode {
   }
 
   tick() {
-    if (this.paused) {
+    if (this.starting) {
+      if (this.game.control.active()) {
+        this.starting = false;
+      }
+    }
+    if (this.paused || this.starting) {
       // No updates. TODO Any juice for paused mode?
       return;
     }
     this.game.stage.tick();
   }
+
+  starting = true;
 
   timeElement: HTMLElement;
 

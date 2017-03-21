@@ -230,6 +230,7 @@ export class EditMode extends Mode {
       this.tool.activate();
     } else {
       this.tool.deactivate();
+      this.game.play.starting = true;
     }
     this.toggleClasses({
       element: this.game.body,
