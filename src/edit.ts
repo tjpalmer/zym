@@ -40,6 +40,8 @@ export class EditMode extends Mode {
     }
   }
 
+  bodyClass = 'editMode';
+
   commandsContainer: HTMLElement;
 
   copyTool: CopyTool;
@@ -85,6 +87,21 @@ export class EditMode extends Mode {
   get ender() {
     // Check toolbox existence because this gets called on construction, too.
     return !!this.toolbox && this.toolbox.getState('ender');
+  }
+
+  enter() {
+    // Unpause on stop, so the characters can react.
+    // TODO Is this doing the right thing?
+    if (this.game.play.paused) {
+      // TODO Activate function on modes for general handling?
+      this.game.play.togglePause();
+    }
+    this.tool.activate();
+  }
+
+  exit() {
+    this.saveAll();
+    this.tool.deactivate();
   }
 
   mouseDown(event: PointEvent) {
@@ -210,33 +227,9 @@ export class EditMode extends Mode {
   }
 
   togglePlay() {
-    this.saveAll();
-    // Sometimes things get confused, and clearing the action might help.
-    // We can't directly read keyboard state.
-    this.game.control.clear();
-    this.game.control.keyAction.clear();
-    // Now toggle mode.
-    this.game.mode = this.game.mode == this.game.play ?
-      this.game.edit : this.game.play;
-    this.game.level.updateStage(this.game, true);
-    let isEdit = this.game.mode == this.game.edit;
-    if (isEdit) {
-      // Unpause on stop, so the characters can react.
-      // TODO Is this doing the right thing?
-      if (this.game.play.paused) {
-        // TODO Activate function on modes for general handling?
-        this.game.play.togglePause();
-      }
-      this.tool.activate();
-    } else {
-      this.tool.deactivate();
-      this.game.play.starting = true;
-    }
-    this.toggleClasses({
-      element: this.game.body,
-      falseClass: 'playMode', trueClass: 'editMode',
-      value: isEdit,
-    });
+    this.game.setMode(
+      this.game.mode == this.game.play ? this.game.edit : this.game.play
+    );
   }
 
   // Default gets set from HTML settings.

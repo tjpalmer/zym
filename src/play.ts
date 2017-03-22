@@ -10,6 +10,16 @@ export class PlayMode extends Mode {
     this.onClick('stop', () => this.game.edit.togglePlay());
   }
 
+  bodyClass = 'playMode';
+
+  enter() {
+    this.game.play.starting = true;
+    // Sometimes things get confused, and clearing the action might help.
+    // We can't directly read keyboard state.
+    this.game.control.clear();
+    this.game.control.keyAction.clear();
+  }
+
   paused = false;
 
   showReport(message: string) {

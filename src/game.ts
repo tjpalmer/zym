@@ -34,6 +34,11 @@ export class Mode {
     this.game = game;
   }
 
+  bodyClass: string;
+
+  enter() {}
+  exit() {}
+
   getButton(command: string): HTMLElement {
     return this.game.body.querySelector(`.panel .${command}`) as HTMLElement;
   }
@@ -104,7 +109,7 @@ export class Game {
     // Modes. After we have a level for them to reference.
     this.edit = new EditMode(this);
     this.play = new PlayMode(this);
-    this.mode = this.edit;
+    setTimeout(() => this.setMode(this.play), 0);
     // Input handlers.
     this.control = new Control(this)
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
@@ -206,6 +211,23 @@ export class Game {
       this.renderer.setSize(canvasSize.x, canvasSize.y);
       this.mode.resize();
     }, 0);
+  }
+
+  setMode(mode: Mode) {
+    // Exit the current mode.
+    let {classList} = this.body;
+    if (this.mode) {
+      classList.remove(this.mode.bodyClass);
+      this.mode.exit();
+    }
+    // Set the new value.
+    this.mode = mode;
+    // Enter the new mode.
+    // Update the stage, since that's often needed.
+    // Do this *after* the mode gets set.
+    this.level.updateStage(this, true);
+    classList.add(mode.bodyClass);
+    this.mode.enter();
   }
 
   scalePoint(point: Vector2): Vector2 {
