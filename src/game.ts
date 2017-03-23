@@ -109,6 +109,8 @@ export class Game {
     // Modes. After we have a level for them to reference.
     this.edit = new EditMode(this);
     this.play = new PlayMode(this);
+    // Cheat set early to avoid errors, but it really kicks in on the timeout.
+    this.mode = this.play;
     setTimeout(() => this.setMode(this.play), 0);
     // Input handlers.
     this.control = new Control(this)
@@ -291,12 +293,16 @@ function loadLevel(towerMeta: ItemMeta) {
     level.save();
   }
   let tower = new Tower().load(towerMeta.id);
-  if (!tower.items.some(item => item.id == level!.id)) {
+  let found = tower.items.find(item => item.id == level!.id);
+  if (!found) {
     // This level isn't in the current tower. Add it.
     // TODO Make sure we keep tower and level selection in sync!
-    tower.items.push(level.encode());
+    found = level.encode();
+    tower.items.push(found);
     tower.save();
   }
+  tower.numberItems();
+  level.number = found.number;
   return level;
 }
 

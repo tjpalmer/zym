@@ -82,7 +82,7 @@ export class Levels extends EditorList<LevelRaw> {
 
   updateNumbers() {
     let {items} = this.tower;
-    ItemList.numberItems(items);
+    this.tower.numberItems();
     let numberElements =
       [...this.list.querySelectorAll('.number')] as Array<HTMLElement>;
     // Build the numbers.

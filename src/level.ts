@@ -146,6 +146,10 @@ export abstract class ItemList<Item extends ItemMeta>
 
   name = this.type;
 
+  numberItems() {
+    ItemList.numberItems(this.items);
+  }
+
   abstract get type(): string;
 
 }
@@ -207,6 +211,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     if (encoded.name) {
       this.name = encoded.name;
     }
+    this.number = encoded.number;
     // Tiles.
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
