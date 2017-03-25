@@ -17,6 +17,7 @@ export class EditMode extends Mode {
     // Buttons.
     this.commandsContainer =
       body.querySelector('.panel.commands') as HTMLElement;
+    this.onClick('exit', () => this.game.setMode(this.game.play));
     this.onClick('play', () => this.togglePlay());
     this.onClick('redo', () => this.editState.redo());
     this.onClick('showLevels', () => this.showLevels());
@@ -157,6 +158,22 @@ export class EditMode extends Mode {
     super.onClick(command, handler);
   }
 
+  onKeyDown(key: string) {
+    switch (key) {
+      case 'Enter': {
+        this.game.setMode(this.game.test);
+        break;
+      }
+      case 'Escape': {
+        if (!(this.game.dialog instanceof Levels)) {
+          // Will happen after the any other hides.
+          window.setTimeout(() => this.showLevels(), 0);
+        }
+        break;
+      }
+    }
+  }
+
   resize() {
     if (this.tool) {
       this.tool.resize();
@@ -228,7 +245,7 @@ export class EditMode extends Mode {
 
   togglePlay() {
     this.game.setMode(
-      this.game.mode == this.game.play ? this.game.edit : this.game.play
+      this.game.mode == this.game.test ? this.game.edit : this.game.test
     );
   }
 

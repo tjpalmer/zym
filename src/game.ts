@@ -1,6 +1,6 @@
 import {
   Control, EditMode, ItemMeta, Level, LevelRaw, ListRaw, PlayMode, Raw, Stage,
-  Theme, Tower, Zone,
+  TestMode, Theme, Tower, Zone,
 } from './';
 import {
   // TODO Clean out unused.
@@ -52,6 +52,11 @@ export class Mode {
   onClick(command: string, handler: () => void) {
     this.getButton(command).addEventListener('click', handler);
   }
+
+  onHideDialog(dialog: Dialog) {}
+
+  // For now, only happens in certain contexts.
+  onKeyDown(key: string) {}
 
   resize() {}
 
@@ -109,6 +114,7 @@ export class Game {
     // Modes. After we have a level for them to reference.
     this.edit = new EditMode(this);
     this.play = new PlayMode(this);
+    this.test = new TestMode(this);
     // Cheat set early to avoid errors, but it really kicks in on the timeout.
     this.mode = this.play;
     setTimeout(() => this.setMode(this.play), 0);
@@ -130,6 +136,9 @@ export class Game {
   edit: EditMode;
 
   hideDialog() {
+    if (this.dialog) {
+      this.mode.onHideDialog(this.dialog);
+    }
     (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';
     this.dialog = undefined;
   }
@@ -274,6 +283,8 @@ export class Game {
   stage = new Stage(this);
 
   scene: Scene;
+
+  test: TestMode;
 
   theme: Theme;
 

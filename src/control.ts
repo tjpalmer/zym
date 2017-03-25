@@ -81,34 +81,20 @@ export class Control extends RunnerAction {
     switch (fieldName) {
       case 'burnLeft':
       case 'burnRight': {
-        // TODO Better mode management for input handling.
         if (this.game.stage.ended) {
-          if (this.game.mode == this.game.play) {
-            this.game.edit.togglePlay();
-          }
+          this.game.mode.onKeyDown('Enter');
           this.game.hideDialog();
         }
-        // TODO Start on burn buttons, too? Just don't want it to actually burn!
         break;
       }
       case 'enter': {
-        this.game.edit.togglePlay();
+        this.game.mode.onKeyDown('Enter');
         this.game.hideDialog();
         break;
       }
       case 'escape': {
-        // TODO Some convenience on this.
-        if (this.game.mode == this.game.play) {
-          this.game.edit.togglePlay();
-        }
-        let pane = this.game.body.querySelector('.pane') as HTMLElement;
-        let style = window.getComputedStyle(pane);
-        if (this.game.showingDialog()) {
-          this.game.hideDialog();
-        } else {
-          // TODO Generalize to whatever context dialog makes most sense.
-          this.game.edit.showLevels();
-        }
+        this.game.mode.onKeyDown('Escape');
+        this.game.hideDialog();
         break;
       }
       case 'pause': {

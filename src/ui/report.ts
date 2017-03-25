@@ -1,4 +1,4 @@
-import {Dialog, Game, formatTime, load} from '../';
+import {Dialog, Game, PlayMode, formatTime, load} from '../';
 
 export class Report extends Dialog {
 
@@ -25,7 +25,6 @@ export class Report extends Dialog {
 
   onKey(event: KeyboardEvent, down: boolean) {
     if (down && event.key == 'Enter') {
-      this.game.edit.togglePlay();
       this.game.hideDialog();
     }
   }

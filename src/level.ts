@@ -1,5 +1,5 @@
 import {
-  Game, GenericPartType, Grid, Id, Part, PartType, Ref, createId,
+  Game, GenericPartType, Grid, Id, Part, PartType, PlayMode, Ref, createId,
 } from './';
 import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
@@ -277,7 +277,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
   // For use from the editor.
   updateStage(game: Game, reset = false) {
-    let play = game.mode == game.play;
+    let play = game.mode instanceof PlayMode;
     let stage = game.stage;
     let theme = game.theme;
     if (reset) {

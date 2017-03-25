@@ -43,8 +43,7 @@ export class Hero extends Runner {
   die() {
     if (!(this.phased || this.game.stage.ended)) {
       this.dead = true;
-      this.game.stage.ended = true;
-      this.game.play.showReport('Maybe next time.');
+      this.game.play.fail();
     }
   }
 
@@ -96,8 +95,7 @@ export class Hero extends Runner {
         this.die();
       }
       if (this.game.stage.ending && y >= Level.pixelCount.y) {
-        this.game.stage.ended = true;
-        this.game.play.showReport('Level complete!');
+        this.game.play.win();
       }
     }
   }
