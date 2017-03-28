@@ -257,6 +257,15 @@ export class GoldTheme implements Theme {
 
   level = new Level();
 
+  modeChanged() {
+    if (this.game.mode == this.game.edit) {
+      // We can't get spacing right without having things visible, so do this
+      // after we get to edit mode.
+      // Doesn't need every time, but eh.
+      this.updateLayout();
+    }
+  }
+
   paintPanels(changedName?: string) {
     let {game} = this;
     let {toolbox} = game.edit;
@@ -317,23 +326,10 @@ export class GoldTheme implements Theme {
     // size implies what looks reasonable for ui elements.
     let scale = Math.round(window.screen.height / 20 / Level.tileSize.y);
     let buttonSize = Level.tileSize.clone().multiplyScalar(scale);
-    let offsetLeft: Number | undefined;
     for (let button of toolbox.getButtons()) {
       let name = toolbox.getName(button);
       let tool = game.edit.namedTools.get(name);
       let type = tool instanceof PartTool ? tool.type : undefined;
-      // Align menu by now known canvas size.
-      let menu = button.querySelector('.toolMenu') as HTMLElement | undefined;
-      if (menu) {
-        if (offsetLeft == undefined) {
-          let style = window.getComputedStyle(button);
-          offsetLeft =
-            Number.parseInt(style.width!) +
-            Number.parseInt(style.borderRightWidth!) +
-            Number.parseInt(style.paddingRight!);
-        }
-        menu.style.marginLeft = `${offsetLeft}px`;
-      }
       if (!type || type == None) {
         // We don't draw a standard tile for this one.
         button.style.width = `${buttonSize.x}px`;
@@ -352,6 +348,7 @@ export class GoldTheme implements Theme {
     }
     this.prepareVariations();
     this.paintPanels();
+    this.updateLayout();
   }
 
   prepareVariations() {
@@ -419,6 +416,26 @@ export class GoldTheme implements Theme {
   tilesMesh?: Mesh;
 
   uniforms: Uniforms;
+
+  updateLayout() {
+    let {game} = this;
+    let {toolbox} = game.edit;
+    let offsetLeft: Number | undefined;
+    for (let button of toolbox.getButtons()) {
+      // Align menu by hopefully known canvas size.
+      let menu = button.querySelector('.toolMenu') as HTMLElement | undefined;
+      if (menu) {
+        if (offsetLeft == undefined) {
+          let style = window.getComputedStyle(button);
+          offsetLeft =
+            Number.parseInt(style.width!) +
+            Number.parseInt(style.borderRightWidth!) +
+            Number.parseInt(style.paddingRight!);
+        }
+        menu.style.marginLeft = `${offsetLeft}px`;
+      }
+    }
+  }
 
   updateTool(button: HTMLElement) {
     this.paintPanels(this.game.edit.toolbox.getName(button));

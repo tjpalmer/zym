@@ -214,6 +214,8 @@ export interface Theme {
 
   buildDone(game: Game): void;
 
+  modeChanged(): void;
+
   updateTool(button: HTMLElement): void;
 
 }

@@ -239,6 +239,7 @@ export class Game {
     this.level.updateStage(this, true);
     classList.add(mode.bodyClass);
     this.mode.enter();
+    this.theme.modeChanged();
   }
 
   scalePoint(point: Vector2): Vector2 {
