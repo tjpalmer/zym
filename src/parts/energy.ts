@@ -23,6 +23,11 @@ export class Energy extends Part {
     return this.solid();
   }
 
+  touchKills(other: Part) {
+    // TODO Energize to speed up, instead?
+    return false;
+  }
+
 }
 
 export class EnergyOff extends Energy {

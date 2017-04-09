@@ -13,12 +13,12 @@ export class Runner extends Part {
   climbing = false;
 
   encased() {
-    let isSolid = (part: Part) => part.solid(this) && part != this;
+    let touchKills = (part: Part) => part.touchKills(this) && part != this;
     return (
-      this.partsAt(0, 0).some(isSolid) ||
-      this.partsAt(0, top).some(isSolid) ||
-      this.partsAt(right, 0).some(isSolid) ||
-      this.partsAt(right, top).some(isSolid)
+      this.partsAt(0, 0).some(touchKills) ||
+      this.partsAt(0, top).some(touchKills) ||
+      this.partsAt(right, 0).some(touchKills) ||
+      this.partsAt(right, top).some(touchKills)
     );
   }
 

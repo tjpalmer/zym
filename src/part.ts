@@ -129,6 +129,10 @@ export class Part {
     return false;
   }
 
+  touchKills(other: Part) {
+    return this.solid(other);
+  }
+
   get type() {
     return this.constructor as PartType;
   }

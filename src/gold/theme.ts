@@ -20,6 +20,7 @@ export enum Layer {
   biggie,
   enemy,
   shot,
+  gun,
   // Front is also static. TODO Really? Does it matter? No?
   front,
   // Flame is in front of front, eh?
