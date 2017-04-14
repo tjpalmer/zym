@@ -6,6 +6,35 @@ export class Runner extends Part {
 
   align = new Vector2();
 
+  alignToPassageIfNeeded() {
+    return;
+    // This aligns with the passage just for appearances, say to avoid hanging
+    // off a ladder on climbing up or down.
+    // Other alignment is needed elsewhere to avoid blockers.
+    // At most one of move.x or move.y should be nonzero at this point.
+    let {align, move, passage, point} = this;
+    if (!(move.x || move.y)) {
+      // No alignment if no moving.
+      return;
+    }
+    if (passage) {
+      if (move.x) {
+        // Horizontal movement.
+        let middle = this.partAt(4, 5, part => part == passage);
+        if (!middle) {
+          // Mostly out of a climbable, so shouldn't stay inside it.
+          align.y = 1;
+        } else {
+          // See if we're off the edge elsewise.
+        }
+      } else {
+        // Vertical movement.
+      }
+    } else {
+      // Moving through None.
+    }
+  }
+
   carriedMove(x: number) {}
 
   climber = true;
@@ -120,6 +149,9 @@ export class Runner extends Part {
 
   intendedMove = new Vector2();
 
+  // The passage is what it's moving through: empty space, climbable, or bar.
+  passage: Part | undefined = undefined;
+
   processAction(action: RunnerAction) {
     // TODO Let changed keys override old ones.
     // TODO Find all actions (and alignments) before moving, for enemies?
@@ -159,6 +191,8 @@ export class Runner extends Part {
     if (climbable && (!support || support.point.y < climbable.point.y)) {
       support = climbable;
     }
+    // TODO Remember catcher from before instead of recalculating?
+    let passage: Part | undefined = this.getCatcher();
     if (this.encased()) {
       // This could happen if a brick just enclosed on part of us.
       this.die();
@@ -169,8 +203,11 @@ export class Runner extends Part {
         // Now move up or down.
         if (action.down) {
           move.y = -1;
+          // This might be undefined, and that's okay.
+          passage = climbable;
         } else if (action.up && inClimbable) {
           move.y = 1;
+          passage = inClimbable;
         }
       }
       if (!move.y) {
@@ -184,33 +221,39 @@ export class Runner extends Part {
       move.y = -1;
     }
     // Align non-moving direction.
-    // TODO Make this actually change the move. Nix the align var.
-    // TODO Except when all on same climbable or none?
-    // TODO No! Make align only when both allowed and needed for movement!!!!!
+    // TODO Make this actually change the move. Nix the align var. <- ???
+    // TODO Because of alignment to moving things? Or just not needed?
     align.setScalar(0);
     // Prioritize y because y move options are rarer.
     if (move.y) {
       if (climbable) {
         // Generalize alignment to whatever provides passage.
-        align.x = Math.sign(climbable.point.x - point.x);
-      } else if (move.y < 0) {
-        align.x = this.findAlign(Edge.top, leftParts, rightParts);
-      } else if (move.y > 0) {
-        align.x = this.findAlign(
-          Edge.bottom, this.partsNear(3, 10), this.partsNear(midRight, 10),
-        );
+        // align.x = Math.sign(climbable.point.x - point.x);
+        if (climbable.point.x < point.x) {
+          // Check if left side in climbable of same type.
+        } else {
+          // Check if right side in climbable of same type.
+        }
       }
-    } else if (move.x < 0) {
-      align.y = this.findAlign(
-        Edge.right, this.partsNear(-1, 4), this.partsNear(-1, midTop),
-      );
-    } else if (move.x > 0) {
-      align.y = this.findAlign(
-        Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
-      );
+      // if (move.y < 0) {
+      //   align.x = this.findAlign(Edge.top, leftParts, rightParts);
+      // } else if (move.y > 0) {
+      //   align.x = this.findAlign(
+      //     Edge.bottom, this.partsNear(3, 10), this.partsNear(midRight, 10),
+      //   );
+      // }
+    // } else if (move.x < 0) {
+    //   align.y = this.findAlign(
+    //     Edge.right, this.partsNear(-1, 4), this.partsNear(-1, midTop),
+    //   );
+    // } else if (move.x > 0) {
+    //   align.y = this.findAlign(
+    //     Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
+    //   );
     }
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
+    this.passage = passage;
     this.support = support;
   }
 
@@ -256,7 +299,7 @@ export class Runner extends Part {
     }
     point.add(move);
     // See if we need to fix things.
-    // TODO Align only when forced or to enable movement, not just for grid.
+    this.alignToPassageIfNeeded();
     // TODO Defer this until first pass of all moving parts so we can resolve
     // TODO together?
     if (!align.x) {
