@@ -50,6 +50,53 @@ Parts.inventory.forEach(({char}) => {
 
 let nonEnders = [Hero, None, Treasure];
 
+let nonInvisibles = [
+  BiggieLeft, BiggieRight, Enemy, GunLeft, GunRight, Hero, None,
+];
+
+function cartesianProduct(input: any, current?: any): any {
+  if (!input || !input.length) {
+    return [];
+  }
+  var head = input[0];
+  var tail = input.slice(1);
+  var output: any[] = [];
+  for (var key in head) {
+    for (var i = 0; i < head[key].length; i++) {
+      var newCurrent = Object.assign({}, current);
+      newCurrent[key] = head[key][i];
+      if (tail.length) {
+        var productOfTail = cartesianProduct(tail, newCurrent);
+        output = output.concat(productOfTail);
+      } else output.push(newCurrent);
+    }
+  }    
+  return output;
+}
+
+type Multiple<Single> = {
+  [property in keyof Single]: Array<Single[property]>;
+};
+
+function cartProd<Single>(object: Multiple<Single>): Array<Single> {
+  let split = Object.keys(object).map(key => ({[key]: object[key]}));
+  return cartesianProduct(split);
+}
+
+Parts.inventory.forEach(part => {
+  let canEnder = nonEnders.indexOf(part) < 0;
+  let canInvisible = nonInvisibles.indexOf(part) < 0;
+  let makeOptions = (condition: boolean) => condition ? [false, true] : [false];
+  let options = {
+    ender: makeOptions(canEnder), invisible: makeOptions(canInvisible),
+  };
+  let cart = cartProd(options).slice(1);
+  for (let c of cart) {
+    c.ender;
+  }
+  if (cart.length) console.log(cart);
+});
+
 Parts.inventory.filter(part => nonEnders.indexOf(part) < 0).forEach(part => {
   // Auto-pick chars in the extended latin range, for convenience.
   // They won't look pretty.

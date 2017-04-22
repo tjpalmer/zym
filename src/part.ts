@@ -21,6 +21,8 @@ export class Part {
 
   static ender = false;
 
+  static invisible = false;
+
   static make(game: Game) {
     return new this(game);
   }
@@ -149,6 +151,8 @@ export interface GenericPartType {
   common: GenericPartType;
 
   ender: boolean;
+
+  invisible: boolean;
 
   name: string;
 
