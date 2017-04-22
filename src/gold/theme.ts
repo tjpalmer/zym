@@ -65,10 +65,21 @@ export abstract class BaseArt<PartType extends Part> implements Art {
 
 export class GoldTheme implements Theme {
 
-  constructor(game: Game) {
-    this.game = game;
+  static load(game: Game) {
     let image = new Image();
+    let promise = new Promise<GoldTheme>((resolve, reject) => {
+      image.addEventListener('load', () => {
+        resolve(new GoldTheme(game, image));
+      });
+      // TODO Error event?
+    });
     image.src = require('./blocks.png');
+    return promise;
+  }
+
+  constructor(game: Game, image: HTMLImageElement) {
+    this.game = game;
+    // Prepare image.
     this.image = image;
     let scaled = this.prepareImage(image);
     this.texture = new Texture(scaled);
