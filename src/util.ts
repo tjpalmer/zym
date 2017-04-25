@@ -164,6 +164,38 @@ export class Ring<Item> {
 
 }
 
+export type Multiple<Single> = {
+  [property in keyof Single]: Array<Single[property]>;
+};
+
+export function cartesianProduct<Single>(object: Multiple<Single>):
+  Array<Single>
+{
+  function cartProdList(input: any, current?: any): any {
+    if (!input || !input.length) {
+      return [];
+    }
+    let head = input[0];
+    let tail = input.slice(1);
+    let output: any[] = [];
+    for (let key in head) {
+      for (let i = 0; i < head[key].length; i++) {
+        let newCurrent = Object.assign({}, current);
+        newCurrent[key] = head[key][i];
+        if (tail.length) {
+          let productOfTail = cartProdList(tail, newCurrent);
+          output = output.concat(productOfTail);
+        } else {
+          output.push(newCurrent);
+        }
+      }
+    }    
+    return output;
+  }
+  let split = Object.keys(object).map(key => ({[key]: object[key]}));
+  return cartProdList(split);
+}
+
 export function createId(byteSize = 16): Id {
   let array = new Uint8Array(byteSize);
   window.crypto.getRandomValues(array);
