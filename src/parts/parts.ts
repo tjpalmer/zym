@@ -3,7 +3,7 @@ import {
   GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
   LauncherLeft, LauncherRight, LauncherUp, None, Steel, Treasure,
 } from './';
-import {cartesianProduct, Part, PartType} from '../';
+import {cartesianProduct, Multiple, Part, PartType} from '../';
 import {Vector2} from 'three';
 
 export class Parts {
@@ -48,19 +48,16 @@ Parts.inventory.forEach(({char}) => {
   chars[char] = char;
 });
 
-let nonEnders = [Hero, None, Treasure];
-
-let nonInvisibles = [
-  BiggieLeft, BiggieRight, Enemy, GunLeft, GunRight, Hero, None,
-];
-
+// This builds all possible parts up front.
+// TODO Build them only dynamically?
 Parts.inventory.forEach(part => {
-  let canEnder = nonEnders.indexOf(part) < 0;
-  let canInvisible = nonInvisibles.indexOf(part) < 0;
   let makeOptions = (condition: boolean) => condition ? [false, true] : [false];
-  let options = {
-    ender: makeOptions(canEnder), invisible: makeOptions(canInvisible),
-  };
+  let options = {} as Multiple<typeof part.options>;
+  type Indexed = {[key: string]: boolean};
+  for (let key in part.options) {
+    (options as Multiple<Indexed>)[key] =
+      makeOptions((part.options as Indexed)[key]);
+  }
   // Take off the all-false case, since we already have those.
   let allOptions = cartesianProduct(options).slice(1);
   allOptions.forEach(option => {

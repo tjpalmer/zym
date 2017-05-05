@@ -31,4 +31,9 @@ export class Treasure extends Prize {
 
   static char = '*';
 
+  static options = {
+    ender: false,
+    invisible: true,
+  };
+
 }

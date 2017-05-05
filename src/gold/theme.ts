@@ -1,6 +1,6 @@
 import {Parts} from './';
 import {
-  GenericPartType, Level, Part, PartTool, PartType, Game, Theme,
+  Game, GenericPartType, Level, Part, PartTool, PartType, Stage, Theme,
 } from '../';
 import {None} from '../parts';
 import {
@@ -97,7 +97,8 @@ export class GoldTheme implements Theme {
 
   buildArt(part: Part) {
     let type = part.type;
-    if (type.ender) {
+    // TODO Change to type != type.base?
+    if (type.ender || type.invisible) {
       type = type.base;
     }
     let makeArt = Parts.tileArts.get(type);
@@ -144,77 +145,32 @@ export class GoldTheme implements Theme {
 
   handle() {
     let {game} = this;
-    let {time} = game.stage;
+    // In passing, see if we need to update the panels.
+    let styleChanged = false;
     if (game.edit.ender != this.ender) {
       this.ender = game.edit.ender;
+      styleChanged = true;
+    }
+    // if (game.edit.invisible != this.invisible) {
+    //   this.invisible = game.edit.invisible;
+    //   styleChanged = true;
+    // }
+    if (styleChanged) {
       this.paintPanels();
     }
+    // Also init on the first round.
     if (!this.tilePlanes) {
       this.initTilePlanes();
     }
-    // TODO Only gray enders, not mains. So maybe no uniform on that.
-    // TODO Except energy blocks might look too much like steel???
-    let ender = game.mode == game.edit && game.edit.ender;
-    this.uniforms.state.value = +ender;
-    let {tileIndices, tileModes, tileOpacities} = this;
-    let tilePlanes = this.tilePlanes!;
-    let tilePlane = this.tilePlane!;
-    // Duplicate prototype, translated and tile indexed.
-    // TODO How to make sure tilePlanes is large enough?
-    // TODO Fill the back with none parts when it's too big?
-    let partIndex = 0;
-    this.buildLayers(game.stage.parts, true);
-    this.buildLayers(game.stage.particles);
-    this.layers.forEach(layer => {
-      for (let part of layer) {
-        if (!part) {
-          // That's the end of this layer.
-          break;
-        }
-        let currentTileIndices = (part.art as Art).tile;
-        // Translate and merge are expensive. TODO Make my own functions?
-        tilePlane.translate(part.point.x, part.point.y, 0);
-        for (let k = 0; k < tileIndices.length; k += 3) {
-          tileIndices[k + 0] = currentTileIndices.x;
-          tileIndices[k + 1] = currentTileIndices.y;
-          tileIndices[k + 2] = part.art.offsetX;
-        }
-        let mode = +(part.type.ender || part.keyTime + 1 > time);
-        if (part.dead) {
-          mode = 2;
-        }
-        let opacity = time >= part.phaseEndTime ? 1 :
-          // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
-          (time - part.phaseBeginTime) /
-            (part.phaseEndTime - part.phaseBeginTime);
-        for (let n = 0; n < tileModes.length; ++n) {
-          // Break state into bits.
-          tileModes[n] = mode;
-          tileOpacities[n] = opacity;
-        }
-        tilePlanes.merge(tilePlane, 6 * partIndex);
-        tilePlane.translate(-part.point.x, -part.point.y, 0);
-        ++partIndex;
-      }
-    });
-    tilePlanes.setDrawRange(0, 6 * partIndex);
-    let attributes: any = tilePlanes.attributes;
-    // Older typing missed needsUpdate, but looks like it's here now.
-    // TODO Define a type with all our attributes on it?
-    (attributes.mode as BufferAttribute).needsUpdate = true;
-    attributes.opacity.needsUpdate = true;
-    attributes.position.needsUpdate = true;
-    attributes.tile.needsUpdate = true;
-    // TODO Preset uv for all spots, so no need for later update?
-    attributes.uv.needsUpdate = true;
+    // But main point is to paint the stage.
+    this.paintStage(game.stage);
   }
 
   image: HTMLImageElement;
 
   initTilePlanes() {
+    console.log('initTilePlanes');
     let {game} = this;
-    // Panels.
-    this.preparePanels();
     // Tiles.
     let tileMaterial = new ShaderMaterial({
       depthTest: false,
@@ -222,11 +178,11 @@ export class GoldTheme implements Theme {
       transparent: true,
       uniforms: {
         map: {value: this.texture},
-        state: {value: 1},
+        // state: {value: 1},
       },
       vertexShader: tileVertexShader,
     });
-    this.uniforms = tileMaterial.uniforms as any as Uniforms;
+    // this.uniforms = tileMaterial.uniforms as any as Uniforms;
     // Prototypical tile.
     this.tilePlane = new BufferGeometry();
     let tilePlane = this.tilePlane;
@@ -261,7 +217,11 @@ export class GoldTheme implements Theme {
     this.tilesMesh = new Mesh(this.tilePlanes, tileMaterial);
     game.scene.add(this.tilesMesh);
     game.redraw = () => this.handle();
+    // Panels, too.
+    this.preparePanels();
   }
+
+  invisible = false;
 
   layerPartIndices = new Array<number>();
 
@@ -318,6 +278,65 @@ export class GoldTheme implements Theme {
     }
   }
 
+  paintStage(stage: Stage) {
+    let {time} = stage;
+    // TODO Only gray enders, not mains. So maybe no uniform on that.
+    // TODO Except energy blocks might look too much like steel???
+    // let ender = game.mode == game.edit && game.edit.ender;
+    // this.uniforms.state.value = +ender;
+    let {tileIndices, tileModes, tileOpacities} = this;
+    let tilePlanes = this.tilePlanes!;
+    let tilePlane = this.tilePlane!;
+    // Duplicate prototype, translated and tile indexed.
+    // TODO How to make sure tilePlanes is large enough?
+    // TODO Fill the back with none parts when it's too big?
+    let partIndex = 0;
+    this.buildLayers(stage.parts, true);
+    this.buildLayers(stage.particles);
+    this.layers.forEach(layer => {
+      for (let part of layer) {
+        if (!part) {
+          // That's the end of this layer.
+          break;
+        }
+        let currentTileIndices = (part.art as Art).tile;
+        // Translate and merge are expensive. TODO Make my own functions?
+        tilePlane.translate(part.point.x, part.point.y, 0);
+        for (let k = 0; k < tileIndices.length; k += 3) {
+          tileIndices[k + 0] = currentTileIndices.x;
+          tileIndices[k + 1] = currentTileIndices.y;
+          tileIndices[k + 2] = part.art.offsetX;
+        }
+        let mode = +(part.type.ender || part.keyTime + 1 > time);
+        if (part.dead) {
+          mode = 2;
+        }
+        let opacity = time >= part.phaseEndTime ? 1 :
+          // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
+          (time - part.phaseBeginTime) /
+            (part.phaseEndTime - part.phaseBeginTime);
+        for (let n = 0; n < tileModes.length; ++n) {
+          // Break state into bits.
+          tileModes[n] = mode;
+          tileOpacities[n] = opacity;
+        }
+        tilePlanes.merge(tilePlane, 6 * partIndex);
+        tilePlane.translate(-part.point.x, -part.point.y, 0);
+        ++partIndex;
+      }
+    });
+    tilePlanes.setDrawRange(0, 6 * partIndex);
+    let attributes: any = tilePlanes.attributes;
+    // Older typing missed needsUpdate, but looks like it's here now.
+    // TODO Define a type with all our attributes on it?
+    (attributes.mode as BufferAttribute).needsUpdate = true;
+    attributes.opacity.needsUpdate = true;
+    attributes.position.needsUpdate = true;
+    attributes.tile.needsUpdate = true;
+    // TODO Preset uv for all spots, so no need for later update?
+    attributes.uv.needsUpdate = true;
+  }
+
   prepareImage(image: HTMLImageElement) {
     // Make the image POT (power-of-two) sized.
     let canvas = document.createElement('canvas');
@@ -365,11 +384,29 @@ export class GoldTheme implements Theme {
 
   prepareVariations() {
     let {game} = this;
+    let {toolbox} = game.edit;
     // TODO Abstract some render target -> canvas?
     let scaled = this.texture.image as HTMLImageElement;
     let material: ShaderMaterial | undefined = undefined;
     let target = new WebGLRenderTarget(scaled.width, scaled.height);
     try {
+      let stage = new Stage(game);
+      stage.parts.length = 0;
+      toolbox.getButtons().forEach(button => {
+        let name = toolbox.getName(button);
+        let tool = game.edit.namedTools.get(name);
+        let type = tool instanceof PartTool ? tool.type : undefined;
+        if (!type) {
+          return;
+        }
+        let part = type.make(game);
+        this.buildArt(part);
+        let art = part.art as Art;
+        part.point.copy(art.tile).multiply(Level.tileSize);
+        console.log(name, art.tile.x, art.tile.y);
+        stage.parts.push(part);
+      });
+      this.paintStage(stage);
       let scene = new Scene();
       material = new ShaderMaterial({
         fragmentShader: enderFragmentShader,
@@ -377,11 +414,16 @@ export class GoldTheme implements Theme {
         vertexShader: tileVertexShader,
       });
       let plane = new PlaneBufferGeometry(this.image.width, this.image.height);
+      plane.addAttribute('mode', new BufferAttribute(this.tileModes, 1));
+      plane.addAttribute(
+        'opacity', new BufferAttribute(this.tileOpacities, 1)
+      );
       plane.translate(this.image.width / 2, this.image.height / 2, 0);
       scene.add(new Mesh(plane, material));
       this.texture.flipY = false;
       try {
         game.renderer.render(scene, game.camera, target);
+        // game.renderer.render(game.scene, game.camera, target);
       } finally {
         this.texture.flipY = true;
         this.texture.needsUpdate = true;
@@ -427,7 +469,7 @@ export class GoldTheme implements Theme {
 
   tilesMesh?: Mesh;
 
-  uniforms: Uniforms;
+  // uniforms: Uniforms;
 
   updateLayout() {
     let {game} = this;
@@ -455,9 +497,9 @@ export class GoldTheme implements Theme {
 
 }
 
-interface Uniforms {
-  state: {value: number};
-}
+// interface Uniforms {
+//   state: {value: number};
+// }
 
 declare function require(name: string): any;
 
@@ -470,6 +512,35 @@ let grayify = `
     rgb += 0.6 * (1.0 - rgb);
   }
 `;
+
+// interface Options {
+//   ender?: boolean;
+//   invisible?: boolean;
+// }
+
+// let enderFragmentShader = `
+//   uniform sampler2D map;
+//   varying float vMode;
+//   varying float vOpacity;
+//   varying vec2 vUv;
+
+//   ${grayify}
+
+//   void main() {
+//     gl_FragColor = texture2D(map, vUv);
+//     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
+//     if (gl_FragColor.w > 0.0) {
+//       gl_FragColor.w = 1.0;
+//       if (vMode != 0.0) {
+//         grayify(gl_FragColor.xyz);
+//         if (vMode > 1.0) {
+//           gl_FragColor.xyz *= 0.5;
+//         }
+//       }
+//       gl_FragColor.w = vOpacity;
+//     }
+//   }
+// `;
 
 let enderFragmentShader = `
   uniform sampler2D map;
@@ -489,7 +560,7 @@ let enderFragmentShader = `
 
 let tileFragmentShader = `
   uniform sampler2D map;
-  uniform int state;
+  // uniform int state;
   varying float vMode;
   varying float vOpacity;
   varying vec3 vTile;

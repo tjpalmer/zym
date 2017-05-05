@@ -4,6 +4,11 @@ import {Vector2} from 'three';
 
 export class Runner extends Part {
 
+  static options = {
+    ender: true,
+    invisible: false,
+  };
+
   align = new Vector2();
 
   carriedMove(x: number) {}

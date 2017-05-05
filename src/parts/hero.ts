@@ -6,6 +6,11 @@ export class Hero extends Runner {
 
   static char = 'R';
 
+  static options = {
+    ender: false,
+    invisible: false,
+  };
+
   action = new RunnerAction();
 
   actionChange = new RunnerAction();

@@ -27,6 +27,11 @@ export class Part {
     return new this(game);
   }
 
+  static options = {
+    ender: true,
+    invisible: true,
+  };
+
   constructor(game: Game) {
     this.game = game;
   }
@@ -171,5 +176,10 @@ export interface PartType extends GenericPartType {
 
   // Don't use new. Use make. It just helps TypeScript know we're a class.
   new (game: Game): Part;
+
+  options: {
+    ender: boolean,
+    invisible: boolean,
+  };
 
 }
