@@ -4,8 +4,9 @@ import {
 } from '../';
 import {None} from '../parts';
 import {
-  BufferAttribute, BufferGeometry, Mesh, NearestFilter, PlaneBufferGeometry,
-  Scene, ShaderMaterial, Texture, Vector2, WebGLRenderTarget,
+  BufferAttribute, BufferGeometry, Mesh, NearestFilter, OrthographicCamera,
+  PlaneBufferGeometry, Scene, ShaderMaterial, Texture, Vector2,
+  WebGLRenderTarget,
 } from 'three';
 
 export enum Layer {
@@ -377,9 +378,9 @@ export class GoldTheme implements Theme {
       canvas.style.height = `${buttonSize.y}px`;
       button.appendChild(canvas);
     }
-    this.prepareVariations();
     this.paintPanels();
     this.updateLayout();
+    this.prepareVariations();
   }
 
   prepareVariations() {
@@ -399,11 +400,13 @@ export class GoldTheme implements Theme {
         if (!type) {
           return;
         }
+        if (type.options.ender) {
+          type = (game.edit.namedEnderTools.get(name) as PartTool).type;
+        }
         let part = type.make(game);
         this.buildArt(part);
         let art = part.art as Art;
         part.point.copy(art.tile).multiply(Level.tileSize);
-        console.log(name, art.tile.x, art.tile.y);
         stage.parts.push(part);
       });
       this.paintStage(stage);
@@ -420,15 +423,19 @@ export class GoldTheme implements Theme {
       );
       plane.translate(this.image.width / 2, this.image.height / 2, 0);
       scene.add(new Mesh(plane, material));
+      let camera = new OrthographicCamera(
+        0, scaled.width, scaled.height, 0, -1e5, 1e5,
+      );
+      camera.position.z = 1;
       this.texture.flipY = false;
       try {
         game.renderer.render(scene, game.camera, target);
-        // game.renderer.render(game.scene, game.camera, target);
       } finally {
         this.texture.flipY = true;
         this.texture.needsUpdate = true;
         plane.dispose();
       }
+      game.renderer.render(game.scene, camera, target);
       let enderImage = document.createElement('canvas');
       enderImage.width = this.image.width;
       enderImage.height = this.image.height;
@@ -437,15 +444,27 @@ export class GoldTheme implements Theme {
       game.renderer.readRenderTargetPixels(
         target, 0, 0, this.image.width, this.image.height, data
       );
+      // Use a temporary canvas for flipping y.
+      let tempImage = document.createElement('canvas');
+      tempImage.width = enderImage.width;
+      tempImage.height = enderImage.height;
+      let tempContext = tempImage.getContext('2d')!;
       let imageData =
-        context.createImageData(enderImage.width, enderImage.height);
+        tempContext.createImageData(enderImage.width, enderImage.height);
       imageData.data.set(data as any);
-      context.putImageData(imageData, 0, 0);
-      // {  // Show the ender image for debugging.
-      //   enderImage.style.position = 'absolute';
-      //   enderImage.style.zIndex = '100';
-      //   window.document.body.appendChild(enderImage);
-      // }
+      tempContext.putImageData(imageData, 0, 0);
+      // Draw to the final.
+      context.save();
+      context.scale(1, -1);
+      context.translate(0, -200);
+      context.drawImage(tempImage, 0, 0);
+      context.restore();
+      {  // Show the ender image for debugging.
+        enderImage.style.border = '1px solid white';
+        enderImage.style.position = 'absolute';
+        enderImage.style.zIndex = '100';
+        window.document.body.appendChild(enderImage);
+      }
       this.enderImage = enderImage;
     } finally {
       if (material) {

@@ -116,8 +116,8 @@ export class Game {
     this.play = new PlayMode(this);
     this.test = new TestMode(this);
     // Cheat set early to avoid errors, but it really kicks in on the timeout.
-    this.mode = this.play;
-    setTimeout(() => this.setMode(this.play), 0);
+    this.mode = this.test;
+    setTimeout(() => this.setMode(this.mode), 0);
     // Input handlers.
     this.control = new Control(this)
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
