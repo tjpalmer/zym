@@ -33,6 +33,8 @@ export enum Layer {
 // TODO Change this to a class, and define part and ender access?
 export interface Art {
 
+  readonly editTile: Vector2;
+
   // Layer is usually (always?) constant by part type, but it's not a big deal
   // just to replicate.
   // TODO Will layers also exist on 3D, or will it all be z-ordered?
@@ -50,6 +52,10 @@ export abstract class BaseArt<PartType extends Part> implements Art {
 
   constructor(part: PartType) {
     this.part = part;
+  }
+
+  get editTile() {
+    return this.tile;
   }
 
   layer: Layer;
@@ -170,7 +176,6 @@ export class GoldTheme implements Theme {
   image: HTMLImageElement;
 
   initTilePlanes() {
-    console.log('initTilePlanes');
     let {game} = this;
     // Tiles.
     let tileMaterial = new ShaderMaterial({
@@ -263,7 +268,7 @@ export class GoldTheme implements Theme {
       let part = type.make(game);
       this.buildArt(part);
       // Now calculate the pixel point.
-      let point = (part.art as Art).tile.clone();
+      let point = (part.art as Art).editTile.clone();
       // TODO Add offset to point.x here.
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
@@ -406,10 +411,16 @@ export class GoldTheme implements Theme {
         let part = type.make(game);
         this.buildArt(part);
         let art = part.art as Art;
-        part.point.copy(art.tile).multiply(Level.tileSize);
+        // console.log(name, art.baseTile.x, art.baseTile.y);
+        part.point.copy(art.editTile).multiply(Level.tileSize);
         stage.parts.push(part);
       });
+      // Hack edit more for painting.
+      let oldMode = game.mode;
+      game.mode = game.edit;
       this.paintStage(stage);
+      // Back to old mode.
+      game.mode = oldMode;
       let scene = new Scene();
       material = new ShaderMaterial({
         fragmentShader: enderFragmentShader,
@@ -459,12 +470,13 @@ export class GoldTheme implements Theme {
       context.translate(0, -200);
       context.drawImage(tempImage, 0, 0);
       context.restore();
-      {  // Show the ender image for debugging.
-        enderImage.style.border = '1px solid white';
-        enderImage.style.position = 'absolute';
-        enderImage.style.zIndex = '100';
-        window.document.body.appendChild(enderImage);
-      }
+      // {  // Show the ender image for debugging.
+      //   enderImage.style.border = '1px solid white';
+      //   enderImage.style.pointerEvents = 'none';
+      //   enderImage.style.position = 'absolute';
+      //   enderImage.style.zIndex = '100';
+      //   window.document.body.appendChild(enderImage);
+      // }
       this.enderImage = enderImage;
     } finally {
       if (material) {
