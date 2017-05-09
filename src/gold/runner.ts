@@ -14,10 +14,6 @@ export class RunnerArt extends BaseArt<Runner> {
 
   base: Vector2;
 
-  get editTile() {
-    return this.base;
-  }
-
   facing = 1;
 
   frame = 0;
@@ -95,6 +91,10 @@ export class RunnerArt extends BaseArt<Runner> {
     workPoint.x += this.mode;
     workPoint.y -= frames[this.frame];
     return workPoint;
+  }
+
+  get toolTile() {
+    return this.base;
   }
 
   workPoint = new Vector2();

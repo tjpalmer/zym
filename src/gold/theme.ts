@@ -33,7 +33,7 @@ export enum Layer {
 // TODO Change this to a class, and define part and ender access?
 export interface Art {
 
-  readonly editTile: Vector2;
+  readonly toolTile: Vector2;
 
   // Layer is usually (always?) constant by part type, but it's not a big deal
   // just to replicate.
@@ -54,10 +54,6 @@ export abstract class BaseArt<PartType extends Part> implements Art {
     this.part = part;
   }
 
-  get editTile() {
-    return this.tile;
-  }
-
   layer: Layer;
 
   get offsetX() {
@@ -67,6 +63,10 @@ export abstract class BaseArt<PartType extends Part> implements Art {
   part: PartType;
 
   tile: Vector2;
+
+  get toolTile() {
+    return this.tile;
+  }
 
 }
 
@@ -146,7 +146,7 @@ export class GoldTheme implements Theme {
 
   ender = false;
 
-  optionsImage: HTMLCanvasElement;
+  toolsImage: HTMLCanvasElement;
 
   game: Game;
 
@@ -163,6 +163,7 @@ export class GoldTheme implements Theme {
     //   styleChanged = true;
     // }
     if (styleChanged) {
+      this.prepareVariations();
       this.paintPanels();
     }
     // Also init on the first round.
@@ -268,23 +269,22 @@ export class GoldTheme implements Theme {
       let part = type.make(game);
       this.buildArt(part);
       // Now calculate the pixel point.
-      let point = (part.art as Art).editTile.clone();
+      let point = (part.art as Art).toolTile.clone();
       // TODO Add offset to point.x here.
       point.y = Level.tileCount.y - point.y - 1;
       point.multiply(Level.tileSize);
       // Now draw to our canvas and to the button background.
       let canvas = button.querySelector(':scope > canvas') as HTMLCanvasElement;
       let context = canvas.getContext('2d')!;
-      let image = type.ender ? this.optionsImage : this.image;
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.drawImage(
-        image, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
+        this.toolsImage, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
         0, 0, canvas.width, canvas.height,
       );
     }
   }
 
-  paintStage(stage: Stage) {
+  paintStage(stage: Stage, asTools = false) {
     let {time} = stage;
     // TODO Only gray enders, not mains. So maybe no uniform on that.
     // TODO Except energy blocks might look too much like steel???
@@ -305,7 +305,8 @@ export class GoldTheme implements Theme {
           // That's the end of this layer.
           break;
         }
-        let currentTileIndices = (part.art as Art).tile;
+        let art = part.art as Art;
+        let currentTileIndices = asTools ? art.toolTile : art.tile;
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(part.point.x, part.point.y, 0);
         for (let k = 0; k < tileIndices.length; k += 3) {
@@ -383,9 +384,9 @@ export class GoldTheme implements Theme {
       canvas.style.height = `${buttonSize.y}px`;
       button.appendChild(canvas);
     }
+    this.prepareVariations();
     this.paintPanels();
     this.updateLayout();
-    this.prepareVariations();
   }
 
   prepareVariations() {
@@ -404,20 +405,20 @@ export class GoldTheme implements Theme {
         if (!type) {
           return;
         }
-        if (type.options.ender) {
+        if (this.ender && type.options.ender) {
           type = (game.edit.namedEnderTools.get(name) as PartTool).type;
         }
         let part = type.make(game);
         this.buildArt(part);
         let art = part.art as Art;
         // console.log(name, art.baseTile.x, art.baseTile.y);
-        part.point.copy(art.editTile).multiply(Level.tileSize);
+        part.point.copy(art.toolTile).multiply(Level.tileSize);
         stage.parts.push(part);
       });
       // Hack edit more for painting.
       let oldMode = game.mode;
       game.mode = game.edit;
-      this.paintStage(stage);
+      this.paintStage(stage, true);
       // Back to old mode.
       game.mode = oldMode;
       let scene = new Scene();
@@ -427,21 +428,21 @@ export class GoldTheme implements Theme {
       camera.position.z = 1;
       // Render and copy out.
       game.renderer.render(game.scene, camera, target);
-      let optionsImage = document.createElement('canvas');
-      optionsImage.width = this.image.width;
-      optionsImage.height = this.image.height;
-      let context = optionsImage.getContext('2d')!;
-      let data = new Uint8Array(4 * optionsImage.width * optionsImage.height);
+      let toolsImage = document.createElement('canvas');
+      toolsImage.width = this.image.width;
+      toolsImage.height = this.image.height;
+      let context = toolsImage.getContext('2d')!;
+      let data = new Uint8Array(4 * toolsImage.width * toolsImage.height);
       game.renderer.readRenderTargetPixels(
         target, 0, 0, this.image.width, this.image.height, data
       );
       // Use a temporary canvas for flipping y.
       let tempImage = document.createElement('canvas');
-      tempImage.width = optionsImage.width;
-      tempImage.height = optionsImage.height;
+      tempImage.width = toolsImage.width;
+      tempImage.height = toolsImage.height;
       let tempContext = tempImage.getContext('2d')!;
       let imageData =
-        tempContext.createImageData(optionsImage.width, optionsImage.height);
+        tempContext.createImageData(toolsImage.width, toolsImage.height);
       imageData.data.set(data as any);
       tempContext.putImageData(imageData, 0, 0);
       // Draw to the final.
@@ -457,7 +458,7 @@ export class GoldTheme implements Theme {
       //   enderImage.style.zIndex = '100';
       //   window.document.body.appendChild(enderImage);
       // }
-      this.optionsImage = optionsImage;
+      this.toolsImage = toolsImage;
     } finally {
       target.dispose();
     }

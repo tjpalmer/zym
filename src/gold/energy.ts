@@ -6,24 +6,24 @@ export class EnergyArt extends BaseArt<Energy> {
 
   layer = Layer.front;
 
-  get editTile() {
-    let {part, workPoint} = this;
-    workPoint.set(16, 16);
-    if (!part.on) {
-      ++workPoint.x;
-    }
-    return workPoint;
-  }
-
   get tile() {
     let {part, workPoint} = this;
     let {game} = part;
     if (game.mode == game.edit) {
-      return this.editTile;
+      return this.toolTile;
     }
     workPoint.set(16, 16);
     if (!part.on) {
       workPoint.set(0, 2);
+    }
+    return workPoint;
+  }
+
+  get toolTile() {
+    let {part, workPoint} = this;
+    workPoint.set(16, 16);
+    if (!part.on) {
+      ++workPoint.x;
     }
     return workPoint;
   }

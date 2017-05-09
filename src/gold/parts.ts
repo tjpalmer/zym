@@ -65,6 +65,6 @@ export class Parts {
 
 function artMaker({layer, tile}: SimpleArt) {
   return (part: Part): Art => {
-    return {editTile: tile, layer, offsetX: 0, part, tile};
+    return {layer, offsetX: 0, part, tile, toolTile: tile};
   }
 }
