@@ -146,7 +146,7 @@ export class GoldTheme implements Theme {
 
   ender = false;
 
-  enderImage: HTMLCanvasElement;
+  optionsImage: HTMLCanvasElement;
 
   game: Game;
 
@@ -275,7 +275,7 @@ export class GoldTheme implements Theme {
       // Now draw to our canvas and to the button background.
       let canvas = button.querySelector(':scope > canvas') as HTMLCanvasElement;
       let context = canvas.getContext('2d')!;
-      let image = type.ender ? this.enderImage : this.image;
+      let image = type.ender ? this.optionsImage : this.image;
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.drawImage(
         image, point.x, point.y, Level.tileSize.x, Level.tileSize.y,
@@ -393,7 +393,6 @@ export class GoldTheme implements Theme {
     let {toolbox} = game.edit;
     // TODO Abstract some render target -> canvas?
     let scaled = this.texture.image as HTMLImageElement;
-    let material: ShaderMaterial | undefined = undefined;
     let target = new WebGLRenderTarget(scaled.width, scaled.height);
     try {
       let stage = new Stage(game);
@@ -422,46 +421,27 @@ export class GoldTheme implements Theme {
       // Back to old mode.
       game.mode = oldMode;
       let scene = new Scene();
-      material = new ShaderMaterial({
-        fragmentShader: enderFragmentShader,
-        uniforms: {map: {value: this.texture}},
-        vertexShader: tileVertexShader,
-      });
-      let plane = new PlaneBufferGeometry(this.image.width, this.image.height);
-      plane.addAttribute('mode', new BufferAttribute(this.tileModes, 1));
-      plane.addAttribute(
-        'opacity', new BufferAttribute(this.tileOpacities, 1)
-      );
-      plane.translate(this.image.width / 2, this.image.height / 2, 0);
-      scene.add(new Mesh(plane, material));
       let camera = new OrthographicCamera(
         0, scaled.width, scaled.height, 0, -1e5, 1e5,
       );
       camera.position.z = 1;
-      this.texture.flipY = false;
-      try {
-        game.renderer.render(scene, game.camera, target);
-      } finally {
-        this.texture.flipY = true;
-        this.texture.needsUpdate = true;
-        plane.dispose();
-      }
+      // Render and copy out.
       game.renderer.render(game.scene, camera, target);
-      let enderImage = document.createElement('canvas');
-      enderImage.width = this.image.width;
-      enderImage.height = this.image.height;
-      let context = enderImage.getContext('2d')!;
-      let data = new Uint8Array(4 * enderImage.width * enderImage.height);
+      let optionsImage = document.createElement('canvas');
+      optionsImage.width = this.image.width;
+      optionsImage.height = this.image.height;
+      let context = optionsImage.getContext('2d')!;
+      let data = new Uint8Array(4 * optionsImage.width * optionsImage.height);
       game.renderer.readRenderTargetPixels(
         target, 0, 0, this.image.width, this.image.height, data
       );
       // Use a temporary canvas for flipping y.
       let tempImage = document.createElement('canvas');
-      tempImage.width = enderImage.width;
-      tempImage.height = enderImage.height;
+      tempImage.width = optionsImage.width;
+      tempImage.height = optionsImage.height;
       let tempContext = tempImage.getContext('2d')!;
       let imageData =
-        tempContext.createImageData(enderImage.width, enderImage.height);
+        tempContext.createImageData(optionsImage.width, optionsImage.height);
       imageData.data.set(data as any);
       tempContext.putImageData(imageData, 0, 0);
       // Draw to the final.
@@ -477,11 +457,8 @@ export class GoldTheme implements Theme {
       //   enderImage.style.zIndex = '100';
       //   window.document.body.appendChild(enderImage);
       // }
-      this.enderImage = enderImage;
+      this.optionsImage = optionsImage;
     } finally {
-      if (material) {
-        material.dispose()
-      }
       target.dispose();
     }
   }
