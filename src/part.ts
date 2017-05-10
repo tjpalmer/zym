@@ -150,14 +150,18 @@ export class Part {
 
 }
 
-export interface GenericPartType {
+export interface PartOptions {
+
+    ender: boolean;
+
+    invisible: boolean;
+
+}
+
+export interface GenericPartType extends PartOptions {
 
   // Whenever a group of types should be considered somewhat equivalent.
   common: GenericPartType;
-
-  ender: boolean;
-
-  invisible: boolean;
 
   name: string;
 
@@ -177,9 +181,7 @@ export interface PartType extends GenericPartType {
   // Don't use new. Use make. It just helps TypeScript know we're a class.
   new (game: Game): Part;
 
-  options: {
-    ender: boolean,
-    invisible: boolean,
-  };
+  // The options that this part type is allowed to take on.
+  options: PartOptions;
 
 }

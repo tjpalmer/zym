@@ -3,7 +3,7 @@ import {
   GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
   LauncherLeft, LauncherRight, LauncherUp, None, Steel, Treasure,
 } from './';
-import {cartesianProduct, Multiple, Part, PartType} from '../';
+import {cartesianProduct, Multiple, Part, PartOptions, PartType} from '../';
 import {Vector2} from 'three';
 
 export class Parts {
@@ -37,6 +37,17 @@ export class Parts {
     part => [part.char, part] as [string, PartType]
   ));
 
+  static typeChar(type: PartType, options: PartOptions) {
+    let char = type.char.codePointAt(0)!;
+    char |= options.ender ? 0x80 : 0x00;
+    char |= options.invisible ? 0x100 : 0x00;
+    if (char == 0xAD) {
+      // Because 0xAD isn't visible, and they're nice to see, at least.
+      char = 0xFF;
+    }
+    return String.fromCodePoint(char);
+  }
+
 }
 
 // Just to check for non-duplicates.
@@ -52,27 +63,21 @@ Parts.inventory.forEach(({char}) => {
 // TODO Build them only dynamically?
 Parts.inventory.forEach(part => {
   let makeOptions = (condition: boolean) => condition ? [false, true] : [false];
-  let options = {} as Multiple<typeof part.options>;
+  let options = {} as Multiple<PartOptions>;
   type Indexed = {[key: string]: boolean};
   for (let key in part.options) {
     (options as Multiple<Indexed>)[key] =
-      makeOptions((part.options as Indexed)[key]);
+      makeOptions((part.options as any as Indexed)[key]);
   }
   // Take off the all-false case, since we already have those.
   let allOptions = cartesianProduct(options).slice(1);
   allOptions.forEach(option => {
-    let char = part.char.codePointAt(0)!;
-    char |= option.ender ? 0x80 : 0x00;
-    char |= option.invisible ? 0x100 : 0x00;
-    if (char == 0xAD) {
-      // Because 0xAD isn't visible, and they're nice to see, at least.
-      char = 0xFF;
-    }
+    let char = Parts.typeChar(part, option);
     class OptionPart extends part {
       static get base() {
         return part;
       }
-      static char = String.fromCodePoint(char);
+      static char = char;
       // TODO Are the following TODOs still relevant?
       // TODO `make` that attends to edit or play mode for ender or base?
       // TODO Or just reference game dynamically in parts?
@@ -81,7 +86,7 @@ Parts.inventory.forEach(part => {
     }
     // Add it to things.
     Parts.inventory.push(OptionPart);
-    Parts.charParts.set(OptionPart.char, OptionPart);
+    Parts.charParts.set(char, OptionPart);
     // console.log(
     //   part.char, OptionPart.char, OptionPart.ender, OptionPart.invisible,
     //   Object.getPrototypeOf(OptionPart).name

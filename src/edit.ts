@@ -1,6 +1,6 @@
 import {
-  CopyTool, Level, Mode, NopTool, Part, PartTool, PartType, PasteTool,
-  PointEvent, Game, Tool, Toolbox,
+  CopyTool, Level, Mode, NopTool, Part, PartOptions, PartTool, PartType,
+  PasteTool, PointEvent, Game, Tool, Toolbox,
 } from './';
 import {Levels} from './ui';
 import {None, Parts} from './parts';
@@ -86,8 +86,7 @@ export class EditMode extends Mode {
   }
 
   get ender() {
-    // Check toolbox existence because this gets called on construction, too.
-    return !!this.toolbox && this.toolbox.getState('ender');
+    return this.getToolBoxState('ender');
   }
 
   enter() {
@@ -103,6 +102,15 @@ export class EditMode extends Mode {
   exit() {
     this.saveAll();
     this.tool.deactivate();
+  }
+
+  getToolBoxState(className: string) {
+    // Check toolbox existence because this gets called on construction, too.
+    return !!this.toolbox && this.toolbox.getState(className);
+  }
+
+  get invisible() {
+    return this.getToolBoxState('invisible');
   }
 
   mouseDown(event: PointEvent) {
@@ -137,10 +145,23 @@ export class EditMode extends Mode {
     this.editState.pushHistory();
   }
 
-  namedEnderTools = new Map(Parts.inventory.filter(type => type.ender).map(
-    type =>
-      [type.base.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
-  ));
+  partTool(name: string, options: PartOptions) {
+    // console.log(name, this.namedTools.get(name));
+    let tool = this.namedTools.get(name);
+    let baseType = tool && (tool as PartTool).type;
+    if (!baseType) {
+      return;
+    }
+    // The type options should be just options, but the options passed in might
+    // have extra, so clone just the type options.
+    let validOptions = {...baseType.options};
+    for (let key in baseType.options) {
+      (validOptions as any)[key] &= (options as any)[key];
+    }
+    let char = Parts.typeChar(baseType, validOptions);
+    let type = Parts.charParts.get(char)!;
+    return new PartTool(this, type);
+  }
 
   namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
     type =>
@@ -254,11 +275,9 @@ export class EditMode extends Mode {
 
   toolFromName(name: string) {
     let tool = this.namedTools.get(name);
-    if (this.ender) {
-      let enderTool = this.namedEnderTools.get(name);
-      if (enderTool) {
-        tool = enderTool;
-      }
+    if (tool instanceof PartTool) {
+      // Be more precise, in terms of our options.
+      tool = this.partTool(name, this);
     }
     return tool;
   }

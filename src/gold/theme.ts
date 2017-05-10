@@ -158,10 +158,10 @@ export class GoldTheme implements Theme {
       this.ender = game.edit.ender;
       styleChanged = true;
     }
-    // if (game.edit.invisible != this.invisible) {
-    //   this.invisible = game.edit.invisible;
-    //   styleChanged = true;
-    // }
+    if (game.edit.invisible != this.invisible) {
+      this.invisible = game.edit.invisible;
+      styleChanged = true;
+    }
     if (styleChanged) {
       this.prepareVariations();
       this.paintPanels();
@@ -306,6 +306,7 @@ export class GoldTheme implements Theme {
           break;
         }
         let art = part.art as Art;
+        // TODO Invisibles!
         let currentTileIndices = asTools ? art.toolTile : art.tile;
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(part.point.x, part.point.y, 0);
@@ -401,12 +402,10 @@ export class GoldTheme implements Theme {
       toolbox.getButtons().forEach(button => {
         let name = toolbox.getName(button);
         let tool = game.edit.namedTools.get(name);
+        tool = game.edit.partTool(name, this);
         let type = tool instanceof PartTool ? tool.type : undefined;
         if (!type) {
           return;
-        }
-        if (this.ender && type.options.ender) {
-          type = (game.edit.namedEnderTools.get(name) as PartTool).type;
         }
         let part = type.make(game);
         this.buildArt(part);
