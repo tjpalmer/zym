@@ -319,10 +319,13 @@ export class GoldTheme implements Theme {
         if (part.dead) {
           mode = 2;
         }
-        let opacity = time >= part.phaseEndTime ? 1 :
-          // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
+        let opacity = time >= part.phaseEndTime ? 0xFF :
+          // TODO Look back into this with integers.
           (time - part.phaseBeginTime) /
             (part.phaseEndTime - part.phaseBeginTime);
+        if (part.type.invisible) {
+          opacity = 0x90;
+        }
         for (let n = 0; n < tileModes.length; ++n) {
           // Break state into bits.
           tileModes[n] = mode;
@@ -511,61 +514,6 @@ export class GoldTheme implements Theme {
 
 declare function require(name: string): any;
 
-let grayify = `
-  void grayify(inout vec3 rgb) {
-    // TODO Better gray?
-    float mean = (rgb.x + rgb.y + rgb.z) / 3.0;
-    rgb = 0.5 * (rgb + vec3(mean));
-    // Paler to make even gray things look different.
-    rgb += 0.6 * (1.0 - rgb);
-  }
-`;
-
-// interface Options {
-//   ender?: boolean;
-//   invisible?: boolean;
-// }
-
-// let enderFragmentShader = `
-//   uniform sampler2D map;
-//   varying float vMode;
-//   varying float vOpacity;
-//   varying vec2 vUv;
-
-//   ${grayify}
-
-//   void main() {
-//     gl_FragColor = texture2D(map, vUv);
-//     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
-//     if (gl_FragColor.w > 0.0) {
-//       gl_FragColor.w = 1.0;
-//       if (vMode != 0.0) {
-//         grayify(gl_FragColor.xyz);
-//         if (vMode > 1.0) {
-//           gl_FragColor.xyz *= 0.5;
-//         }
-//       }
-//       gl_FragColor.w = vOpacity;
-//     }
-//   }
-// `;
-
-let enderFragmentShader = `
-  uniform sampler2D map;
-  varying vec2 vUv;
-
-  ${grayify}
-
-  void main() {
-    gl_FragColor = texture2D(map, vUv);
-    gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
-    if (gl_FragColor.w > 0.0) {
-      grayify(gl_FragColor.xyz);
-      gl_FragColor.w = 1.0;
-    }
-  }
-`;
-
 let tileFragmentShader = `
   uniform sampler2D map;
   // uniform int state;
@@ -574,7 +522,13 @@ let tileFragmentShader = `
   varying vec3 vTile;
   varying vec2 vUv;
 
-  ${grayify}
+  void grayify(inout vec3 rgb) {
+    // TODO Better gray?
+    float mean = (rgb.x + rgb.y + rgb.z) / 3.0;
+    rgb = 0.5 * (rgb + vec3(mean));
+    // Paler to make even gray things look different.
+    rgb += 0.6 * (1.0 - rgb);
+  }
 
   void main() {
     vec2 coord = (
@@ -609,7 +563,7 @@ let tileVertexShader = `
   void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     vMode = mode;
-    vOpacity = opacity;
+    vOpacity = opacity / 255.0;
     vUv = uv;
     vTile = tile;
   }
