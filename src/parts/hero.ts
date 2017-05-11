@@ -113,7 +113,7 @@ export class Hero extends Runner {
     this.seesInvisible = false;
     for (let i = -1; i <= 1; ++i) {
       for (let j = -1; j <= 1; ++j) {
-        workPoint.set(j, i).multiply(Level.tileSize);
+        workPoint.set(j, i).addScalar(0.5).multiply(Level.tileSize);
         let invisible =
           this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
         if (invisible) {
