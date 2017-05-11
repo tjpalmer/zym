@@ -152,14 +152,7 @@ export class EditMode extends Mode {
     if (!baseType) {
       return;
     }
-    // The type options should be just options, but the options passed in might
-    // have extra, so clone just the type options.
-    let validOptions = {...baseType.options};
-    for (let key in baseType.options) {
-      (validOptions as any)[key] &= (options as any)[key];
-    }
-    let char = Parts.typeChar(baseType, validOptions);
-    let type = Parts.charParts.get(char)!;
+    let type = Parts.optionType(baseType, options);
     return new PartTool(this, type);
   }
 

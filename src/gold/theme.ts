@@ -285,10 +285,10 @@ export class GoldTheme implements Theme {
   }
 
   paintStage(stage: Stage, asTools = false) {
-    let {time} = stage;
+    let {game, time} = stage;
     // TODO Only gray enders, not mains. So maybe no uniform on that.
     // TODO Except energy blocks might look too much like steel???
-    // let ender = game.mode == game.edit && game.edit.ender;
+    let edit = game.mode == game.edit;
     // this.uniforms.state.value = +ender;
     let {tileIndices, tileModes, tileOpacities} = this;
     let tilePlanes = this.tilePlanes!;
@@ -306,7 +306,6 @@ export class GoldTheme implements Theme {
           break;
         }
         let art = part.art as Art;
-        // TODO Invisibles!
         let currentTileIndices = asTools ? art.toolTile : art.tile;
         // Translate and merge are expensive. TODO Make my own functions?
         tilePlane.translate(part.point.x, part.point.y, 0);
@@ -324,7 +323,11 @@ export class GoldTheme implements Theme {
           (time - part.phaseBeginTime) /
             (part.phaseEndTime - part.phaseBeginTime);
         if (part.type.invisible) {
-          opacity = 0x90;
+          if (stage.hero && !stage.hero.seesInvisible && !edit) {
+            opacity = 0;
+          } else {
+            opacity = 0x90;
+          }
         }
         for (let n = 0; n < tileModes.length; ++n) {
           // Break state into bits.

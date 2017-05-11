@@ -297,7 +297,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         // Handle enders for play mode.
         if (play && tile.ender) {
           // TODO Need a time for transition animation?
-          tile = stage.ending ? tile.base : None;
+          let options = {...tile.options};
+          options.ender = false;
+          tile = stage.ending ? Parts.optionType(tile, options) : None;
         }
         // Build a new part if needed.
         let oldPart = stage.parts[k];
@@ -325,6 +327,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       }
     }
     if (reset) {
+      stage.init();
       if (!stage.treasureCount) {
         // Already got them all!
         stage.ending = true;

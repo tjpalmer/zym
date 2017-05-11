@@ -37,6 +37,19 @@ export class Parts {
     part => [part.char, part] as [string, PartType]
   ));
 
+  static optionType(baseType: PartType, options: PartOptions) {
+    // The type options should be just options, but the options passed in might
+    // have extra, so clone just the type options.
+    baseType = baseType.base;
+    let validOptions = {...baseType.options};
+    for (let key in baseType.options) {
+      (validOptions as any)[key] &= (options as any)[key];
+    }
+    let char = Parts.typeChar(baseType, validOptions);
+    let type = Parts.charParts.get(char)!;
+    return type;
+  }
+
   static typeChar(type: PartType, options: PartOptions) {
     let char = type.char.codePointAt(0)!;
     char |= options.ender ? 0x80 : 0x00;

@@ -146,6 +146,9 @@ export class Part {
 
   update() {}
 
+  // State that can be updated on stage init.
+  updateInfo() {}
+
   workPoint = new Vector2();
 
 }

@@ -57,6 +57,12 @@ export class Stage {
 
   hero: Hero | undefined = undefined;
 
+  init() {
+    for (let part of this.parts) {
+      part.updateInfo();
+    }
+  }
+
   manageParticles() {
     let {particles} = this;
     // The oldest particles should likely be the first to cease existing.

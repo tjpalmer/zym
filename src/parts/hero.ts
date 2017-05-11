@@ -67,6 +67,8 @@ export class Hero extends Runner {
 
   fastEnd = -10;
 
+  seesInvisible = false;
+
   speed = new Vector2(1, 1);
 
   treasureCount = 0;
@@ -103,6 +105,25 @@ export class Hero extends Runner {
         this.game.play.win();
       }
     }
+    this.updateInfo();
+  }
+
+  updateInfo() {
+    // Check for seeing invisibles, by nearby invisibles.
+    this.seesInvisible = false;
+    for (let i = -1; i <= 1; ++i) {
+      for (let j = -1; j <= 1; ++j) {
+        workPoint.set(j, i).multiply(Level.tileSize);
+        let invisible =
+          this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
+        if (invisible) {
+          this.seesInvisible = true;
+          break;
+        }
+      }
+    }
   }
 
 }
+
+let workPoint = new Vector2();
