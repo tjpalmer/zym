@@ -322,7 +322,7 @@ export class GoldTheme implements Theme {
             (part.phaseEndTime - part.phaseBeginTime);
         if (part.type.invisible) {
           opacity = seeOpacity;
-        } else if (part == stage.hero && stage.hero.hasInvisible) {
+        } else if (part == stage.hero && stage.hero.bonusSee) {
           opacity = 0x90;
         }
         for (let n = 0; n < tileModes.length; ++n) {

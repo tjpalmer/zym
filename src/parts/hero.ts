@@ -15,7 +15,11 @@ export class Hero extends Runner {
 
   actionChange = new RunnerAction();
 
-  bonus: Bonus | undefined = undefined;
+  // Separate speed vs see bonus.
+  bonusSee: Bonus | undefined = undefined;
+
+  // Separate speed vs see bonus.
+  bonusSpeed: Bonus | undefined = undefined;
 
   carried = true;
 
@@ -34,15 +38,11 @@ export class Hero extends Runner {
   }
 
   choose() {
-    let {action, fastEnd, game, speed} = this;
-    if (fastEnd >= game.stage.time) {
+    let {action, bonusSpeed, game, speed} = this;
+    if (bonusSpeed) {
       speed.setScalar(1.75);
     } else {
       speed.setScalar(1);
-      if (this.hasInvisible == this.bonus) {
-        this.hasInvisible = undefined;
-      }
-      this.bonus = undefined;
     }
     this.checkAction();
     if (this.game.stage.ended || this.phased) {
@@ -73,8 +73,6 @@ export class Hero extends Runner {
 
   fastEnd = -10;
 
-  hasInvisible: Part | undefined = undefined;
-
   seesInvisible = false;
 
   speed = new Vector2(1, 1);
@@ -88,24 +86,27 @@ export class Hero extends Runner {
         this.game.stage.ending = true;
         this.game.level.updateStage(this.game);
       }
-      if (prize.type.invisible) {
-        this.hasInvisible = prize;
-      }
-    } else {
-      // Bonus is the only other option.
+    } else if (prize instanceof Bonus) {
+      // Bonus is the only other option, but eh.
       let {stage} = this.game;
-      this.bonus = prize;
-      if (prize.type.invisible && (
-        !this.hasInvisible || this.hasInvisible instanceof Bonus
-      )) {
-        this.hasInvisible = prize;
+      let old: Bonus | undefined;
+      if (prize.type.invisible) {
+        old = this.bonusSee;
+        this.bonusSee = prize;
+      } else {
+        old = this.bonusSpeed;
+        this.bonusSpeed = prize;
       }
-      let baseTime = Math.max(this.fastEnd, stage.time);
-      this.fastEnd = baseTime + 10;
-      // Change visually before slowing.
-      // TODO There's also about 1 second diff here in keyTime handling. Why?
-      this.keyTime = this.fastEnd - 1.5;
+      let baseTime = Math.max(old ? old.bonusEnd : 0, stage.time);
+      prize.bonusEnd = baseTime + 10;
+      if (!prize.type.invisible) {
+        // Change visually before slowing.
+        // TODO There's also about 1 second diff here in keyTime handling. Why?
+        this.keyTime = prize.bonusEnd - 1.5;
+      }
     }
+    prize.point.x = -1000;
+    this.game.stage.removed(prize);
     return true;
   }
 
@@ -127,20 +128,23 @@ export class Hero extends Runner {
 
   updateInfo() {
     // Check for seeing invisibles, by nearby invisibles.
+    if (this.bonusSee && this.bonusSee.bonusEnd < this.game.stage.time) {
+      this.bonusSee = undefined;
+    }
+    if (this.bonusSpeed && this.bonusSpeed.bonusEnd < this.game.stage.time) {
+      this.bonusSpeed = undefined;
+    }
+    if (this.bonusSee) {
+      // Already done.
+      this.seesInvisible = true;
+      return;
+    }
     this.seesInvisible = false;
     for (let i = -1; i <= 1; ++i) {
       for (let j = -1; j <= 1; ++j) {
         workPoint.set(j, i).addScalar(0.5).multiply(Level.tileSize);
         let invisible =
-          this.partAt(workPoint.x, workPoint.y, part => {
-            if (part.type.invisible) {
-              if (part instanceof Bonus && part.owner == this) {
-                return part == this.hasInvisible;
-              }
-              return true;
-            }
-            return false;
-          });
+          this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
         if (invisible) {
           this.seesInvisible = true;
           break;
