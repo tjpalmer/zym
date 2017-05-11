@@ -1,4 +1,4 @@
-import {None, Prize, Runner, Treasure} from './';
+import {Bonus, None, Prize, Runner, Treasure} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -14,6 +14,8 @@ export class Hero extends Runner {
   action = new RunnerAction();
 
   actionChange = new RunnerAction();
+
+  bonus: Bonus | undefined = undefined;
 
   carried = true;
 
@@ -37,6 +39,10 @@ export class Hero extends Runner {
       speed.setScalar(1.75);
     } else {
       speed.setScalar(1);
+      if (this.hasInvisible == this.bonus) {
+        this.hasInvisible = undefined;
+      }
+      this.bonus = undefined;
     }
     this.checkAction();
     if (this.game.stage.ended || this.phased) {
@@ -67,6 +73,8 @@ export class Hero extends Runner {
 
   fastEnd = -10;
 
+  hasInvisible: Part | undefined = undefined;
+
   seesInvisible = false;
 
   speed = new Vector2(1, 1);
@@ -80,9 +88,18 @@ export class Hero extends Runner {
         this.game.stage.ending = true;
         this.game.level.updateStage(this.game);
       }
+      if (prize.type.invisible) {
+        this.hasInvisible = prize;
+      }
     } else {
       // Bonus is the only other option.
       let {stage} = this.game;
+      this.bonus = prize;
+      if (prize.type.invisible && (
+        !this.hasInvisible || this.hasInvisible instanceof Bonus
+      )) {
+        this.hasInvisible = prize;
+      }
       let baseTime = Math.max(this.fastEnd, stage.time);
       this.fastEnd = baseTime + 10;
       // Change visually before slowing.
@@ -115,7 +132,15 @@ export class Hero extends Runner {
       for (let j = -1; j <= 1; ++j) {
         workPoint.set(j, i).addScalar(0.5).multiply(Level.tileSize);
         let invisible =
-          this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
+          this.partAt(workPoint.x, workPoint.y, part => {
+            if (part.type.invisible) {
+              if (part instanceof Bonus && part.owner == this) {
+                return part == this.hasInvisible;
+              }
+              return true;
+            }
+            return false;
+          });
         if (invisible) {
           this.seesInvisible = true;
           break;

@@ -328,6 +328,8 @@ export class GoldTheme implements Theme {
           } else {
             opacity = 0x90;
           }
+        } else if (part == stage.hero && stage.hero.hasInvisible) {
+          opacity = 0x90;
         }
         for (let n = 0; n < tileModes.length; ++n) {
           // Break state into bits.

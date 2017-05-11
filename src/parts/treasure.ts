@@ -7,7 +7,9 @@ export class Prize extends Part {
 
   update() {
     if (this.owner) {
+      this.workPoint.copy(this.point);
       this.point.copy(this.owner.point);
+      this.game.stage.moved(this, this.workPoint);
     } else {
       let runner = this.partAt(4, 5, part =>
         part instanceof Runner && !part.dead
