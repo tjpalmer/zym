@@ -73,8 +73,6 @@ export class Hero extends Runner {
 
   fastEnd = -10;
 
-  seesInvisible = false;
-
   speed = new Vector2(1, 1);
 
   treasureCount = 0;
@@ -123,7 +121,6 @@ export class Hero extends Runner {
         this.game.play.win();
       }
     }
-    this.updateInfo();
   }
 
   updateInfo() {
@@ -139,20 +136,7 @@ export class Hero extends Runner {
       this.seesInvisible = true;
       return;
     }
-    this.seesInvisible = false;
-    for (let i = -1; i <= 1; ++i) {
-      for (let j = -1; j <= 1; ++j) {
-        workPoint.set(j, i).addScalar(0.5).multiply(Level.tileSize);
-        let invisible =
-          this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
-        if (invisible) {
-          this.seesInvisible = true;
-          break;
-        }
-      }
-    }
+    super.updateInfo();
   }
 
 }
-
-let workPoint = new Vector2();

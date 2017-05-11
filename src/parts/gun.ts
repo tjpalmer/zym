@@ -47,7 +47,8 @@ export class Gun extends Runner {
     let {point} = this;
     let {stage} = this.game;
     let {hero} = stage;
-    if (!hero) {
+    if (!hero || (hero.bonusSee && !this.seesInvisible)) {
+      // TODO Let enemies see if near invisible?
       return false;
     }
     if (hero.point.y + 10 < point.y || hero.point.y > point.y + 10) {

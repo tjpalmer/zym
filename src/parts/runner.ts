@@ -219,6 +219,8 @@ export class Runner extends Part {
     this.support = support;
   }
 
+  seesInvisible = false;
+
   get shootable() {
     return true;
   }
@@ -365,6 +367,23 @@ export class Runner extends Part {
     // Update moved to the actual move, and update the stage.
     this.moved.copy(this.point).sub(oldPoint);
     this.game.stage.moved(this, oldPoint);
+    // Update info that doesn't involve moving.
+    this.updateInfo();
+  }
+
+  updateInfo() {
+    this.seesInvisible = false;
+    for (let i = -1; i <= 1; ++i) {
+      for (let j = -1; j <= 1; ++j) {
+        workPoint.set(j, i).addScalar(0.5).multiply(Level.tileSize);
+        let invisible =
+          this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
+        if (invisible) {
+          this.seesInvisible = true;
+          break;
+        }
+      }
+    }
   }
 
   // Move some of these to module global. We're sync, right?
@@ -386,3 +405,5 @@ export const TilePos = {
 }
 
 let {midBottom, midLeft, midRight, midTop, right, top} = TilePos;
+
+let workPoint = new Vector2();
