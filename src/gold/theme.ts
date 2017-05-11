@@ -146,7 +146,7 @@ export class GoldTheme implements Theme {
 
   ender = false;
 
-  toolsImage: HTMLCanvasElement;
+  fadeSee = new Lerper(0, 0x90, -100, 0.2);
 
   game: Game;
 
@@ -286,10 +286,6 @@ export class GoldTheme implements Theme {
 
   paintStage(stage: Stage, asTools = false) {
     let {game, time} = stage;
-    // TODO Only gray enders, not mains. So maybe no uniform on that.
-    // TODO Except energy blocks might look too much like steel???
-    let edit = game.mode == game.edit;
-    // this.uniforms.state.value = +ender;
     let {tileIndices, tileModes, tileOpacities} = this;
     let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
@@ -299,6 +295,8 @@ export class GoldTheme implements Theme {
     let partIndex = 0;
     this.buildLayers(stage.parts, true);
     this.buildLayers(stage.particles);
+    let seeOpacity = this.updateFade();
+    // Draw everything.
     this.layers.forEach(layer => {
       for (let part of layer) {
         if (!part) {
@@ -323,11 +321,7 @@ export class GoldTheme implements Theme {
           (time - part.phaseBeginTime) /
             (part.phaseEndTime - part.phaseBeginTime);
         if (part.type.invisible) {
-          if (stage.hero && !stage.hero.seesInvisible && !edit) {
-            opacity = 0;
-          } else {
-            opacity = 0x90;
-          }
+          opacity = seeOpacity;
         } else if (part == stage.hero && stage.hero.hasInvisible) {
           opacity = 0x90;
         }
@@ -485,7 +479,24 @@ export class GoldTheme implements Theme {
 
   tilesMesh?: Mesh;
 
+  toolsImage: HTMLCanvasElement;
+
   // uniforms: Uniforms;
+
+  updateFade() {
+    let edit = this.game.mode == this.game.edit;
+    let {hero, time} = this.game.stage;
+    // TODO Extract all this invisibility fade stuff elsewhere.
+    let see = edit || !hero || hero.seesInvisible;
+    if (!time) {
+      // Don't observe state switch from initial state.
+      // Just sneak it in.
+      // TODO Going from edit to test, this doesn't seem to reset right.
+      this.fadeSee.ref = -100;
+      this.fadeSee.state = see;
+    }
+    return this.fadeSee.update(see, time);
+  }
 
   updateLayout() {
     let {game} = this;
@@ -510,6 +521,45 @@ export class GoldTheme implements Theme {
   updateTool(button: HTMLElement) {
     this.paintPanels(this.game.edit.toolbox.getName(button));
   }
+
+}
+
+class Lerper {
+
+  constructor(begin: number, end: number, ref: number, span: number) {
+    this.begin = begin;
+    this.end = end;
+    this.ref = ref;
+    this.span = span;
+  }
+
+  begin: number;
+
+  end: number;
+
+  ref: number;
+
+  span: number;
+
+  state = false;
+
+  update(state: boolean, x: number) {
+    if (this.state != state) {
+      // TODO Modify ref calc based on current value.
+      this.ref = x;
+      this.state = state;
+    }
+    return this.value(x);
+  }
+
+  value(x: number) {
+    // State false means go to begin, and true to end.
+    let begin = this.state ? this.begin : this.end;
+    let end = this.state ? this.end : this.begin;
+    // Now lerp.
+    let rel = Math.min((x - this.ref) / this.span, 1);
+    return rel * (end - begin) + begin;
+  } 
 
 }
 
