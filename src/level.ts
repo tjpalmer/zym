@@ -298,6 +298,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         if (play && tile.ender) {
           // TODO Need a time for transition animation?
           let options = {...tile.options};
+          for (let key in tile.options) {
+            (options as any)[key] = (tile as any)[key];
+          }
           options.ender = false;
           tile = stage.ending ? Parts.optionType(tile, options) : None;
         }

@@ -113,7 +113,7 @@ export abstract class EditorList<
       field.contentEditable = 'plaintext-only';
     });
     field.addEventListener('keydown', event => {
-      console.log('Down!');
+      // console.log('Down!');
       switch (event.key) {
         case 'Enter': {
           field.contentEditable = 'false';
