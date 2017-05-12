@@ -62,7 +62,12 @@ export class Part {
   dead = false;
 
   die(killer?: Part) {
-    this.dead = true;
+    let wasDead = this.dead;
+    if (!wasDead) {
+      // TODO Handle subtype death event in separate function.
+      this.dead = true;
+      this.game.stage.died(this);
+    }
   }
 
   // For overriding.

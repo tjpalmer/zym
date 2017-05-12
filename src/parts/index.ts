@@ -12,6 +12,7 @@ export * from './hero';
 export * from './ladder';
 export * from './launcher';
 export * from './none';
+export * from './spawn';
 export * from './steel';
 export * from './treasure';
 
