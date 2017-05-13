@@ -3,21 +3,31 @@ webpackJsonp([1],[
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
+	var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
 	const _1 = __webpack_require__(1);
 	const gold_1 = __webpack_require__(4);
-	__webpack_require__(49);
+	__webpack_require__(50);
 	__webpack_require__(8);
 	window.onload = main;
 	function main() {
-	    let game = new _1.Game(window.document.body);
-	    let theme = new gold_1.GoldTheme(game);
-	    game.theme = theme;
-	    // Fill in even empty/none parts before the first drawing, so uv and such get
-	    // in there.
-	    game.level.updateStage(game);
-	    theme.handle();
-	    // Now kick off the display.
-	    game.render();
+	    return __awaiter(this, void 0, void 0, function* () {
+	        let game = new _1.Game(window.document.body);
+	        let theme = yield gold_1.GoldTheme.load(game);
+	        game.theme = theme;
+	        // Fill in even empty/none parts before the first drawing, so uv and such get
+	        // in there.
+	        game.level.updateStage(game);
+	        theme.handle();
+	        // Now kick off the display.
+	        game.render();
+	    });
 	}
 
 
@@ -32,15 +42,15 @@ webpackJsonp([1],[
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
 	// Some others depend on Mode and Part from these for now, so import it first.
+	__export(__webpack_require__(44));
 	__export(__webpack_require__(11));
 	__export(__webpack_require__(21));
-	__export(__webpack_require__(37));
+	__export(__webpack_require__(38));
 	__export(__webpack_require__(9));
 	__export(__webpack_require__(10));
 	__export(__webpack_require__(20));
-	__export(__webpack_require__(36));
-	__export(__webpack_require__(38));
-	__export(__webpack_require__(43));
+	__export(__webpack_require__(37));
+	__export(__webpack_require__(39));
 
 
 /***/ },
@@ -67,6 +77,7 @@ webpackJsonp([1],[
 	__export(__webpack_require__(31));
 	__export(__webpack_require__(34));
 	__export(__webpack_require__(35));
+	__export(__webpack_require__(36));
 	// After individual parts above.
 	__export(__webpack_require__(32));
 
@@ -101,11 +112,11 @@ webpackJsonp([1],[
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
 	// Dependencies.
-	__export(__webpack_require__(40));
-	// Others.
-	__export(__webpack_require__(39));
 	__export(__webpack_require__(41));
+	// Others.
+	__export(__webpack_require__(40));
 	__export(__webpack_require__(42));
+	__export(__webpack_require__(43));
 
 
 /***/ },
@@ -126,6 +137,10 @@ webpackJsonp([1],[
 	        this.left = false;
 	        this.right = false;
 	        this.up = false;
+	    }
+	    active() {
+	        return (this.burnLeft || this.burnRight ||
+	            this.down || this.left || this.right || this.up);
 	    }
 	    clear() {
 	        this.burnLeft = this.burnRight = false;
@@ -175,35 +190,20 @@ webpackJsonp([1],[
 	        switch (fieldName) {
 	            case 'burnLeft':
 	            case 'burnRight': {
-	                // TODO Better mode management for input handling.
 	                if (this.game.stage.ended) {
-	                    if (this.game.mode == this.game.play) {
-	                        this.game.edit.togglePlay();
-	                    }
+	                    this.game.mode.onKeyDown('Enter');
 	                    this.game.hideDialog();
 	                }
-	                // TODO Start on burn buttons, too? Just don't want it to actually burn!
 	                break;
 	            }
 	            case 'enter': {
-	                this.game.edit.togglePlay();
+	                this.game.mode.onKeyDown('Enter');
 	                this.game.hideDialog();
 	                break;
 	            }
 	            case 'escape': {
-	                // TODO Some convenience on this.
-	                if (this.game.mode == this.game.play) {
-	                    this.game.edit.togglePlay();
-	                }
-	                let pane = this.game.body.querySelector('.pane');
-	                let style = window.getComputedStyle(pane);
-	                if (this.game.showingDialog()) {
-	                    this.game.hideDialog();
-	                }
-	                else {
-	                    // TODO Generalize to whatever context dialog makes most sense.
-	                    this.game.edit.showLevels();
-	                }
+	                this.game.mode.onKeyDown('Escape');
+	                this.game.hideDialog();
 	                break;
 	            }
 	            case 'pause': {
@@ -229,6 +229,9 @@ webpackJsonp([1],[
 	        let field = this.keyFields[event.key];
 	        // Let 'escape' be global because that's already handled well enough.
 	        if (this.game.showingDialog() && field != 'escape') {
+	            if (this.game.dialog) {
+	                this.game.dialog.onKey(event, down);
+	            }
 	            return;
 	        }
 	        if (field) {
@@ -289,9 +292,9 @@ webpackJsonp([1],[
 	    constructor(game) {
 	        super(game);
 	        this.active = false;
+	        this.bodyClass = 'editMode';
 	        // TODO Limit the total number of editStates?
 	        this.editStates = {};
-	        this.namedEnderTools = new Map(parts_1.Parts.inventory.filter(type => type.ender).map(type => [type.base.name.toLowerCase(), new _1.PartTool(this, type)]));
 	        this.namedTools = new Map(parts_1.Parts.inventory.filter(type => !type.ender).map(type => [type.name.toLowerCase(), new _1.PartTool(this, type)]));
 	        this.saveDelay = 10e3;
 	        let { body } = document;
@@ -301,6 +304,7 @@ webpackJsonp([1],[
 	        // Buttons.
 	        this.commandsContainer =
 	            body.querySelector('.panel.commands');
+	        this.onClick('exit', () => this.game.setMode(this.game.play));
 	        this.onClick('play', () => this.togglePlay());
 	        this.onClick('redo', () => this.editState.redo());
 	        this.onClick('showLevels', () => this.showLevels());
@@ -355,8 +359,27 @@ webpackJsonp([1],[
 	        }
 	    }
 	    get ender() {
+	        return this.getToolBoxState('ender');
+	    }
+	    enter() {
+	        // Unpause on stop, so the characters can react.
+	        // TODO Is this doing the right thing?
+	        if (this.game.play.paused) {
+	            // TODO Activate function on modes for general handling?
+	            this.game.play.togglePause();
+	        }
+	        this.tool.activate();
+	    }
+	    exit() {
+	        this.saveAll();
+	        this.tool.deactivate();
+	    }
+	    getToolBoxState(className) {
 	        // Check toolbox existence because this gets called on construction, too.
-	        return !!this.toolbox && this.toolbox.getState('ender');
+	        return !!this.toolbox && this.toolbox.getState(className);
+	    }
+	    get invisible() {
+	        return this.getToolBoxState('invisible');
 	    }
 	    mouseDown(event) {
 	        // Mouse down is always in bounds.
@@ -388,6 +411,16 @@ webpackJsonp([1],[
 	        this.active = false;
 	        this.editState.pushHistory();
 	    }
+	    partTool(name, options) {
+	        // console.log(name, this.namedTools.get(name));
+	        let tool = this.namedTools.get(name);
+	        let baseType = tool && tool.type;
+	        if (!baseType) {
+	            return;
+	        }
+	        let type = parts_1.Parts.optionType(baseType, options);
+	        return new _1.PartTool(this, type);
+	    }
 	    onClick(command, handler) {
 	        // Hide tool effects.
 	        this.getButton(command).addEventListener('click', () => {
@@ -397,6 +430,21 @@ webpackJsonp([1],[
 	        });
 	        // And the requested handler, too.
 	        super.onClick(command, handler);
+	    }
+	    onKeyDown(key) {
+	        switch (key) {
+	            case 'Enter': {
+	                this.game.setMode(this.game.test);
+	                break;
+	            }
+	            case 'Escape': {
+	                if (!(this.game.dialog instanceof ui_1.Levels)) {
+	                    // Will happen after the any other hides.
+	                    window.setTimeout(() => this.showLevels(), 0);
+	                }
+	                break;
+	            }
+	        }
 	    }
 	    resize() {
 	        if (this.tool) {
@@ -459,41 +507,13 @@ webpackJsonp([1],[
 	        return point;
 	    }
 	    togglePlay() {
-	        this.saveAll();
-	        // Sometimes things get confused, and clearing the action might help.
-	        // We can't directly read keyboard state.
-	        this.game.control.clear();
-	        this.game.control.keyAction.clear();
-	        // Now toggle mode.
-	        this.game.mode = this.game.mode == this.game.play ?
-	            this.game.edit : this.game.play;
-	        this.game.level.updateStage(this.game, true);
-	        let isEdit = this.game.mode == this.game.edit;
-	        if (isEdit) {
-	            // Unpause on stop, so the characters can react.
-	            // TODO Is this doing the right thing?
-	            if (this.game.play.paused) {
-	                // TODO Activate function on modes for general handling?
-	                this.game.play.togglePause();
-	            }
-	            this.tool.activate();
-	        }
-	        else {
-	            this.tool.deactivate();
-	        }
-	        this.toggleClasses({
-	            element: this.game.body,
-	            falseClass: 'playMode', trueClass: 'editMode',
-	            value: isEdit,
-	        });
+	        this.game.setMode(this.game.mode == this.game.test ? this.game.edit : this.game.test);
 	    }
 	    toolFromName(name) {
 	        let tool = this.namedTools.get(name);
-	        if (this.ender) {
-	            let enderTool = this.namedEnderTools.get(name);
-	            if (enderTool) {
-	                tool = enderTool;
-	            }
+	        if (tool instanceof _1.PartTool) {
+	            // Be more precise, in terms of our options.
+	            tool = this.partTool(name, this);
 	        }
 	        return tool;
 	    }
@@ -597,10 +617,19 @@ webpackJsonp([1],[
 	"use strict";
 	const _1 = __webpack_require__(1);
 	const three_1 = __webpack_require__(2);
+	class Dialog {
+	    constructor(game) {
+	        this.game = game;
+	    }
+	    onKey(event, down) { }
+	}
+	exports.Dialog = Dialog;
 	class Mode {
 	    constructor(game) {
 	        this.game = game;
 	    }
+	    enter() { }
+	    exit() { }
 	    getButton(command) {
 	        return this.game.body.querySelector(`.panel .${command}`);
 	    }
@@ -610,6 +639,9 @@ webpackJsonp([1],[
 	    onClick(command, handler) {
 	        this.getButton(command).addEventListener('click', handler);
 	    }
+	    onHideDialog(dialog) { }
+	    // For now, only happens in certain contexts.
+	    onKeyDown(key) { }
 	    resize() { }
 	    tick() { }
 	    toggleClasses(options) {
@@ -660,7 +692,10 @@ webpackJsonp([1],[
 	        // Modes. After we have a level for them to reference.
 	        this.edit = new _1.EditMode(this);
 	        this.play = new _1.PlayMode(this);
-	        this.mode = this.edit;
+	        this.test = new _1.TestMode(this);
+	        // Cheat set early to avoid errors, but it really kicks in on the timeout.
+	        this.mode = this.test;
+	        setTimeout(() => this.setMode(this.mode), 0);
 	        // Input handlers.
 	        this.control = new _1.Control(this);
 	        canvas.addEventListener('mousedown', event => this.mouseDown(event));
@@ -668,7 +703,11 @@ webpackJsonp([1],[
 	        window.addEventListener('mouseup', event => this.mouseUp(event));
 	    }
 	    hideDialog() {
+	        if (this.dialog) {
+	            this.mode.onHideDialog(this.dialog);
+	        }
 	        this.body.querySelector('.pane').style.display = 'none';
+	        this.dialog = undefined;
 	    }
 	    mouseDown(event) {
 	        let point = new three_1.Vector2(event.offsetX, event.offsetY);
@@ -734,6 +773,23 @@ webpackJsonp([1],[
 	            this.mode.resize();
 	        }, 0);
 	    }
+	    setMode(mode) {
+	        // Exit the current mode.
+	        let { classList } = this.body;
+	        if (this.mode) {
+	            classList.remove(this.mode.bodyClass);
+	            this.mode.exit();
+	        }
+	        // Set the new value.
+	        this.mode = mode;
+	        // Enter the new mode.
+	        // Update the stage, since that's often needed.
+	        // Do this *after* the mode gets set.
+	        this.level.updateStage(this, true);
+	        classList.add(mode.bodyClass);
+	        this.mode.enter();
+	        this.theme.modeChanged();
+	    }
 	    scalePoint(point) {
 	        let canvas = this.renderer.domElement;
 	        point.divide(new three_1.Vector2(canvas.clientWidth, canvas.clientHeight));
@@ -750,6 +806,7 @@ webpackJsonp([1],[
 	        }
 	        dialogBox.appendChild(dialog.content);
 	        pane.style.display = 'block';
+	        this.dialog = dialog;
 	    }
 	    showLevel(level) {
 	        // TODO Something here is messing with different level objects vs edit state.
@@ -781,12 +838,16 @@ webpackJsonp([1],[
 	        level.save();
 	    }
 	    let tower = new _1.Tower().load(towerMeta.id);
-	    if (!tower.items.some(item => item.id == level.id)) {
+	    let found = tower.items.find(item => item.id == level.id);
+	    if (!found) {
 	        // This level isn't in the current tower. Add it.
 	        // TODO Make sure we keep tower and level selection in sync!
-	        tower.items.push(level.encode());
+	        found = level.encode();
+	        tower.items.push(found);
 	        tower.save();
 	    }
+	    tower.numberItems();
+	    level.number = found.number;
 	    return level;
 	}
 	// TODO Simplify.
@@ -823,6 +884,7 @@ webpackJsonp([1],[
 	    }
 	    // This might save the new id or just overwrite. TODO Be more precise?
 	    window.localStorage['zym.towerId'] = tower.id;
+	    delete window.localStorage['zym.worldId'];
 	    return _1.Raw.encodeMeta(tower);
 	}
 	exports.loadTower = loadTower;
@@ -1004,14 +1066,20 @@ webpackJsonp([1],[
 	    get tile() {
 	        let { part, workPoint } = this;
 	        let { game } = part;
+	        if (game.mode == game.edit) {
+	            return this.toolTile;
+	        }
 	        workPoint.set(16, 16);
 	        if (!part.on) {
-	            if (game.mode == game.edit) {
-	                workPoint.x += 1;
-	            }
-	            else {
-	                workPoint.set(0, 2);
-	            }
+	            workPoint.set(0, 2);
+	        }
+	        return workPoint;
+	    }
+	    get toolTile() {
+	        let { part, workPoint } = this;
+	        workPoint.set(16, 16);
+	        if (!part.on) {
+	            ++workPoint.x;
 	        }
 	        return workPoint;
 	    }
@@ -1050,7 +1118,7 @@ webpackJsonp([1],[
 	class GunArt extends _1.BaseArt {
 	    constructor() {
 	        super(...arguments);
-	        this.layer = _1.Layer.front;
+	        this.layer = _1.Layer.gun;
 	        this.workPoint = new three_1.Vector2(0, 10);
 	    }
 	    get tile() {
@@ -1081,6 +1149,7 @@ webpackJsonp([1],[
 	    LauncherUp: { layer: _1.Layer.back, tile: new three_1.Vector2(10, 17) },
 	    None: { layer: _1.Layer.back, tile: new three_1.Vector2(0, 2) },
 	    Shot: { layer: _1.Layer.shot, tile: new three_1.Vector2(22, 10) },
+	    Spawn: { layer: _1.Layer.back, tile: new three_1.Vector2(12, 16) },
 	    Steel: { layer: _1.Layer.front, tile: new three_1.Vector2(7, 17) },
 	};
 	class Parts {
@@ -1110,13 +1179,14 @@ webpackJsonp([1],[
 	    [_2.LauncherUp, artMaker(exports.arts.LauncherUp)],
 	    [_2.None, artMaker(exports.arts.None)],
 	    [_2.Shot, artMaker(exports.arts.Shot)],
+	    [_2.Spawn, artMaker(exports.arts.Spawn)],
 	    [_2.Steel, artMaker(exports.arts.Steel)],
 	    [_2.Treasure, part => new _1.PrizeArt(part, new three_1.Vector2(13, 17))],
 	]);
 	exports.Parts = Parts;
 	function artMaker({ layer, tile }) {
 	    return (part) => {
-	        return { layer, offsetX: 0, part, tile };
+	        return { layer, offsetX: 0, part, tile, toolTile: tile };
 	    };
 	}
 
@@ -1154,7 +1224,7 @@ webpackJsonp([1],[
 	            this.facing = Math.sign(intendedMove.x);
 	        }
 	        // Figure out what frame and mode.
-	        if (game.mode == game.edit) {
+	        if (game.mode == game.edit || !stage.time) {
 	            this.frame = 0;
 	            // TODO Subclass RunnerArt for enemies?
 	            if (this.part instanceof parts_1.Enemy) {
@@ -1211,6 +1281,9 @@ webpackJsonp([1],[
 	        workPoint.y -= frames[this.frame];
 	        return workPoint;
 	    }
+	    get toolTile() {
+	        return this.base;
+	    }
 	}
 	exports.RunnerArt = RunnerArt;
 	var Mode;
@@ -1247,12 +1320,13 @@ webpackJsonp([1],[
 	    Layer[Layer["biggie"] = 4] = "biggie";
 	    Layer[Layer["enemy"] = 5] = "enemy";
 	    Layer[Layer["shot"] = 6] = "shot";
+	    Layer[Layer["gun"] = 7] = "gun";
 	    // Front is also static. TODO Really? Does it matter? No?
-	    Layer[Layer["front"] = 7] = "front";
+	    Layer[Layer["front"] = 8] = "front";
 	    // Flame is in front of front, eh?
-	    Layer[Layer["flame"] = 8] = "flame";
+	    Layer[Layer["flame"] = 9] = "flame";
 	    // Just to track the number of enum values.
-	    Layer[Layer["length"] = 9] = "length";
+	    Layer[Layer["length"] = 10] = "length";
 	})(Layer = exports.Layer || (exports.Layer = {}));
 	class BaseArt {
 	    constructor(part) {
@@ -1261,11 +1335,16 @@ webpackJsonp([1],[
 	    get offsetX() {
 	        return 0;
 	    }
+	    get toolTile() {
+	        return this.tile;
+	    }
 	}
 	exports.BaseArt = BaseArt;
 	class GoldTheme {
-	    constructor(game) {
+	    constructor(game, image) {
 	        this.ender = false;
+	        this.fadeSee = new Lerper(0, 0x90, -100, 0.2);
+	        this.invisible = false;
 	        this.layerPartIndices = new Array();
 	        this.layers = new Array();
 	        this.level = new _2.Level();
@@ -1273,8 +1352,7 @@ webpackJsonp([1],[
 	        this.tileModes = new Uint8Array(6);
 	        this.tileOpacities = new Uint8Array(6);
 	        this.game = game;
-	        let image = new Image();
-	        image.src = __webpack_require__(50);
+	        // Prepare image.
 	        this.image = image;
 	        let scaled = this.prepareImage(image);
 	        this.texture = new three_1.Texture(scaled);
@@ -1289,9 +1367,21 @@ webpackJsonp([1],[
 	            this.layers.push(new Array(maxLayerPartCount));
 	        }
 	    }
+	    static load(game) {
+	        let image = new Image();
+	        let promise = new Promise((resolve, reject) => {
+	            image.addEventListener('load', () => {
+	                resolve(new GoldTheme(game, image));
+	            });
+	            // TODO Error event?
+	        });
+	        image.src = __webpack_require__(51);
+	        return promise;
+	    }
 	    buildArt(part) {
 	        let type = part.type;
-	        if (type.ender) {
+	        // TODO Change to type != type.base?
+	        if (type.ender || type.invisible) {
 	            type = type.base;
 	        }
 	        let makeArt = _1.Parts.tileArts.get(type);
@@ -1329,74 +1419,29 @@ webpackJsonp([1],[
 	    }
 	    handle() {
 	        let { game } = this;
-	        let { time } = game.stage;
+	        // In passing, see if we need to update the panels.
+	        let styleChanged = false;
 	        if (game.edit.ender != this.ender) {
 	            this.ender = game.edit.ender;
+	            styleChanged = true;
+	        }
+	        if (game.edit.invisible != this.invisible) {
+	            this.invisible = game.edit.invisible;
+	            styleChanged = true;
+	        }
+	        if (styleChanged) {
+	            this.prepareVariations();
 	            this.paintPanels();
 	        }
+	        // Also init on the first round.
 	        if (!this.tilePlanes) {
 	            this.initTilePlanes();
 	        }
-	        // TODO Only gray enders, not mains. So maybe no uniform on that.
-	        // TODO Except energy blocks might look too much like steel???
-	        let ender = game.mode == game.edit && game.edit.ender;
-	        this.uniforms.state.value = +ender;
-	        let { tileIndices, tileModes, tileOpacities } = this;
-	        let tilePlanes = this.tilePlanes;
-	        let tilePlane = this.tilePlane;
-	        // Duplicate prototype, translated and tile indexed.
-	        // TODO How to make sure tilePlanes is large enough?
-	        // TODO Fill the back with none parts when it's too big?
-	        let partIndex = 0;
-	        this.buildLayers(game.stage.parts, true);
-	        this.buildLayers(game.stage.particles);
-	        this.layers.forEach(layer => {
-	            for (let part of layer) {
-	                if (!part) {
-	                    // That's the end of this layer.
-	                    break;
-	                }
-	                let currentTileIndices = part.art.tile;
-	                // Translate and merge are expensive. TODO Make my own functions?
-	                tilePlane.translate(part.point.x, part.point.y, 0);
-	                for (let k = 0; k < tileIndices.length; k += 3) {
-	                    tileIndices[k + 0] = currentTileIndices.x;
-	                    tileIndices[k + 1] = currentTileIndices.y;
-	                    tileIndices[k + 2] = part.art.offsetX;
-	                }
-	                let mode = +(part.type.ender || part.keyTime + 1 > time);
-	                if (part.dead) {
-	                    mode = 2;
-	                }
-	                let opacity = time >= part.phaseEndTime ? 1 :
-	                    // TODO Why doesn't this opacity work? Setting w = 0.5 for all works.
-	                    (time - part.phaseBeginTime) /
-	                        (part.phaseEndTime - part.phaseBeginTime);
-	                for (let n = 0; n < tileModes.length; ++n) {
-	                    // Break state into bits.
-	                    tileModes[n] = mode;
-	                    tileOpacities[n] = opacity;
-	                }
-	                tilePlanes.merge(tilePlane, 6 * partIndex);
-	                tilePlane.translate(-part.point.x, -part.point.y, 0);
-	                ++partIndex;
-	            }
-	        });
-	        tilePlanes.setDrawRange(0, 6 * partIndex);
-	        let attributes = tilePlanes.attributes;
-	        // Older typing missed needsUpdate, but looks like it's here now.
-	        // TODO Define a type with all our attributes on it?
-	        attributes.mode.needsUpdate = true;
-	        attributes.opacity.needsUpdate = true;
-	        attributes.position.needsUpdate = true;
-	        attributes.tile.needsUpdate = true;
-	        // TODO Preset uv for all spots, so no need for later update?
-	        attributes.uv.needsUpdate = true;
+	        // But main point is to paint the stage.
+	        this.paintStage(game.stage);
 	    }
 	    initTilePlanes() {
 	        let { game } = this;
-	        // Panels.
-	        this.preparePanels();
 	        // Tiles.
 	        let tileMaterial = new three_1.ShaderMaterial({
 	            depthTest: false,
@@ -1404,11 +1449,10 @@ webpackJsonp([1],[
 	            transparent: true,
 	            uniforms: {
 	                map: { value: this.texture },
-	                state: { value: 1 },
 	            },
 	            vertexShader: tileVertexShader,
 	        });
-	        this.uniforms = tileMaterial.uniforms;
+	        // this.uniforms = tileMaterial.uniforms as any as Uniforms;
 	        // Prototypical tile.
 	        this.tilePlane = new three_1.BufferGeometry();
 	        let tilePlane = this.tilePlane;
@@ -1439,6 +1483,16 @@ webpackJsonp([1],[
 	        this.tilesMesh = new three_1.Mesh(this.tilePlanes, tileMaterial);
 	        game.scene.add(this.tilesMesh);
 	        game.redraw = () => this.handle();
+	        // Panels, too.
+	        this.preparePanels();
+	    }
+	    modeChanged() {
+	        if (this.game.mode == this.game.edit) {
+	            // We can't get spacing right without having things visible, so do this
+	            // after we get to edit mode.
+	            // Doesn't need every time, but eh.
+	            this.updateLayout();
+	        }
 	    }
 	    paintPanels(changedName) {
 	        let { game } = this;
@@ -1464,17 +1518,79 @@ webpackJsonp([1],[
 	            let part = type.make(game);
 	            this.buildArt(part);
 	            // Now calculate the pixel point.
-	            let point = part.art.tile.clone();
+	            let point = part.art.toolTile.clone();
 	            // TODO Add offset to point.x here.
 	            point.y = _2.Level.tileCount.y - point.y - 1;
 	            point.multiply(_2.Level.tileSize);
 	            // Now draw to our canvas and to the button background.
 	            let canvas = button.querySelector(':scope > canvas');
 	            let context = canvas.getContext('2d');
-	            let image = type.ender ? this.enderImage : this.image;
 	            context.clearRect(0, 0, canvas.width, canvas.height);
-	            context.drawImage(image, point.x, point.y, _2.Level.tileSize.x, _2.Level.tileSize.y, 0, 0, canvas.width, canvas.height);
+	            context.drawImage(this.toolsImage, point.x, point.y, _2.Level.tileSize.x, _2.Level.tileSize.y, 0, 0, canvas.width, canvas.height);
 	        }
+	    }
+	    paintStage(stage, asTools = false) {
+	        let { game, time } = stage;
+	        let { tileIndices, tileModes, tileOpacities } = this;
+	        let tilePlanes = this.tilePlanes;
+	        let tilePlane = this.tilePlane;
+	        // Duplicate prototype, translated and tile indexed.
+	        // TODO How to make sure tilePlanes is large enough?
+	        // TODO Fill the back with none parts when it's too big?
+	        let partIndex = 0;
+	        this.buildLayers(stage.parts, true);
+	        this.buildLayers(stage.particles);
+	        let seeOpacity = this.updateFade();
+	        // Draw everything.
+	        this.layers.forEach(layer => {
+	            for (let part of layer) {
+	                if (!part) {
+	                    // That's the end of this layer.
+	                    break;
+	                }
+	                let art = part.art;
+	                let currentTileIndices = asTools ? art.toolTile : art.tile;
+	                // Translate and merge are expensive. TODO Make my own functions?
+	                tilePlane.translate(part.point.x, part.point.y, 0);
+	                for (let k = 0; k < tileIndices.length; k += 3) {
+	                    tileIndices[k + 0] = currentTileIndices.x;
+	                    tileIndices[k + 1] = currentTileIndices.y;
+	                    tileIndices[k + 2] = part.art.offsetX;
+	                }
+	                let mode = +(part.type.ender || part.keyTime + 1 > time);
+	                if (part.dead) {
+	                    mode = 2;
+	                }
+	                let opacity = time >= part.phaseEndTime ? 0xFF :
+	                    // TODO Look back into this with integers.
+	                    (time - part.phaseBeginTime) /
+	                        (part.phaseEndTime - part.phaseBeginTime);
+	                if (part.type.invisible) {
+	                    opacity = seeOpacity;
+	                }
+	                else if (part == stage.hero && stage.hero.bonusSee) {
+	                    opacity = 0x90;
+	                }
+	                for (let n = 0; n < tileModes.length; ++n) {
+	                    // Break state into bits.
+	                    tileModes[n] = mode;
+	                    tileOpacities[n] = opacity;
+	                }
+	                tilePlanes.merge(tilePlane, 6 * partIndex);
+	                tilePlane.translate(-part.point.x, -part.point.y, 0);
+	                ++partIndex;
+	            }
+	        });
+	        tilePlanes.setDrawRange(0, 6 * partIndex);
+	        let attributes = tilePlanes.attributes;
+	        // Older typing missed needsUpdate, but looks like it's here now.
+	        // TODO Define a type with all our attributes on it?
+	        attributes.mode.needsUpdate = true;
+	        attributes.opacity.needsUpdate = true;
+	        attributes.position.needsUpdate = true;
+	        attributes.tile.needsUpdate = true;
+	        // TODO Preset uv for all spots, so no need for later update?
+	        attributes.uv.needsUpdate = true;
 	    }
 	    prepareImage(image) {
 	        // Make the image POT (power-of-two) sized.
@@ -1495,23 +1611,10 @@ webpackJsonp([1],[
 	        // size implies what looks reasonable for ui elements.
 	        let scale = Math.round(window.screen.height / 20 / _2.Level.tileSize.y);
 	        let buttonSize = _2.Level.tileSize.clone().multiplyScalar(scale);
-	        let offsetLeft;
 	        for (let button of toolbox.getButtons()) {
 	            let name = toolbox.getName(button);
 	            let tool = game.edit.namedTools.get(name);
 	            let type = tool instanceof _2.PartTool ? tool.type : undefined;
-	            // Align menu by now known canvas size.
-	            let menu = button.querySelector('.toolMenu');
-	            if (menu) {
-	                if (offsetLeft == undefined) {
-	                    let style = window.getComputedStyle(button);
-	                    offsetLeft =
-	                        Number.parseInt(style.width) +
-	                            Number.parseInt(style.borderRightWidth) +
-	                            Number.parseInt(style.paddingRight);
-	                }
-	                menu.style.marginLeft = `${offsetLeft}px`;
-	            }
 	            if (!type || type == parts_1.None) {
 	                // We don't draw a standard tile for this one.
 	                button.style.width = `${buttonSize.x}px`;
@@ -1530,53 +1633,108 @@ webpackJsonp([1],[
 	        }
 	        this.prepareVariations();
 	        this.paintPanels();
+	        this.updateLayout();
 	    }
 	    prepareVariations() {
 	        let { game } = this;
+	        let { toolbox } = game.edit;
 	        // TODO Abstract some render target -> canvas?
 	        let scaled = this.texture.image;
-	        let material = undefined;
 	        let target = new three_1.WebGLRenderTarget(scaled.width, scaled.height);
 	        try {
-	            let scene = new three_1.Scene();
-	            material = new three_1.ShaderMaterial({
-	                fragmentShader: enderFragmentShader,
-	                uniforms: { map: { value: this.texture } },
-	                vertexShader: tileVertexShader,
+	            let stage = new _2.Stage(game);
+	            stage.parts.length = 0;
+	            toolbox.getButtons().forEach(button => {
+	                let name = toolbox.getName(button);
+	                let tool = game.edit.namedTools.get(name);
+	                tool = game.edit.partTool(name, this);
+	                let type = tool instanceof _2.PartTool ? tool.type : undefined;
+	                if (!type) {
+	                    return;
+	                }
+	                let part = type.make(game);
+	                this.buildArt(part);
+	                let art = part.art;
+	                // console.log(name, art.baseTile.x, art.baseTile.y);
+	                part.point.copy(art.toolTile).multiply(_2.Level.tileSize);
+	                stage.parts.push(part);
 	            });
-	            let plane = new three_1.PlaneBufferGeometry(this.image.width, this.image.height);
-	            plane.translate(this.image.width / 2, this.image.height / 2, 0);
-	            scene.add(new three_1.Mesh(plane, material));
-	            this.texture.flipY = false;
-	            try {
-	                game.renderer.render(scene, game.camera, target);
-	            }
-	            finally {
-	                this.texture.flipY = true;
-	                this.texture.needsUpdate = true;
-	                plane.dispose();
-	            }
-	            let enderImage = document.createElement('canvas');
-	            enderImage.width = this.image.width;
-	            enderImage.height = this.image.height;
-	            let context = enderImage.getContext('2d');
-	            let data = new Uint8Array(4 * enderImage.width * enderImage.height);
+	            // Hack edit more for painting.
+	            let oldMode = game.mode;
+	            game.mode = game.edit;
+	            this.paintStage(stage, true);
+	            // Back to old mode.
+	            game.mode = oldMode;
+	            let scene = new three_1.Scene();
+	            let camera = new three_1.OrthographicCamera(0, scaled.width, scaled.height, 0, -1e5, 1e5);
+	            camera.position.z = 1;
+	            // Render and copy out.
+	            game.renderer.render(game.scene, camera, target);
+	            let toolsImage = document.createElement('canvas');
+	            toolsImage.width = this.image.width;
+	            toolsImage.height = this.image.height;
+	            let context = toolsImage.getContext('2d');
+	            let data = new Uint8Array(4 * toolsImage.width * toolsImage.height);
 	            game.renderer.readRenderTargetPixels(target, 0, 0, this.image.width, this.image.height, data);
-	            let imageData = context.createImageData(enderImage.width, enderImage.height);
+	            // Use a temporary canvas for flipping y.
+	            let tempImage = document.createElement('canvas');
+	            tempImage.width = toolsImage.width;
+	            tempImage.height = toolsImage.height;
+	            let tempContext = tempImage.getContext('2d');
+	            let imageData = tempContext.createImageData(toolsImage.width, toolsImage.height);
 	            imageData.data.set(data);
-	            context.putImageData(imageData, 0, 0);
+	            tempContext.putImageData(imageData, 0, 0);
+	            // Draw to the final.
+	            context.save();
+	            context.scale(1, -1);
+	            context.translate(0, -200);
+	            context.drawImage(tempImage, 0, 0);
+	            context.restore();
 	            // {  // Show the ender image for debugging.
+	            //   enderImage.style.border = '1px solid white';
+	            //   enderImage.style.pointerEvents = 'none';
 	            //   enderImage.style.position = 'absolute';
 	            //   enderImage.style.zIndex = '100';
 	            //   window.document.body.appendChild(enderImage);
 	            // }
-	            this.enderImage = enderImage;
+	            this.toolsImage = toolsImage;
 	        }
 	        finally {
-	            if (material) {
-	                material.dispose();
-	            }
 	            target.dispose();
+	        }
+	    }
+	    // uniforms: Uniforms;
+	    updateFade() {
+	        let edit = this.game.mode == this.game.edit;
+	        let { hero, time } = this.game.stage;
+	        // TODO Extract all this invisibility fade stuff elsewhere.
+	        let see = edit || !hero || hero.seesInvisible;
+	        if (!time) {
+	            // Don't observe state switch from initial state.
+	            // Just sneak it in.
+	            // TODO Going from edit to test, this doesn't seem to reset right.
+	            this.fadeSee.ref = -100;
+	            this.fadeSee.state = see;
+	        }
+	        return this.fadeSee.update(see, time);
+	    }
+	    updateLayout() {
+	        let { game } = this;
+	        let { toolbox } = game.edit;
+	        let offsetLeft;
+	        for (let button of toolbox.getButtons()) {
+	            // Align menu by hopefully known canvas size.
+	            let menu = button.querySelector('.toolMenu');
+	            if (menu) {
+	                if (offsetLeft == undefined) {
+	                    let style = window.getComputedStyle(button);
+	                    offsetLeft =
+	                        Number.parseInt(style.width) +
+	                            Number.parseInt(style.borderRightWidth) +
+	                            Number.parseInt(style.paddingRight);
+	                }
+	                menu.style.marginLeft = `${offsetLeft}px`;
+	            }
 	        }
 	    }
 	    updateTool(button) {
@@ -1584,7 +1742,39 @@ webpackJsonp([1],[
 	    }
 	}
 	exports.GoldTheme = GoldTheme;
-	let grayify = `
+	class Lerper {
+	    constructor(begin, end, ref, span) {
+	        this.state = false;
+	        this.begin = begin;
+	        this.end = end;
+	        this.ref = ref;
+	        this.span = span;
+	    }
+	    update(state, x) {
+	        if (this.state != state) {
+	            // TODO Modify ref calc based on current value.
+	            this.ref = x;
+	            this.state = state;
+	        }
+	        return this.value(x);
+	    }
+	    value(x) {
+	        // State false means go to begin, and true to end.
+	        let begin = this.state ? this.begin : this.end;
+	        let end = this.state ? this.end : this.begin;
+	        // Now lerp.
+	        let rel = Math.min((x - this.ref) / this.span, 1);
+	        return rel * (end - begin) + begin;
+	    }
+	}
+	let tileFragmentShader = `
+	  uniform sampler2D map;
+	  // uniform int state;
+	  varying float vMode;
+	  varying float vOpacity;
+	  varying vec3 vTile;
+	  varying vec2 vUv;
+	
 	  void grayify(inout vec3 rgb) {
 	    // TODO Better gray?
 	    float mean = (rgb.x + rgb.y + rgb.z) / 3.0;
@@ -1592,31 +1782,6 @@ webpackJsonp([1],[
 	    // Paler to make even gray things look different.
 	    rgb += 0.6 * (1.0 - rgb);
 	  }
-	`;
-	let enderFragmentShader = `
-	  uniform sampler2D map;
-	  varying vec2 vUv;
-	
-	  ${grayify}
-	
-	  void main() {
-	    gl_FragColor = texture2D(map, vUv);
-	    gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
-	    if (gl_FragColor.w > 0.0) {
-	      grayify(gl_FragColor.xyz);
-	      gl_FragColor.w = 1.0;
-	    }
-	  }
-	`;
-	let tileFragmentShader = `
-	  uniform sampler2D map;
-	  uniform int state;
-	  varying float vMode;
-	  varying float vOpacity;
-	  varying vec3 vTile;
-	  varying vec2 vUv;
-	
-	  ${grayify}
 	
 	  void main() {
 	    vec2 coord = (
@@ -1650,7 +1815,7 @@ webpackJsonp([1],[
 	  void main() {
 	    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 	    vMode = mode;
-	    vOpacity = opacity;
+	    vOpacity = opacity / 255.0;
 	    vUv = uv;
 	    vTile = tile;
 	  }
@@ -1672,6 +1837,7 @@ webpackJsonp([1],[
 	    }
 	    get tile() {
 	        return this.part.owner ? goneTile : this.mainTile;
+	        // return this.mainTile;
 	    }
 	}
 	exports.PrizeArt = PrizeArt;
@@ -1760,6 +1926,9 @@ webpackJsonp([1],[
 	        // Intended for full export.
 	        return Object.assign({ items: this.items }, Raw.encodeMeta(this));
 	    }
+	    numberItems() {
+	        ItemList.numberItems(this.items);
+	    }
 	}
 	exports.ItemList = ItemList;
 	class Zone extends ItemList {
@@ -1808,6 +1977,7 @@ webpackJsonp([1],[
 	        if (encoded.name) {
 	            this.name = encoded.name;
 	        }
+	        this.number = encoded.number;
 	        // Tiles.
 	        let point = new three_1.Vector2();
 	        let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
@@ -1855,7 +2025,7 @@ webpackJsonp([1],[
 	    }
 	    // For use from the editor.
 	    updateStage(game, reset = false) {
-	        let play = game.mode == game.play;
+	        let play = game.mode instanceof _1.PlayMode;
 	        let stage = game.stage;
 	        let theme = game.theme;
 	        if (reset) {
@@ -1875,7 +2045,12 @@ webpackJsonp([1],[
 	                // Handle enders for play mode.
 	                if (play && tile.ender) {
 	                    // TODO Need a time for transition animation?
-	                    tile = stage.ending ? tile.base : parts_1.None;
+	                    let options = Object.assign({}, tile.options);
+	                    for (let key in tile.options) {
+	                        options[key] = tile[key];
+	                    }
+	                    options.ender = false;
+	                    tile = stage.ending ? parts_1.Parts.optionType(tile, options) : parts_1.None;
 	                }
 	                // Build a new part if needed.
 	                let oldPart = stage.parts[k];
@@ -1905,6 +2080,7 @@ webpackJsonp([1],[
 	            }
 	        }
 	        if (reset) {
+	            stage.init();
 	            if (!stage.treasureCount) {
 	                // Already got them all!
 	                stage.ending = true;
@@ -1979,7 +2155,12 @@ webpackJsonp([1],[
 	            point.y >= y && point.y < y + _1.Level.tileSize.y);
 	    }
 	    die(killer) {
-	        this.dead = true;
+	        let wasDead = this.dead;
+	        if (!wasDead) {
+	            // TODO Handle subtype death event in separate function.
+	            this.dead = true;
+	            this.game.stage.died(this);
+	        }
 	    }
 	    // For overriding.
 	    editPlacedAt(tilePoint) { }
@@ -2018,12 +2199,22 @@ webpackJsonp([1],[
 	    surface(other, seems) {
 	        return false;
 	    }
+	    touchKills(other) {
+	        return this.solid(other);
+	    }
 	    get type() {
 	        return this.constructor;
 	    }
 	    update() { }
+	    // State that can be updated on stage init.
+	    updateInfo() { }
 	}
 	Part.ender = false;
+	Part.invisible = false;
+	Part.options = {
+	    ender: true,
+	    invisible: true,
+	};
 	exports.Part = Part;
 
 
@@ -2309,6 +2500,20 @@ webpackJsonp([1],[
 	        if (!hero) {
 	            return;
 	        }
+	        // TODO Let enemy see if near invisible (including hero)?
+	        // TODO Combine logic with gun.
+	        let heroHidden = hero.bonusSee && !this.seesInvisible;
+	        if (heroHidden) {
+	            // Invisible, so confuse.
+	            if (state.x == State.chase) {
+	                state.x = State.wait;
+	                waitTime.x = time + closeTime;
+	            }
+	            if (state.y == State.chase) {
+	                state.y = State.wait;
+	                waitTime.y = time + closeTime;
+	            }
+	        }
 	        // TODO Using oldDiff also causes the top of ladder problem, but worse.
 	        // let oldDiff = this.workPoint2.copy(hero.oldPoint).sub(this.oldPoint);
 	        let diff = this.workPoint2.copy(hero.point).sub(this.point);
@@ -2366,7 +2571,7 @@ webpackJsonp([1],[
 	                }
 	                let waitDiff = Math.abs(this.point.x - this.waitPoint.x);
 	                let waitDiffHero = Math.abs(hero.point.y - this.waitPointHero.y);
-	                if (waitDiff >= _2.Level.tileSize.x || waitDiffHero >= _2.Level.tileSize.y) {
+	                if (!heroHidden && (waitDiff >= _2.Level.tileSize.x || waitDiffHero >= _2.Level.tileSize.y)) {
 	                    state.y = State.chase;
 	                }
 	                else if (time >= waitTime.y) {
@@ -2424,7 +2629,7 @@ webpackJsonp([1],[
 	                }
 	                let waitDiff = Math.abs(this.point.y - this.waitPoint.y);
 	                let waitDiffHero = Math.abs(hero.point.x - this.waitPointHero.x);
-	                if (waitDiff >= _2.Level.tileSize.y || waitDiffHero >= _2.Level.tileSize.x) {
+	                if (!heroHidden && (waitDiff >= _2.Level.tileSize.y || waitDiffHero >= _2.Level.tileSize.x)) {
 	                    state.x = State.chase;
 	                }
 	                else if (time >= waitTime.x) {
@@ -2559,7 +2764,7 @@ webpackJsonp([1],[
 	            }
 	        }
 	        if (this.dazed) {
-	            if (this.caughtTime < this.game.stage.time - 3) {
+	            if (this.caughtTime < this.game.stage.time - 1.4) {
 	                this.dazed = false;
 	            }
 	            else {
@@ -2617,6 +2822,10 @@ webpackJsonp([1],[
 	    }
 	    surface() {
 	        return this.solid();
+	    }
+	    touchKills(other) {
+	        // TODO Energize to speed up, instead?
+	        return false;
 	    }
 	}
 	Energy.char = 'O';
@@ -2747,7 +2956,8 @@ webpackJsonp([1],[
 	        let { point } = this;
 	        let { stage } = this.game;
 	        let { hero } = stage;
-	        if (!hero) {
+	        if (!hero || (hero.bonusSee && !this.seesInvisible)) {
+	            // TODO Let enemies see if near invisible?
 	            return false;
 	        }
 	        if (hero.point.y + 10 < point.y || hero.point.y > point.y + 10) {
@@ -2896,10 +3106,13 @@ webpackJsonp([1],[
 	        super(...arguments);
 	        this.action = new _2.RunnerAction();
 	        this.actionChange = new _2.RunnerAction();
+	        // Separate speed vs see bonus.
+	        this.bonusSee = undefined;
+	        // Separate speed vs see bonus.
+	        this.bonusSpeed = undefined;
 	        this.carried = true;
 	        this.fastEnd = -10;
 	        this.speed = new three_1.Vector2(1, 1);
-	        this.startTime = 0;
 	        this.treasureCount = 0;
 	    }
 	    checkAction() {
@@ -2916,8 +3129,8 @@ webpackJsonp([1],[
 	        this.action.copy(control);
 	    }
 	    choose() {
-	        let { action, fastEnd, game, speed } = this;
-	        if (fastEnd >= game.stage.time) {
+	        let { action, bonusSpeed, game, speed } = this;
+	        if (bonusSpeed) {
 	            speed.setScalar(1.75);
 	        }
 	        else {
@@ -2927,23 +3140,12 @@ webpackJsonp([1],[
 	        if (this.game.stage.ended || this.phased) {
 	            action.clear();
 	        }
-	        if (!this.startTime) {
-	            // Remember the first action time.
-	            // And we get cleared if over, so we count from the beginning if no action
-	            // ever, and that's okay.
-	            if (action.left || action.right || action.up || action.down ||
-	                action.burnLeft || action.burnRight) {
-	                // TODO Visual indicator of when clock starts?
-	                this.startTime = this.game.stage.time;
-	            }
-	        }
 	        this.processAction(action);
 	    }
 	    die() {
 	        if (!(this.phased || this.game.stage.ended)) {
 	            this.dead = true;
-	            this.game.stage.ended = true;
-	            this.game.play.showReport('Maybe next time.');
+	            this.game.play.fail();
 	        }
 	    }
 	    editPlacedAt(tilePoint) {
@@ -2966,15 +3168,28 @@ webpackJsonp([1],[
 	                this.game.level.updateStage(this.game);
 	            }
 	        }
-	        else {
-	            // Bonus is the only other option.
+	        else if (prize instanceof _1.Bonus) {
+	            // Bonus is the only other option, but eh.
 	            let { stage } = this.game;
-	            let baseTime = Math.max(this.fastEnd, stage.time);
-	            this.fastEnd = baseTime + 10;
-	            // Change visually before slowing.
-	            // TODO There's also about 1 second diff here in keyTime handling. Why?
-	            this.keyTime = this.fastEnd - 1.5;
+	            let old;
+	            if (prize.type.invisible) {
+	                old = this.bonusSee;
+	                this.bonusSee = prize;
+	            }
+	            else {
+	                old = this.bonusSpeed;
+	                this.bonusSpeed = prize;
+	            }
+	            let baseTime = Math.max(old ? old.bonusEnd : 0, stage.time);
+	            prize.bonusEnd = baseTime + 10;
+	            if (!prize.type.invisible) {
+	                // Change visually before slowing.
+	                // TODO There's also about 1 second diff here in keyTime handling. Why?
+	                this.keyTime = prize.bonusEnd - 1.5;
+	            }
 	        }
+	        prize.point.x = -1000;
+	        this.game.stage.removed(prize);
 	        return true;
 	    }
 	    update() {
@@ -2987,13 +3202,31 @@ webpackJsonp([1],[
 	                this.die();
 	            }
 	            if (this.game.stage.ending && y >= _2.Level.pixelCount.y) {
-	                this.game.stage.ended = true;
-	                this.game.play.showReport('Level complete!');
+	                this.game.play.win();
 	            }
 	        }
 	    }
+	    updateInfo() {
+	        // Check for seeing invisibles, by nearby invisibles.
+	        if (this.bonusSee && this.bonusSee.bonusEnd < this.game.stage.time) {
+	            this.bonusSee = undefined;
+	        }
+	        if (this.bonusSpeed && this.bonusSpeed.bonusEnd < this.game.stage.time) {
+	            this.bonusSpeed = undefined;
+	        }
+	        if (this.bonusSee) {
+	            // Already done.
+	            this.seesInvisible = true;
+	            return;
+	        }
+	        super.updateInfo();
+	    }
 	}
 	Hero.char = 'R';
+	Hero.options = {
+	    ender: false,
+	    invisible: false,
+	};
 	exports.Hero = Hero;
 
 
@@ -3191,6 +3424,10 @@ webpackJsonp([1],[
 	    }
 	}
 	None.char = ' ';
+	None.options = {
+	    ender: false,
+	    invisible: false,
+	};
 	exports.None = None;
 
 
@@ -3200,7 +3437,30 @@ webpackJsonp([1],[
 
 	"use strict";
 	const _1 = __webpack_require__(3);
+	const _2 = __webpack_require__(1);
 	class Parts {
+	    static optionType(baseType, options) {
+	        // The type options should be just options, but the options passed in might
+	        // have extra, so clone just the type options.
+	        baseType = baseType.base;
+	        let validOptions = Object.assign({}, baseType.options);
+	        for (let key in baseType.options) {
+	            validOptions[key] &= options[key];
+	        }
+	        let char = Parts.typeChar(baseType, validOptions);
+	        let type = Parts.charParts.get(char);
+	        return type;
+	    }
+	    static typeChar(type, options) {
+	        let char = type.char.codePointAt(0);
+	        char |= options.ender ? 0x80 : 0x00;
+	        char |= options.invisible ? 0x100 : 0x00;
+	        if (char == 0xAD) {
+	            // Because 0xAD isn't visible, and they're nice to see, at least.
+	            char = 0xFF;
+	        }
+	        return String.fromCodePoint(char);
+	    }
 	}
 	Parts.inventory = [
 	    _1.Bar,
@@ -3223,6 +3483,7 @@ webpackJsonp([1],[
 	    _1.LauncherRight,
 	    _1.LauncherUp,
 	    _1.None,
+	    _1.Spawn,
 	    _1.Steel,
 	    _1.Treasure,
 	];
@@ -3236,32 +3497,38 @@ webpackJsonp([1],[
 	    }
 	    chars[char] = char;
 	});
-	let nonEnders = [_1.Hero, _1.None, _1.Treasure];
-	Parts.inventory.filter(part => nonEnders.indexOf(part) < 0).forEach(part => {
-	    // Auto-pick chars in the extended latin range, for convenience.
-	    // They won't look pretty.
-	    // 1D4D0-1D4E9 caps, 1D4EA-1D503 lower, others, for pretty?
-	    let char = part.char.codePointAt(0) + 0x80;
-	    if (char == 0xAD) {
-	        // Because 0xAD isn't visible, and they're nice to see, at least.
-	        char = 0xFF;
+	// This builds all possible parts up front.
+	// TODO Build them only dynamically?
+	Parts.inventory.forEach(part => {
+	    let makeOptions = (condition) => condition ? [false, true] : [false];
+	    let options = {};
+	    for (let key in part.options) {
+	        options[key] =
+	            makeOptions(part.options[key]);
 	    }
-	    // Creat the class.
-	    class Ender extends part {
-	        static get base() {
-	            return part;
+	    // Take off the all-false case, since we already have those.
+	    let allOptions = _2.cartesianProduct(options).slice(1);
+	    allOptions.forEach(option => {
+	        let char = Parts.typeChar(part, option);
+	        class OptionPart extends part {
+	            static get base() {
+	                return part;
+	            }
 	        }
-	    }
-	    Ender.char = String.fromCodePoint(char);
-	    // TODO `make` that attends to edit or play mode for ender or base?
-	    // TODO Or just reference game dynamically in parts?
-	    Ender.ender = true;
-	    // Add it to things.
-	    Parts.inventory.push(Ender);
-	    Parts.charParts.set(Ender.char, Ender);
-	    // console.log(
-	    //   part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name
-	    // );
+	        OptionPart.char = char;
+	        // TODO Are the following TODOs still relevant?
+	        // TODO `make` that attends to edit or play mode for ender or base?
+	        // TODO Or just reference game dynamically in parts?
+	        OptionPart.ender = option.ender;
+	        OptionPart.invisible = option.invisible;
+	        // Add it to things.
+	        Parts.inventory.push(OptionPart);
+	        Parts.charParts.set(char, OptionPart);
+	        // console.log(
+	        //   part.char, OptionPart.char, OptionPart.ender, OptionPart.invisible,
+	        //   Object.getPrototypeOf(OptionPart).name
+	        // );
+	    });
 	});
 
 
@@ -3281,17 +3548,18 @@ webpackJsonp([1],[
 	        this.oldCatcher = undefined;
 	        this.oldPoint = new three_1.Vector2();
 	        this.intendedMove = new three_1.Vector2();
+	        this.seesInvisible = false;
 	        this.support = undefined;
 	        // Move some of these to module global. We're sync, right?
 	        this.workPointExtra = new three_1.Vector2();
 	    }
 	    carriedMove(x) { }
 	    encased() {
-	        let isSolid = (part) => part.solid(this) && part != this;
-	        return (this.partsAt(0, 0).some(isSolid) ||
-	            this.partsAt(0, top).some(isSolid) ||
-	            this.partsAt(right, 0).some(isSolid) ||
-	            this.partsAt(right, top).some(isSolid));
+	        let touchKills = (part) => part.touchKills(this) && part != this;
+	        return (this.partsAt(0, 0).some(touchKills) ||
+	            this.partsAt(0, top).some(touchKills) ||
+	            this.partsAt(right, 0).some(touchKills) ||
+	            this.partsAt(right, top).some(touchKills));
 	    }
 	    findAlign(edge, minParts, maxParts) {
 	        // Find where an opening is, so we can align to that.
@@ -3609,8 +3877,27 @@ webpackJsonp([1],[
 	        // Update moved to the actual move, and update the stage.
 	        this.moved.copy(this.point).sub(oldPoint);
 	        this.game.stage.moved(this, oldPoint);
+	        // Update info that doesn't involve moving.
+	        this.updateInfo();
+	    }
+	    updateInfo() {
+	        this.seesInvisible = false;
+	        for (let i = -1; i <= 1; ++i) {
+	            for (let j = -1; j <= 1; ++j) {
+	                workPoint.set(j, i).addScalar(0.5).multiply(_1.Level.tileSize);
+	                let invisible = this.partAt(workPoint.x, workPoint.y, part => part.type.invisible);
+	                if (invisible) {
+	                    this.seesInvisible = true;
+	                    break;
+	                }
+	            }
+	        }
 	    }
 	}
+	Runner.options = {
+	    ender: true,
+	    invisible: false,
+	};
 	exports.Runner = Runner;
 	let epsilon = 1e-2;
 	exports.TilePos = {
@@ -3624,10 +3911,68 @@ webpackJsonp([1],[
 	    top: 10 - epsilon,
 	};
 	let { midBottom, midLeft, midRight, midTop, right, top } = exports.TilePos;
+	let workPoint = new three_1.Vector2();
 
 
 /***/ },
 /* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const _1 = __webpack_require__(3);
+	const _2 = __webpack_require__(1);
+	class Spawn extends _2.Part {
+	    constructor() {
+	        super(...arguments);
+	        this.spawnItems = new Array();
+	    }
+	    static respawnMaybe(part) {
+	        if (!(part instanceof _1.Enemy)) {
+	            return;
+	        }
+	        // Find the spawn point, if any, and spawn.
+	        let choice = undefined;
+	        let min = Infinity;
+	        for (let spawn of part.game.stage.spawns) {
+	            let distance = part.point.distanceTo(spawn.point);
+	            // Could possibly be equal or close but that's rare, and this will do.
+	            if (distance < min) {
+	                choice = spawn;
+	                min = distance;
+	            }
+	        }
+	        // Spawn a new enemy.
+	        if (choice) {
+	            choice.queueSpawn(new _1.Enemy(part.game));
+	        }
+	    }
+	    queueSpawn(part) {
+	        this.spawnItems.push({ part, time: this.game.stage.time + 5 });
+	    }
+	    spawn(part) {
+	        let { stage } = this.game;
+	        this.game.theme.buildArt(part);
+	        part.point.copy(this.point);
+	        stage.particles.push(part);
+	        stage.added(part);
+	    }
+	    update() {
+	        if (!this.spawnItems.length) {
+	            return;
+	        }
+	        let first = this.spawnItems[0];
+	        if (this.game.stage.time >= first.time) {
+	            this.spawnItems.shift();
+	            this.spawn(first.part);
+	        }
+	    }
+	}
+	Spawn.char = 'M';
+	exports.Spawn = Spawn;
+
+
+/***/ },
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3645,7 +3990,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3657,10 +4002,7 @@ webpackJsonp([1],[
 	        this.owner = undefined;
 	    }
 	    update() {
-	        if (this.owner) {
-	            this.point.copy(this.owner.point);
-	        }
-	        else {
+	        if (!this.owner) {
 	            let runner = this.partAt(4, 5, part => part instanceof _1.Runner && !part.dead);
 	            if (runner && runner.take(this)) {
 	                this.owner = runner;
@@ -3670,6 +4012,10 @@ webpackJsonp([1],[
 	}
 	exports.Prize = Prize;
 	class Bonus extends Prize {
+	    constructor() {
+	        super(...arguments);
+	        this.bonusEnd = 0;
+	    }
 	}
 	// Time is money, eh?
 	Bonus.char = '$';
@@ -3677,11 +4023,15 @@ webpackJsonp([1],[
 	class Treasure extends Prize {
 	}
 	Treasure.char = '*';
+	Treasure.options = {
+	    ender: false,
+	    invisible: true,
+	};
 	exports.Treasure = Treasure;
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3690,16 +4040,73 @@ webpackJsonp([1],[
 	class PlayMode extends _1.Mode {
 	    constructor(game) {
 	        super(game);
+	        this.bodyClass = 'playMode';
 	        this.paused = false;
+	        this.starting = true;
+	        this.won = false;
 	        this.onClick('pause', () => this.togglePause());
 	        // TODO Different handling (and visual display) of stop when really playing? 
-	        this.onClick('stop', () => this.game.edit.togglePlay());
+	        this.onClick('stop', () => this.game.setMode(this.game.edit));
+	    }
+	    enter() {
+	        this.game.play.starting = true;
+	        this.won = false;
+	        // Sometimes things get confused, and clearing the action might help.
+	        // We can't directly read keyboard state.
+	        this.game.control.clear();
+	        this.game.control.keyAction.clear();
+	    }
+	    fail() {
+	        this.game.stage.ended = true;
+	        this.showReport('Maybe next time.');
+	    }
+	    onHideDialog(dialog) {
+	        if (dialog instanceof ui_1.Report) {
+	            this.startNextOrRestart();
+	        }
 	    }
 	    showReport(message) {
 	        this.game.showDialog(new ui_1.Report(this.game, message));
 	    }
+	    startNextOrRestart() {
+	        let { game } = this;
+	        // If we won, get the next level ready.
+	        if (this.won) {
+	            let tower = new _1.Tower().load(game.tower.id);
+	            tower.numberItems();
+	            let index = tower.items.findIndex(item => item.id == game.level.id);
+	            if (index == -1) {
+	                // How did we lose our level?
+	                console.log(`Level ${game.level.id} not found in tower ${game.tower.id}`);
+	                // Get out of here or something ...
+	                game.setMode(game.edit);
+	                return;
+	            }
+	            let next = tower.items.slice(index + 1).find(item => !item.excluded);
+	            if (!next) {
+	                // That was the end of the tower.
+	                // TODO Show tower-end screen, then go back to the title screen or such.
+	                game.setMode(game.edit);
+	                return;
+	            }
+	            // Got a level, so use it.
+	            game.showLevel(next);
+	            window.localStorage['zym.levelId'] = next.id;
+	        }
+	        else {
+	            // Restart the current level.
+	            game.level.updateStage(game, true);
+	        }
+	        // And kick things off.
+	        this.enter();
+	    }
 	    tick() {
-	        if (this.paused) {
+	        if (this.starting) {
+	            if (this.game.control.active()) {
+	                this.starting = false;
+	            }
+	        }
+	        if (this.paused || this.starting) {
 	            // No updates. TODO Any juice for paused mode?
 	            return;
 	        }
@@ -3713,12 +4120,36 @@ webpackJsonp([1],[
 	            value: this.paused,
 	        });
 	    }
+	    win() {
+	        this.won = true;
+	        this.game.stage.ended = true;
+	        this.showReport('Level complete!');
+	    }
 	}
 	exports.PlayMode = PlayMode;
+	class TestMode extends PlayMode {
+	    // TODO Different end-level handling and/or keyboard handling.
+	    // TODO Probably different bodyClass, too.
+	    onKeyDown(key) {
+	        switch (key) {
+	            case 'Enter':
+	            case 'Escape': {
+	                this.game.setMode(this.game.edit);
+	                break;
+	            }
+	        }
+	    }
+	    onHideDialog(dialog) {
+	        if (dialog instanceof ui_1.Report) {
+	            this.game.setMode(this.game.edit);
+	        }
+	    }
+	}
+	exports.TestMode = TestMode;
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3735,6 +4166,7 @@ webpackJsonp([1],[
 	        // Collision grid.
 	        this.grid = new _1.Grid(_1.Level.tileCount);
 	        this.hero = undefined;
+	        this.spawns = new Array();
 	        // These particles are short-lived but relevant to game state.
 	        // Other particles might exist only in the visual theme.
 	        this.particles = new _1.Group();
@@ -3779,9 +4211,20 @@ webpackJsonp([1],[
 	        this.walkGrid(part.point, () => {
 	            grid.get(workPoint).push(part);
 	        });
+	        if (part instanceof parts_1.Spawn) {
+	            this.spawns.push(part);
+	        }
 	    }
 	    clearGrid() {
 	        this.grid.items.forEach(items => items.length = 0);
+	    }
+	    died(part) {
+	        parts_1.Spawn.respawnMaybe(part);
+	    }
+	    init() {
+	        for (let part of this.parts) {
+	            part.updateInfo();
+	        }
 	    }
 	    manageParticles() {
 	        let { particles } = this;
@@ -3854,6 +4297,10 @@ webpackJsonp([1],[
 	                parts.splice(index, 1);
 	            }
 	        });
+	        if (part instanceof parts_1.Spawn) {
+	            let index = this.spawns.indexOf(part);
+	            this.spawns.splice(index, 1);
+	        }
 	    }
 	    tick() {
 	        // TODO Move all updates to worker thread, and just receive state each
@@ -3909,7 +4356,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3963,7 +4410,7 @@ webpackJsonp([1],[
 	    }
 	    handleChangedCheckbox(checkbox) {
 	        let name = this.getName(checkbox.closest('label'));
-	        if (name == 'ender') {
+	        if (name in _1.Part.options) {
 	            this.edit.updateTool();
 	        }
 	    }
@@ -4317,7 +4764,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 39 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4325,7 +4772,7 @@ webpackJsonp([1],[
 	const _2 = __webpack_require__(1);
 	class Levels extends _1.EditorList {
 	    constructor(game) {
-	        super(game, __webpack_require__(46));
+	        super(game, __webpack_require__(47));
 	        this.updateNumbers();
 	    }
 	    addLevel() {
@@ -4334,6 +4781,8 @@ webpackJsonp([1],[
 	        this.tower.save();
 	        this.addItem(level);
 	        this.updateNumbers();
+	        // Select the new.
+	        this.selectValue(level);
 	    }
 	    buildTitleBar() {
 	        // First time through, we haven't yet set our own tower.
@@ -4386,7 +4835,7 @@ webpackJsonp([1],[
 	    }
 	    updateNumbers() {
 	        let { items } = this.tower;
-	        _2.ItemList.numberItems(items);
+	        this.tower.numberItems();
 	        let numberElements = [...this.list.querySelectorAll('.number')];
 	        // Build the numbers.
 	        numberElements.forEach((numberElement, index) => {
@@ -4421,13 +4870,14 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 40 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const _1 = __webpack_require__(1);
-	class EditorList {
+	class EditorList extends _1.Dialog {
 	    constructor(game, templateText) {
+	        super(game);
 	        this.hoverValue = undefined;
 	        this.game = game;
 	        this.init();
@@ -4461,6 +4911,7 @@ webpackJsonp([1],[
 	        let nameElement = item.querySelector('.name');
 	        this.makeEditable(nameElement, this.defaultValueName, () => value.name, text => {
 	            value.name = text;
+	            // console.log('saving', value);
 	            _1.Raw.save(value);
 	        });
 	        let nameBox = item.querySelector('.nameBox');
@@ -4493,8 +4944,10 @@ webpackJsonp([1],[
 	        field.spellcheck = false;
 	        field.innerText = get().trim() || defaultText;
 	        field.addEventListener('blur', () => {
+	            // console.log('Blur!');
 	            let text = field.innerText.trim();
 	            if (get() != text) {
+	                // console.log('Set!');
 	                set(text);
 	            }
 	            if (!text) {
@@ -4505,6 +4958,7 @@ webpackJsonp([1],[
 	            field.contentEditable = 'plaintext-only';
 	        });
 	        field.addEventListener('keydown', event => {
+	            // console.log('Down!');
 	            switch (event.key) {
 	                case 'Enter': {
 	                    field.contentEditable = 'false';
@@ -4550,14 +5004,15 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 41 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const _1 = __webpack_require__(1);
-	class Report {
+	class Report extends _1.Dialog {
 	    constructor(game, message) {
-	        let content = this.content = _1.load(__webpack_require__(47));
+	        super(game);
+	        let content = this.content = _1.load(__webpack_require__(48));
 	        // Hide extras.
 	        for (let row of content.querySelectorAll('.timeRow')) {
 	            row.style.display = 'none';
@@ -4565,25 +5020,17 @@ webpackJsonp([1],[
 	        // Now format.
 	        // TODO Juicier animation of this and such.
 	        this.field('endMessage').innerText = message;
-	        let { hero, time: stopTime } = game.stage;
-	        let scoreTime = stopTime;
-	        if (hero) {
-	            if (hero.startTime) {
-	                this.show('startTimeRow');
-	                this.field('startTime').innerText = _1.formatTime(hero.startTime);
-	                scoreTime -= hero.startTime;
-	            }
-	        }
-	        if (scoreTime != stopTime) {
-	            this.show('stopTimeRow');
-	            this.field('stopTime').innerText = _1.formatTime(stopTime);
-	        }
-	        // Always show score time.
+	        // TODO Simplify out this show thing? We used to have more variance.
 	        this.show('scoreTimeRow');
-	        this.field('scoreTime').innerText = _1.formatTime(scoreTime);
+	        this.field('scoreTime').innerText = _1.formatTime(game.stage.time);
 	    }
 	    field(name) {
 	        return this.content.querySelector(`.${name}`);
+	    }
+	    onKey(event, down) {
+	        if (down && event.key == 'Enter') {
+	            this.game.hideDialog();
+	        }
 	    }
 	    show(name, display = 'table-row') {
 	        this.field(name).style.display = display;
@@ -4593,7 +5040,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 42 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4601,7 +5048,7 @@ webpackJsonp([1],[
 	const _2 = __webpack_require__(1);
 	class Towers extends _1.EditorList {
 	    constructor(game) {
-	        super(game, __webpack_require__(48));
+	        super(game, __webpack_require__(49));
 	    }
 	    addTower() {
 	        let tower = new _2.Tower().encode();
@@ -4612,6 +5059,8 @@ webpackJsonp([1],[
 	        this.zone.items.push(tower);
 	        this.zone.save();
 	        this.addItem(tower);
+	        // Select the new.
+	        this.selectValue(tower);
 	    }
 	    buildTitleBar() {
 	        this.on('add', () => this.addTower());
@@ -4663,7 +5112,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 43 */
+/* 44 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -4797,6 +5246,33 @@ webpackJsonp([1],[
 	    }
 	}
 	exports.Ring = Ring;
+	function cartesianProduct(object) {
+	    function cartProdList(input, current) {
+	        if (!input || !input.length) {
+	            return [];
+	        }
+	        let head = input[0];
+	        let tail = input.slice(1);
+	        let output = [];
+	        for (let key in head) {
+	            for (let i = 0; i < head[key].length; i++) {
+	                let newCurrent = Object.assign({}, current);
+	                newCurrent[key] = head[key][i];
+	                if (tail.length) {
+	                    let productOfTail = cartProdList(tail, newCurrent);
+	                    output = output.concat(productOfTail);
+	                }
+	                else {
+	                    output.push(newCurrent);
+	                }
+	            }
+	        }
+	        return output;
+	    }
+	    let split = Object.keys(object).map(key => ({ [key]: object[key] }));
+	    return cartProdList(split);
+	}
+	exports.cartesianProduct = cartesianProduct;
 	function createId(byteSize = 16) {
 	    let array = new Uint8Array(byteSize);
 	    window.crypto.getRandomValues(array);
@@ -4837,8 +5313,8 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 44 */,
-/* 45 */
+/* 45 */,
+/* 46 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(6)();
@@ -4852,31 +5328,31 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 46 */
+/* 47 */
 /***/ function(module, exports) {
 
 	module.exports = "<div class=\"dialog levels\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=nameBox> <span class=name>Tower</span> </span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Marked Clipboard Level(s)\"></i> <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\" title=\"Unmark Clipboard Selections\"></i> <i class=\"fa fa-ban exclude\" title=\"Exclude Level\"></i> <i class=\"fa fa-trash delete disabled\" title=\"Delete Level\"></i> <i class=\"fa fa-download save\" title=\"Export Tower to File\"></i> <i class=\"fa fa-arrow-up towers\" title=\"List Towers\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i> <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i> <i class=\"fa fa-arrow-right edit\" title=\"Edit Level\"></i> </div> </div> </div> </div> </div> ";
 
 /***/ },
-/* 47 */
+/* 48 */
 /***/ function(module, exports) {
 
-	module.exports = "<div class=\"dialog report\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=endMessage>...</div> <table> <tr class=\"startTimeRow timeRow\"> <th>Begin time:</th><td class=startTime></td> </tr> <tr class=\"stopTimeRow timeRow\"> <th>End time:</th><td class=stopTime></td> </tr> <tr class=\"scoreTimeRow timeRow\"> <th>Score time:</th><td class=scoreTime></td> </tr> </table> </div> </div> ";
+	module.exports = "<div class=\"dialog report\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=endMessage>...</div> <table> <tr class=\"scoreTimeRow timeRow\"> <th>Time:</th><td class=scoreTime></td> </tr> </table> </div> </div> ";
 
 /***/ },
-/* 48 */
+/* 49 */
 /***/ function(module, exports) {
 
 	module.exports = "<div class=\"dialog towers\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=nameBox> <span class=name>Towers</span> </span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Marked Clipboard Tower(s)\"></i> <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\" title=\"Unmark Clipboard Selections\"></i> <i class=\"fa fa-ban exclude disabled\" title=\"Exclude Tower\"></i> <i class=\"fa fa-trash delete disabled\" title=\"Delete Tower\"></i> <i class=\"fa fa-upload load disabled\" title=\"Import Tower\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i> <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i> <i class=\"fa fa-arrow-right edit\" title=\"List Levels\"></i> </div> </div> </div> </div> </div> ";
 
 /***/ },
-/* 49 */
+/* 50 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(45);
+	var content = __webpack_require__(46);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(7)(content, {});
@@ -4896,7 +5372,7 @@ webpackJsonp([1],[
 	}
 
 /***/ },
-/* 50 */
+/* 51 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,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"
