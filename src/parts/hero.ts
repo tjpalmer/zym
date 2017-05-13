@@ -1,4 +1,4 @@
-import {None, Prize, Runner, Treasure} from './';
+import {Bonus, None, Prize, Runner, Treasure} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
@@ -6,9 +6,20 @@ export class Hero extends Runner {
 
   static char = 'R';
 
+  static options = {
+    ender: false,
+    invisible: false,
+  };
+
   action = new RunnerAction();
 
   actionChange = new RunnerAction();
+
+  // Separate speed vs see bonus.
+  bonusSee: Bonus | undefined = undefined;
+
+  // Separate speed vs see bonus.
+  bonusSpeed: Bonus | undefined = undefined;
 
   carried = true;
 
@@ -27,8 +38,8 @@ export class Hero extends Runner {
   }
 
   choose() {
-    let {action, fastEnd, game, speed} = this;
-    if (fastEnd >= game.stage.time) {
+    let {action, bonusSpeed, game, speed} = this;
+    if (bonusSpeed) {
       speed.setScalar(1.75);
     } else {
       speed.setScalar(1);
@@ -37,26 +48,13 @@ export class Hero extends Runner {
     if (this.game.stage.ended || this.phased) {
       action.clear();
     }
-    if (!this.startTime) {
-      // Remember the first action time.
-      // And we get cleared if over, so we count from the beginning if no action
-      // ever, and that's okay.
-      if (
-        action.left || action.right || action.up || action.down ||
-        action.burnLeft || action.burnRight
-      ) {
-        // TODO Visual indicator of when clock starts?
-        this.startTime = this.game.stage.time;
-      }
-    }
     this.processAction(action);
   }
 
   die() {
     if (!(this.phased || this.game.stage.ended)) {
       this.dead = true;
-      this.game.stage.ended = true;
-      this.game.play.showReport('Maybe next time.');
+      this.game.play.fail();
     }
   }
 
@@ -77,8 +75,6 @@ export class Hero extends Runner {
 
   speed = new Vector2(1, 1);
 
-  startTime = 0;
-
   treasureCount = 0;
 
   take(prize: Prize) {
@@ -88,15 +84,27 @@ export class Hero extends Runner {
         this.game.stage.ending = true;
         this.game.level.updateStage(this.game);
       }
-    } else {
-      // Bonus is the only other option.
+    } else if (prize instanceof Bonus) {
+      // Bonus is the only other option, but eh.
       let {stage} = this.game;
-      let baseTime = Math.max(this.fastEnd, stage.time);
-      this.fastEnd = baseTime + 10;
-      // Change visually before slowing.
-      // TODO There's also about 1 second diff here in keyTime handling. Why?
-      this.keyTime = this.fastEnd - 1.5;
+      let old: Bonus | undefined;
+      if (prize.type.invisible) {
+        old = this.bonusSee;
+        this.bonusSee = prize;
+      } else {
+        old = this.bonusSpeed;
+        this.bonusSpeed = prize;
+      }
+      let baseTime = Math.max(old ? old.bonusEnd : 0, stage.time);
+      prize.bonusEnd = baseTime + 10;
+      if (!prize.type.invisible) {
+        // Change visually before slowing.
+        // TODO There's also about 1 second diff here in keyTime handling. Why?
+        this.keyTime = prize.bonusEnd - 1.5;
+      }
     }
+    prize.point.x = -1000;
+    this.game.stage.removed(prize);
     return true;
   }
 
@@ -110,10 +118,25 @@ export class Hero extends Runner {
         this.die();
       }
       if (this.game.stage.ending && y >= Level.pixelCount.y) {
-        this.game.stage.ended = true;
-        this.game.play.showReport('Level complete!');
+        this.game.play.win();
       }
     }
+  }
+
+  updateInfo() {
+    // Check for seeing invisibles, by nearby invisibles.
+    if (this.bonusSee && this.bonusSee.bonusEnd < this.game.stage.time) {
+      this.bonusSee = undefined;
+    }
+    if (this.bonusSpeed && this.bonusSpeed.bonusEnd < this.game.stage.time) {
+      this.bonusSpeed = undefined;
+    }
+    if (this.bonusSee) {
+      // Already done.
+      this.seesInvisible = true;
+      return;
+    }
+    super.updateInfo();
   }
 
 }

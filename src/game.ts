@@ -1,6 +1,6 @@
 import {
   Control, EditMode, ItemMeta, Level, LevelRaw, ListRaw, PlayMode, Raw, Stage,
-  Theme, Tower, Zone,
+  TestMode, Theme, Tower, Zone,
 } from './';
 import {
   // TODO Clean out unused.
@@ -10,8 +10,18 @@ import {
   Vector3, WebGLRenderer,
 } from 'three';
 
-export interface Dialog {
+export class Dialog {
+
+  constructor(game: Game) {
+    this.game = game;
+  }
+
   content: HTMLElement;  
+
+  game: Game;
+
+  onKey(event: KeyboardEvent, down: boolean) {}
+
 }
 
 export interface PointEvent {
@@ -23,6 +33,11 @@ export class Mode {
   constructor(game: Game) {
     this.game = game;
   }
+
+  bodyClass: string;
+
+  enter() {}
+  exit() {}
 
   getButton(command: string): HTMLElement {
     return this.game.body.querySelector(`.panel .${command}`) as HTMLElement;
@@ -37,6 +52,11 @@ export class Mode {
   onClick(command: string, handler: () => void) {
     this.getButton(command).addEventListener('click', handler);
   }
+
+  onHideDialog(dialog: Dialog) {}
+
+  // For now, only happens in certain contexts.
+  onKeyDown(key: string) {}
 
   resize() {}
 
@@ -94,7 +114,10 @@ export class Game {
     // Modes. After we have a level for them to reference.
     this.edit = new EditMode(this);
     this.play = new PlayMode(this);
-    this.mode = this.edit;
+    this.test = new TestMode(this);
+    // Cheat set early to avoid errors, but it really kicks in on the timeout.
+    this.mode = this.test;
+    setTimeout(() => this.setMode(this.mode), 0);
     // Input handlers.
     this.control = new Control(this)
     canvas.addEventListener('mousedown', event => this.mouseDown(event));
@@ -108,10 +131,16 @@ export class Game {
 
   control: Control;
 
+  dialog?: Dialog;
+
   edit: EditMode;
 
   hideDialog() {
+    if (this.dialog) {
+      this.mode.onHideDialog(this.dialog);
+    }
     (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';
+    this.dialog = undefined;
   }
 
   level: Level;
@@ -195,6 +224,24 @@ export class Game {
     }, 0);
   }
 
+  setMode(mode: Mode) {
+    // Exit the current mode.
+    let {classList} = this.body;
+    if (this.mode) {
+      classList.remove(this.mode.bodyClass);
+      this.mode.exit();
+    }
+    // Set the new value.
+    this.mode = mode;
+    // Enter the new mode.
+    // Update the stage, since that's often needed.
+    // Do this *after* the mode gets set.
+    this.level.updateStage(this, true);
+    classList.add(mode.bodyClass);
+    this.mode.enter();
+    this.theme.modeChanged();
+  }
+
   scalePoint(point: Vector2): Vector2 {
     let canvas = this.renderer.domElement;
     point.divide(new Vector2(canvas.clientWidth, canvas.clientHeight));
@@ -212,6 +259,7 @@ export class Game {
     }
     dialogBox.appendChild(dialog.content);
     pane.style.display = 'block';
+    this.dialog = dialog;
   }
 
   showLevel(level: LevelRaw) {
@@ -237,6 +285,8 @@ export class Game {
 
   scene: Scene;
 
+  test: TestMode;
+
   theme: Theme;
 
   tower: ItemMeta;
@@ -255,12 +305,16 @@ function loadLevel(towerMeta: ItemMeta) {
     level.save();
   }
   let tower = new Tower().load(towerMeta.id);
-  if (!tower.items.some(item => item.id == level!.id)) {
+  let found = tower.items.find(item => item.id == level!.id);
+  if (!found) {
     // This level isn't in the current tower. Add it.
     // TODO Make sure we keep tower and level selection in sync!
-    tower.items.push(level.encode());
+    found = level.encode();
+    tower.items.push(found);
     tower.save();
   }
+  tower.numberItems();
+  level.number = found.number;
   return level;
 }
 
@@ -297,6 +351,7 @@ export function loadTower(zoneMeta: ItemMeta) {
   }
   // This might save the new id or just overwrite. TODO Be more precise?
   window.localStorage['zym.towerId'] = tower.id;
+  delete window.localStorage['zym.worldId'];
   return Raw.encodeMeta(tower);
 }
 

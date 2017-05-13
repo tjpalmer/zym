@@ -1,6 +1,6 @@
 import {
-  CopyTool, Level, Mode, NopTool, Part, PartTool, PartType, PasteTool,
-  PointEvent, Game, Tool, Toolbox,
+  CopyTool, Level, Mode, NopTool, Part, PartOptions, PartTool, PartType,
+  PasteTool, PointEvent, Game, Tool, Toolbox,
 } from './';
 import {Levels} from './ui';
 import {None, Parts} from './parts';
@@ -17,6 +17,7 @@ export class EditMode extends Mode {
     // Buttons.
     this.commandsContainer =
       body.querySelector('.panel.commands') as HTMLElement;
+    this.onClick('exit', () => this.game.setMode(this.game.play));
     this.onClick('play', () => this.togglePlay());
     this.onClick('redo', () => this.editState.redo());
     this.onClick('showLevels', () => this.showLevels());
@@ -39,6 +40,8 @@ export class EditMode extends Mode {
       this.tool.drag(tilePoint);
     }
   }
+
+  bodyClass = 'editMode';
 
   commandsContainer: HTMLElement;
 
@@ -83,8 +86,31 @@ export class EditMode extends Mode {
   }
 
   get ender() {
+    return this.getToolBoxState('ender');
+  }
+
+  enter() {
+    // Unpause on stop, so the characters can react.
+    // TODO Is this doing the right thing?
+    if (this.game.play.paused) {
+      // TODO Activate function on modes for general handling?
+      this.game.play.togglePause();
+    }
+    this.tool.activate();
+  }
+
+  exit() {
+    this.saveAll();
+    this.tool.deactivate();
+  }
+
+  getToolBoxState(className: string) {
     // Check toolbox existence because this gets called on construction, too.
-    return !!this.toolbox && this.toolbox.getState('ender');
+    return !!this.toolbox && this.toolbox.getState(className);
+  }
+
+  get invisible() {
+    return this.getToolBoxState('invisible');
   }
 
   mouseDown(event: PointEvent) {
@@ -119,10 +145,16 @@ export class EditMode extends Mode {
     this.editState.pushHistory();
   }
 
-  namedEnderTools = new Map(Parts.inventory.filter(type => type.ender).map(
-    type =>
-      [type.base.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
-  ));
+  partTool(name: string, options: PartOptions) {
+    // console.log(name, this.namedTools.get(name));
+    let tool = this.namedTools.get(name);
+    let baseType = tool && (tool as PartTool).type;
+    if (!baseType) {
+      return;
+    }
+    let type = Parts.optionType(baseType, options);
+    return new PartTool(this, type);
+  }
 
   namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
     type =>
@@ -138,6 +170,22 @@ export class EditMode extends Mode {
     });
     // And the requested handler, too.
     super.onClick(command, handler);
+  }
+
+  onKeyDown(key: string) {
+    switch (key) {
+      case 'Enter': {
+        this.game.setMode(this.game.test);
+        break;
+      }
+      case 'Escape': {
+        if (!(this.game.dialog instanceof Levels)) {
+          // Will happen after the any other hides.
+          window.setTimeout(() => this.showLevels(), 0);
+        }
+        break;
+      }
+    }
   }
 
   resize() {
@@ -210,32 +258,9 @@ export class EditMode extends Mode {
   }
 
   togglePlay() {
-    this.saveAll();
-    // Sometimes things get confused, and clearing the action might help.
-    // We can't directly read keyboard state.
-    this.game.control.clear();
-    this.game.control.keyAction.clear();
-    // Now toggle mode.
-    this.game.mode = this.game.mode == this.game.play ?
-      this.game.edit : this.game.play;
-    this.game.level.updateStage(this.game, true);
-    let isEdit = this.game.mode == this.game.edit;
-    if (isEdit) {
-      // Unpause on stop, so the characters can react.
-      // TODO Is this doing the right thing?
-      if (this.game.play.paused) {
-        // TODO Activate function on modes for general handling?
-        this.game.play.togglePause();
-      }
-      this.tool.activate();
-    } else {
-      this.tool.deactivate();
-    }
-    this.toggleClasses({
-      element: this.game.body,
-      falseClass: 'playMode', trueClass: 'editMode',
-      value: isEdit,
-    });
+    this.game.setMode(
+      this.game.mode == this.game.test ? this.game.edit : this.game.test
+    );
   }
 
   // Default gets set from HTML settings.
@@ -243,11 +268,9 @@ export class EditMode extends Mode {
 
   toolFromName(name: string) {
     let tool = this.namedTools.get(name);
-    if (this.ender) {
-      let enderTool = this.namedEnderTools.get(name);
-      if (enderTool) {
-        tool = enderTool;
-      }
+    if (tool instanceof PartTool) {
+      // Be more precise, in terms of our options.
+      tool = this.partTool(name, this);
     }
     return tool;
   }

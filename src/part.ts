@@ -21,9 +21,16 @@ export class Part {
 
   static ender = false;
 
+  static invisible = false;
+
   static make(game: Game) {
     return new this(game);
   }
+
+  static options = {
+    ender: true,
+    invisible: true,
+  };
 
   constructor(game: Game) {
     this.game = game;
@@ -55,7 +62,12 @@ export class Part {
   dead = false;
 
   die(killer?: Part) {
-    this.dead = true;
+    let wasDead = this.dead;
+    if (!wasDead) {
+      // TODO Handle subtype death event in separate function.
+      this.dead = true;
+      this.game.stage.died(this);
+    }
   }
 
   // For overriding.
@@ -129,22 +141,35 @@ export class Part {
     return false;
   }
 
+  touchKills(other: Part) {
+    return this.solid(other);
+  }
+
   get type() {
     return this.constructor as PartType;
   }
 
   update() {}
 
+  // State that can be updated on stage init.
+  updateInfo() {}
+
   workPoint = new Vector2();
 
 }
 
-export interface GenericPartType {
+export interface PartOptions {
+
+    ender: boolean;
+
+    invisible: boolean;
+
+}
+
+export interface GenericPartType extends PartOptions {
 
   // Whenever a group of types should be considered somewhat equivalent.
   common: GenericPartType;
-
-  ender: boolean;
 
   name: string;
 
@@ -163,5 +188,8 @@ export interface PartType extends GenericPartType {
 
   // Don't use new. Use make. It just helps TypeScript know we're a class.
   new (game: Game): Part;
+
+  // The options that this part type is allowed to take on.
+  options: PartOptions;
 
 }

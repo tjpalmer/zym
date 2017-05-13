@@ -5,9 +5,9 @@ import 'font-awesome';
 
 window.onload = main;
 
-function main() {
+async function main() {
   let game = new Game(window.document.body);
-  let theme = new GoldTheme(game);
+  let theme = await GoldTheme.load(game);
   game.theme = theme;
   // Fill in even empty/none parts before the first drawing, so uv and such get
   // in there.

@@ -2,9 +2,10 @@ import {Dialog, Encodable, Game, ItemMeta, Raw, load} from '../';
 
 export abstract class EditorList<
   Value extends ItemMeta  // , Value extends Encodable<RawItem>
-> implements Dialog {
+> extends Dialog {
 
   constructor(game: Game, templateText: string) {
+    super(game);
     this.game = game;
     this.init();
     let dialogElement = load(templateText);
@@ -39,6 +40,7 @@ export abstract class EditorList<
     this.makeEditable(
       nameElement, this.defaultValueName, () => value.name, text => {
         value.name = text;
+        // console.log('saving', value);
         Raw.save(value);
       }
     );
@@ -97,8 +99,10 @@ export abstract class EditorList<
     field.spellcheck = false;
     field.innerText = get().trim() || defaultText;
     field.addEventListener('blur', () => {
+      // console.log('Blur!');
       let text = field.innerText.trim();
       if (get() != text) {
+        // console.log('Set!');
         set(text);
       }
       if (!text) {
@@ -109,6 +113,7 @@ export abstract class EditorList<
       field.contentEditable = 'plaintext-only';
     });
     field.addEventListener('keydown', event => {
+      // console.log('Down!');
       switch (event.key) {
         case 'Enter': {
           field.contentEditable = 'false';

@@ -37,7 +37,7 @@ export class RunnerArt extends BaseArt<Runner> {
       this.facing = Math.sign(intendedMove.x);
     }
     // Figure out what frame and mode.
-    if (game.mode == game.edit) {
+    if (game.mode == game.edit || !stage.time) {
       this.frame = 0;
       // TODO Subclass RunnerArt for enemies?
       if (this.part instanceof Enemy) {
@@ -91,6 +91,10 @@ export class RunnerArt extends BaseArt<Runner> {
     workPoint.x += this.mode;
     workPoint.y -= frames[this.frame];
     return workPoint;
+  }
+
+  get toolTile() {
+    return this.base;
   }
 
   workPoint = new Vector2();

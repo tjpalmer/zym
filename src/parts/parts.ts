@@ -1,9 +1,9 @@
 import {
   Bar, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff, GunLeft,
   GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
-  LauncherLeft, LauncherRight, LauncherUp, None, Steel, Treasure,
+  LauncherLeft, LauncherRight, LauncherUp, None, Spawn, Steel, Treasure,
 } from './';
-import {Part, PartType} from '../';
+import {cartesianProduct, Multiple, Part, PartOptions, PartType} from '../';
 import {Vector2} from 'three';
 
 export class Parts {
@@ -29,6 +29,7 @@ export class Parts {
     LauncherRight,
     LauncherUp,
     None,
+    Spawn,
     Steel,
     Treasure,
   ];
@@ -36,6 +37,30 @@ export class Parts {
   static charParts = new Map(Parts.inventory.map(
     part => [part.char, part] as [string, PartType]
   ));
+
+  static optionType(baseType: PartType, options: PartOptions) {
+    // The type options should be just options, but the options passed in might
+    // have extra, so clone just the type options.
+    baseType = baseType.base;
+    let validOptions = {...baseType.options};
+    for (let key in baseType.options) {
+      (validOptions as any)[key] &= (options as any)[key];
+    }
+    let char = Parts.typeChar(baseType, validOptions);
+    let type = Parts.charParts.get(char)!;
+    return type;
+  }
+
+  static typeChar(type: PartType, options: PartOptions) {
+    let char = type.char.codePointAt(0)!;
+    char |= options.ender ? 0x80 : 0x00;
+    char |= options.invisible ? 0x100 : 0x00;
+    if (char == 0xAD) {
+      // Because 0xAD isn't visible, and they're nice to see, at least.
+      char = 0xFF;
+    }
+    return String.fromCodePoint(char);
+  }
 
 }
 
@@ -48,31 +73,37 @@ Parts.inventory.forEach(({char}) => {
   chars[char] = char;
 });
 
-let nonEnders = [Hero, None, Treasure];
-
-Parts.inventory.filter(part => nonEnders.indexOf(part) < 0).forEach(part => {
-  // Auto-pick chars in the extended latin range, for convenience.
-  // They won't look pretty.
-  // 1D4D0-1D4E9 caps, 1D4EA-1D503 lower, others, for pretty?
-  let char = part.char.codePointAt(0)! + 0x80;
-  if (char == 0xAD) {
-    // Because 0xAD isn't visible, and they're nice to see, at least.
-    char = 0xFF;
+// This builds all possible parts up front.
+// TODO Build them only dynamically?
+Parts.inventory.forEach(part => {
+  let makeOptions = (condition: boolean) => condition ? [false, true] : [false];
+  let options = {} as Multiple<PartOptions>;
+  type Indexed = {[key: string]: boolean};
+  for (let key in part.options) {
+    (options as Multiple<Indexed>)[key] =
+      makeOptions((part.options as any as Indexed)[key]);
   }
-  // Creat the class.
-  class Ender extends part {
-    static get base() {
-      return part;
+  // Take off the all-false case, since we already have those.
+  let allOptions = cartesianProduct(options).slice(1);
+  allOptions.forEach(option => {
+    let char = Parts.typeChar(part, option);
+    class OptionPart extends part {
+      static get base() {
+        return part;
+      }
+      static char = char;
+      // TODO Are the following TODOs still relevant?
+      // TODO `make` that attends to edit or play mode for ender or base?
+      // TODO Or just reference game dynamically in parts?
+      static ender = option.ender;
+      static invisible = option.invisible;
     }
-    static char = String.fromCodePoint(char);
-    // TODO `make` that attends to edit or play mode for ender or base?
-    // TODO Or just reference game dynamically in parts?
-    static ender = true;
-  }
-  // Add it to things.
-  Parts.inventory.push(Ender);
-  Parts.charParts.set(Ender.char, Ender);
-  // console.log(
-  //   part.char, Ender.char, Ender.ender, Object.getPrototypeOf(Ender).name
-  // );
+    // Add it to things.
+    Parts.inventory.push(OptionPart);
+    Parts.charParts.set(char, OptionPart);
+    // console.log(
+    //   part.char, OptionPart.char, OptionPart.ender, OptionPart.invisible,
+    //   Object.getPrototypeOf(OptionPart).name
+    // );
+  });
 });

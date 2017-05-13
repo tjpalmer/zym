@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8"/>
-    <title>Zym</title>
+    <title>Phase</title>
     <script src="vendor.js"></script>
     <script src="app.js"></script>
   </head>
-  <body class="editMode">
+  <body class="playMode">
     <!-- TODO Move out all UI! -->
     <div class="panelBox">
       <form class="panel toolbox">
@@ -65,6 +65,9 @@
             <label class="enemy">
               <input name="danger" type="radio" checked="checked"/>
             </label>
+            <label class="spawn">
+              <input name="danger" type="radio"/>
+            </label>
             <label class="biggieright">
               <input name="danger" type="radio"/>
             </label>
@@ -101,7 +104,7 @@
           <i class="fa fa-angle-double-up"></i>
           <input name="ender" type="checkbox"/>
         </label>
-        <label class="invisible disabled">
+        <label class="invisible">
           <i class="fa fa-eye-slash"></i>
           <input name="invisible" type="checkbox"/>
         </label>
@@ -125,7 +128,7 @@
         <i class="fa fa-reply undo disabled" title="Undo"></i>
         <i class="fa fa-share redo disabled" title="Redo"></i>
         <i class="fa fa-list showLevels" title="Show levels"></i>
-        <i class="fa fa-sign-out exit disabled"></i>
+        <i class="fa fa-sign-out exit" title="Exit to play"></i>
         <!-- Placeholders for reminders of save status. -->
         <i class="fa fa-pencil-square changing disabled"></i>
         <i class="fa fa-check-square saved disabled"></i>

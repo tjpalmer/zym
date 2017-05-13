@@ -1,5 +1,5 @@
 import {
-  Game, GenericPartType, Grid, Id, Part, PartType, Ref, createId,
+  Game, GenericPartType, Grid, Id, Part, PartType, PlayMode, Ref, createId,
 } from './';
 import {Hero, None, Parts, Treasure} from './parts';
 import {Vector2} from 'three';
@@ -146,6 +146,10 @@ export abstract class ItemList<Item extends ItemMeta>
 
   name = this.type;
 
+  numberItems() {
+    ItemList.numberItems(this.items);
+  }
+
   abstract get type(): string;
 
 }
@@ -207,6 +211,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     if (encoded.name) {
       this.name = encoded.name;
     }
+    this.number = encoded.number;
     // Tiles.
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
@@ -272,7 +277,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
   // For use from the editor.
   updateStage(game: Game, reset = false) {
-    let play = game.mode == game.play;
+    let play = game.mode instanceof PlayMode;
     let stage = game.stage;
     let theme = game.theme;
     if (reset) {
@@ -292,7 +297,12 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         // Handle enders for play mode.
         if (play && tile.ender) {
           // TODO Need a time for transition animation?
-          tile = stage.ending ? tile.base : None;
+          let options = {...tile.options};
+          for (let key in tile.options) {
+            (options as any)[key] = (tile as any)[key];
+          }
+          options.ender = false;
+          tile = stage.ending ? Parts.optionType(tile, options) : None;
         }
         // Build a new part if needed.
         let oldPart = stage.parts[k];
@@ -320,6 +330,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       }
     }
     if (reset) {
+      stage.init();
       if (!stage.treasureCount) {
         // Already got them all!
         stage.ending = true;

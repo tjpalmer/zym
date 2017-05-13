@@ -6,7 +6,7 @@ import {
   Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff,
   GunLeft, GunRight, Hero, Ladder, Latch, LatchLeft, LatchRight, LauncherCenter,
   LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None, Prize, Runner,
-  Shot, Steel, Treasure,
+  Shot, Spawn, Steel, Treasure,
 } from '../parts/';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -22,6 +22,7 @@ export let arts = {
   LauncherUp: {layer: Layer.back, tile: new Vector2(10, 17)},
   None: {layer: Layer.back, tile: new Vector2(0, 2)},
   Shot: {layer: Layer.shot, tile: new Vector2(22, 10)},
+  Spawn: {layer: Layer.back, tile: new Vector2(12, 16)},
   Steel: {layer: Layer.front, tile: new Vector2(7, 17)},
 };
 
@@ -57,6 +58,7 @@ export class Parts {
     [LauncherUp, artMaker(arts.LauncherUp)], 
     [None, artMaker(arts.None)],
     [Shot, artMaker(arts.Shot)],
+    [Spawn, artMaker(arts.Spawn)],
     [Steel, artMaker(arts.Steel)],
     [Treasure, part => new PrizeArt(part as Prize, new Vector2(13, 17))],
   ]);
@@ -65,6 +67,6 @@ export class Parts {
 
 function artMaker({layer, tile}: SimpleArt) {
   return (part: Part): Art => {
-    return {layer, offsetX: 0, part, tile};
+    return {layer, offsetX: 0, part, tile, toolTile: tile};
   }
 }

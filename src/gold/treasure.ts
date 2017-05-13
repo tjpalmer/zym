@@ -15,6 +15,7 @@ export class PrizeArt extends BaseArt<Prize> {
 
   get tile() {
     return this.part.owner ? goneTile : this.mainTile;
+    // return this.mainTile;
   }
 
 }

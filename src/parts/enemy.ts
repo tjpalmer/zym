@@ -56,6 +56,20 @@ export class Enemy extends Runner {
     if (!hero) {
       return;
     }
+    // TODO Let enemy see if near invisible (including hero)?
+    // TODO Combine logic with gun.
+    let heroHidden = hero.bonusSee && !this.seesInvisible;
+    if (heroHidden) {
+      // Invisible, so confuse.
+      if (state.x == State.chase) {
+        state.x = State.wait;
+        waitTime.x = time + closeTime;
+      }
+      if (state.y == State.chase) {
+        state.y = State.wait;
+        waitTime.y = time + closeTime;
+      }
+    }
     // TODO Using oldDiff also causes the top of ladder problem, but worse.
     // let oldDiff = this.workPoint2.copy(hero.oldPoint).sub(this.oldPoint);
     let diff = this.workPoint2.copy(hero.point).sub(this.point);
@@ -113,7 +127,9 @@ export class Enemy extends Runner {
         }
         let waitDiff = Math.abs(this.point.x - this.waitPoint.x);
         let waitDiffHero = Math.abs(hero.point.y - this.waitPointHero.y);
-        if (waitDiff >= Level.tileSize.x || waitDiffHero >= Level.tileSize.y) {
+        if (!heroHidden && (
+          waitDiff >= Level.tileSize.x || waitDiffHero >= Level.tileSize.y
+        )) {
           state.y = State.chase;
         } else if (time >= waitTime.y) {
           if (state.y == State.wait) {
@@ -167,7 +183,9 @@ export class Enemy extends Runner {
         }
         let waitDiff = Math.abs(this.point.y - this.waitPoint.y);
         let waitDiffHero = Math.abs(hero.point.x - this.waitPointHero.x);
-        if (waitDiff >= Level.tileSize.y || waitDiffHero >= Level.tileSize.x) {
+        if (!heroHidden && (
+          waitDiff >= Level.tileSize.y || waitDiffHero >= Level.tileSize.x
+        )) {
           state.x = State.chase;
         } else if (time >= waitTime.x) {
           if (state.x == State.wait) {
@@ -327,7 +345,7 @@ export class Enemy extends Runner {
       }
     }
     if (this.dazed) {
-      if (this.caughtTime < this.game.stage.time - 3) {
+      if (this.caughtTime < this.game.stage.time - 1.4) {
         this.dazed = false;
       } else {
         this.move.setScalar(0);

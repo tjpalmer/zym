@@ -1,4 +1,4 @@
-import {EditMode, Grid, Level, PartType} from './';
+import {EditMode, Grid, Level, Part, PartType} from './';
 import {None} from './parts';
 import {Vector2, WebGLRenderTarget} from 'three';
 
@@ -62,7 +62,7 @@ export class Toolbox {
 
   handleChangedCheckbox(checkbox: HTMLInputElement) {
     let name = this.getName(checkbox.closest('label') as HTMLElement);
-    if (name == 'ender') {
+    if (name in Part.options) {
       this.edit.updateTool();
     }
   }

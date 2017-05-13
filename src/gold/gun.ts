@@ -4,7 +4,7 @@ import {Vector2} from 'three';
 
 export class GunArt extends BaseArt<Gun> {
 
-  layer = Layer.front;
+  layer = Layer.gun;
 
   get tile() {
     let {part, workPoint} = this;

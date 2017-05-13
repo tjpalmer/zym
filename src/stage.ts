@@ -1,5 +1,5 @@
 import {Game, Grid, Group, Level, Part} from './';
-import {Hero, Steel, Treasure} from './parts';
+import {Hero, Spawn, Steel, Treasure} from './parts';
 import {Vector2} from 'three';
 
 export class Stage {
@@ -34,10 +34,17 @@ export class Stage {
     this.walkGrid(part.point, () => {
       grid.get(workPoint)!.push(part);
     });
+    if (part instanceof Spawn) {
+      this.spawns.push(part);
+    }
   }
 
   clearGrid() {
     this.grid.items.forEach(items => items.length = 0);
+  }
+
+  died(part: Part) {
+    Spawn.respawnMaybe(part);
   }
 
   edgeLeft = new Array<Array<Part>>();
@@ -56,6 +63,14 @@ export class Stage {
   grid = new Grid<Array<Part>>(Level.tileCount);
 
   hero: Hero | undefined = undefined;
+
+  init() {
+    for (let part of this.parts) {
+      part.updateInfo();
+    }
+  }
+
+  spawns = new Array<Spawn>();
 
   manageParticles() {
     let {particles} = this;
@@ -143,6 +158,10 @@ export class Stage {
         parts.splice(index, 1);
       }
     });
+    if (part instanceof Spawn) {
+      let index = this.spawns.indexOf(part);
+      this.spawns.splice(index, 1);
+    }
   }
 
   tick() {
@@ -213,6 +232,8 @@ export interface Theme {
   buildArt(part: Part): void;
 
   buildDone(game: Game): void;
+
+  modeChanged(): void;
 
   updateTool(button: HTMLElement): void;
 
