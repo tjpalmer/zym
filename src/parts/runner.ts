@@ -88,6 +88,27 @@ export class Runner extends Part {
       climbableAt(midLeft, top) || climbableAt(midRight, top));
   }
 
+  getBlockerDown(point: Vector2): Blocker | undefined {
+    let blockY = (blocker: Part) => blocker.point.y;
+    let offX = point.x - this.point.x;
+    let blocker1 = this.getSolid(Edge.top, offX, 0);
+    let blocker2 = this.getSolid(Edge.top, right + offX, 0);
+    let blocker = argmax(blockY, blocker1, blocker2);
+    let fixY = point.y;
+    if (blocker) {
+      fixY = blocker.point.y + Level.tileSize.y;
+    } else {
+      blocker1 = this.getSolidInside(Edge.bottom, offX, 0, 0, this.move.y);
+      blocker2 =
+        this.getSolidInside(Edge.bottom, right + offX, 0, 0, this.move.y);
+      blocker = argmax(blockY, blocker1, blocker2);
+      if (blocker) {
+        point.y = blocker.point.y;
+      }
+    }
+    return blocker && {part: blocker, pos: fixY};
+  }
+
   getBlockerLeft(point: Vector2): Blocker | undefined {
     let blockX = (blocker: Part) => blocker.point.x;
     let offY = point.y - this.point.y;
@@ -364,6 +385,7 @@ export class Runner extends Part {
     // TODO together?
     // See if we need to align y for solids.
     if (move.y < 0) {
+      blockY(point => this.getBlockerDown(point));
       // Surface checks halfway, but solid checks ends.
       // This seems odd, but it usually shouldn't matter, since alignment to
       // open spaces should make them equivalent.
@@ -372,18 +394,18 @@ export class Runner extends Part {
       let newSupport = support ? undefined : this.getSurface();
       let blocker1 = this.getSolid(Edge.top, 0, 0);
       let blocker2 = this.getSolid(Edge.top, right, 0);
-      let blockY = (blocker?: Part) =>
+      let blockY2 = (blocker?: Part) =>
         blocker ? blocker.point.y : -Level.tileSize.y;
       if (newSupport || blocker1 || blocker2) {
         let y =
-          Math.max(blockY(newSupport), blockY(blocker1), blockY(blocker2));
+          Math.max(blockY2(newSupport), blockY2(blocker1), blockY2(blocker2));
         point.y = y + Level.tileSize.y;
       } else {
         // TODO Unify catcher and inside bottom solids at all?
         blocker1 = this.getSolidInside(Edge.bottom, 0, 0, 0, move.y);
         blocker2 = this.getSolidInside(Edge.bottom, right, 0, 0, move.y);
         if (blocker1 || blocker2) {
-          let y = Math.max(blockY(blocker1), blockY(blocker2));
+          let y = Math.max(blockY2(blocker1), blockY2(blocker2));
           point.y = y;
         } else if (this.climber) {
           // See if we entered a catcher.
