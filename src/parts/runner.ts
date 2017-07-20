@@ -276,6 +276,35 @@ export class Runner extends Part {
     } else {
       move.y = -1;
     }
+    let isClimbable = (part: Part) => part.climbable(this) && part != this;
+    if (move.y) {
+      let checkY = move.y < 0 ? TilePos.bottom : TilePos.top;
+      let climbLeft = this.partAt(TilePos.left, checkY, isClimbable);
+      let climbRight = this.partAt(TilePos.right, checkY, isClimbable);
+      if (climbLeft || climbRight) {
+        let alignX: Part | undefined;
+        if (climbLeft && climbRight) {
+          // alignX = climbLeft.type != climbRight.type;
+        } else {
+          if (climbLeft) {
+            if (point.x - climbLeft.point.x < 4) {
+              point.x = climbLeft.point.x;
+            } else {
+              point.x = climbLeft.point.x + 8;
+            }
+          } else {
+            if (climbRight!.point.x - point.x < 4) {
+              point.x = climbRight!.point.x;
+            } else {
+              point.x = climbRight!.point.x - 8;
+            }
+          }
+        }
+      }
+    } else if (move.x) {
+      let climbTop = this.partAt(4, TilePos.top, isClimbable);
+      // ...
+    }
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
     this.support = support;
@@ -386,6 +415,8 @@ export class Runner extends Part {
     // See if we need to align y for solids.
     if (move.y < 0) {
       blockY(point => this.getBlockerDown(point));
+      // TODO What below is needed? At least new catcher?
+      // TODO Still do alignment for none or climbing if not uniform tile type.
       // Surface checks halfway, but solid checks ends.
       // This seems odd, but it usually shouldn't matter, since alignment to
       // open spaces should make them equivalent.
