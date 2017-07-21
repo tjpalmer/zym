@@ -287,13 +287,14 @@ export class Runner extends Part {
           // alignX = climbLeft.type != climbRight.type;
         } else {
           if (climbLeft) {
-            if (point.x - climbLeft.point.x < 4) {
+            // Use <= to err on the side of the climbable.
+            if (point.x - climbLeft.point.x <= 4) {
               point.x = climbLeft.point.x;
             } else {
               point.x = climbLeft.point.x + 8;
             }
           } else {
-            if (climbRight!.point.x - point.x < 4) {
+            if (climbRight!.point.x - point.x <= 4) {
               point.x = climbRight!.point.x;
             } else {
               point.x = climbRight!.point.x - 8;
