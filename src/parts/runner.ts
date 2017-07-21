@@ -276,25 +276,31 @@ export class Runner extends Part {
     } else {
       move.y = -1;
     }
+    // Check for alignment when climbing and falling near climbables.
     let isClimbable = (part: Part) => part.climbable(this) && part != this;
     if (move.y) {
       let checkY = move.y < 0 ? TilePos.bottom : TilePos.top;
       let climbLeft = this.partAt(TilePos.left, checkY, isClimbable);
       let climbRight = this.partAt(TilePos.right, checkY, isClimbable);
       if (climbLeft || climbRight) {
-        let alignX: Part | undefined;
         if (climbLeft && climbRight) {
-          // alignX = climbLeft.type != climbRight.type;
+          if (climbLeft.type != climbRight.type) {
+            // Find the closer one, and no need for abs, since we know order.
+            if (point.x - climbLeft.point.x < climbRight.point.x - point.x) {
+              point.x = climbLeft.point.x;
+            } else {
+              point.x = climbRight.point.x;
+            }
+          }
         } else {
           if (climbLeft) {
-            // Use <= to err on the side of the climbable.
-            if (point.x - climbLeft.point.x <= 4) {
+            if (this.climbing) {
               point.x = climbLeft.point.x;
             } else {
               point.x = climbLeft.point.x + 8;
             }
           } else {
-            if (climbRight!.point.x - point.x <= 4) {
+            if (this.climbing) {
               point.x = climbRight!.point.x;
             } else {
               point.x = climbRight!.point.x - 8;
@@ -303,9 +309,41 @@ export class Runner extends Part {
         }
       }
     } else if (move.x) {
-      let climbTop = this.partAt(4, TilePos.top, isClimbable);
-      // ...
+      let checkX = move.x < 0 ? TilePos.left : TilePos.right;
+      let climbBottom = this.partAt(checkX, TilePos.bottom, isClimbable);
+      let climbTop = this.partAt(checkX, TilePos.top, isClimbable);
+      if (climbBottom || climbTop) {
+        if (climbBottom && climbTop) {
+          if (climbBottom.type != climbTop.type) {
+            // Find the closer one, and no need for abs, since we know order.
+            if (point.y - climbBottom.point.y < climbTop.point.y - point.y) {
+              point.y = climbBottom.point.y;
+            } else {
+              point.y = climbTop.point.y;
+            }
+          }
+        } else {
+          // For align to row, we can fall out of climbables, unlike for column
+          // alignment.
+          // Still, err on the side of climbing with <=.
+          if (climbBottom) {
+            if (point.y - climbBottom.point.y <= 5) {
+              point.y = climbBottom.point.y;
+            } else {
+              point.y = climbBottom.point.y + 10;
+            }
+          } else {
+            if (climbTop!.point.y - point.y <= 5) {
+              point.y = climbTop!.point.y;
+            } else {
+              point.y = climbTop!.point.y - 10;
+            }
+          }
+        }
+      }
     }
+    // TODO Add tiny random amounts here so we don't stay aligned?
+    // TODO But no randomness so far, right?
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
     this.support = support;
