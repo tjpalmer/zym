@@ -103,7 +103,7 @@ export class Runner extends Part {
         this.getSolidInside(Edge.bottom, right + offX, 0, 0, this.move.y);
       blocker = argmax(blockY, blocker1, blocker2);
       if (blocker) {
-        point.y = blocker.point.y;
+        fixY = blocker.point.y;
       }
     }
     return blocker && {part: blocker, pos: fixY};
@@ -165,7 +165,7 @@ export class Runner extends Part {
         this.getSolidInside(Edge.top, right + offX, top, 0, this.move.y);
       blocker = argmin(blockY, blocker1, blocker2);
       if (blocker) {
-        point.y = blocker.point.y;
+        fixY = blocker.point.y;
       }
     }
     return blocker && {part: blocker, pos: fixY};
