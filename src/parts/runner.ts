@@ -455,7 +455,8 @@ export class Runner extends Part {
     if (move.y < 0) {
       blockY(point => this.getBlockerDown(point));
       // TODO What below is needed? At least new catcher?
-      // TODO Still do alignment for none or climbing if not uniform tile type.
+      // TODO It would be nice to fall full off surfaces, even if non-solid and
+      // TODO non-climbable, but we don't right now.
       // Surface checks halfway, but solid checks ends.
       // This seems odd, but it usually shouldn't matter, since alignment to
       // open spaces should make them equivalent.

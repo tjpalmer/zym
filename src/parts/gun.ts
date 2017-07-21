@@ -69,6 +69,9 @@ export class Gun extends Runner {
     return false;
   }
 
+  // Long before the start.
+  lastShootTime = -100;
+
   lastSupport?: Part = undefined;
 
   lastSupportFacing = 0;
@@ -101,7 +104,9 @@ export class Gun extends Runner {
     if (this.dead) {
       return;
     }
-    if (!shot.active && this.heroVisible()) {
+    // Min wait on shots recommended by Matt.
+    let timeSince = stage.time - this.lastShootTime;
+    if (!shot.active && timeSince > 2 && this.heroVisible()) {
       if (!shot.art) {
         this.game.theme.buildArt(shot);
       }
@@ -110,6 +115,7 @@ export class Gun extends Runner {
       shot.point.copy(this.point);
       stage.particles.push(shot);
       stage.added(shot);
+      this.lastShootTime = stage.time;
     }
   }
 
