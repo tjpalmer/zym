@@ -83,7 +83,7 @@ export class Enemy extends Runner {
           waitPoint.x = this.point.x;
           waitPointHero.y = hero.point.y;
           waitTime.y = time + closeTime;
-        } else if (diff.y) {
+        } else if (Math.abs(diff.y) >= 1) {
           if (diff.y < 0) {
             // Don't try to go down if we can't.
             // The problem is that if we're on a ladder with a solid at
@@ -98,7 +98,7 @@ export class Enemy extends Runner {
               // TODO could be nice.
               let climbable = (x: number) =>
                 this.partAt(x, -1, part => part.climbable(this));
-              if (climbable(TilePos.midLeft) || climbable(TilePos.midRight)) {
+              if (climbable(4 - 1e-3) || climbable(4 + 1e-3)) {
                 // Let climbable trump.
                 solidSurface = undefined;
               }
@@ -203,7 +203,7 @@ export class Enemy extends Runner {
       // Don't walk into seeming walls. TODO Exact alignment against such?
       let x = action.left ? -this.speed.x : 8 + this.speed.x;
       let edge = action.left ? Edge.right : Edge.left;
-      let wall = this.partAt(x, 0, part => part.solid(this, edge, true));
+      let wall = this.partAt(x, 4, part => part.solid(this, edge, true));
       if (wall) {
         action.left = action.right = false;
       }
