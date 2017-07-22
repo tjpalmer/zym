@@ -146,7 +146,7 @@ export class GoldTheme implements Theme {
 
   ender = false;
 
-  fadeSee = new Lerper(0, 0x90, -100, 0.2);
+  fadeSee = new Lerper(0, 0x90, -100, 0.2, 1);
 
   game: Game;
 
@@ -488,7 +488,7 @@ export class GoldTheme implements Theme {
     let {hero, time} = this.game.stage;
     // TODO Extract all this invisibility fade stuff elsewhere.
     let see = edit || !hero || hero.seesInvisible;
-    if (!time) {
+    if (time < 0.05) {
       // Don't observe state switch from initial state.
       // Just sneak it in.
       // TODO Going from edit to test, this doesn't seem to reset right.
@@ -526,11 +526,14 @@ export class GoldTheme implements Theme {
 
 class Lerper {
 
-  constructor(begin: number, end: number, ref: number, span: number) {
+  constructor(
+    begin: number, end: number, ref: number, span: number, spanOut: number
+  ) {
     this.begin = begin;
     this.end = end;
     this.ref = ref;
     this.span = span;
+    this.spanOut = spanOut;
   }
 
   begin: number;
@@ -540,6 +543,8 @@ class Lerper {
   ref: number;
 
   span: number;
+
+  spanOut: number;
 
   state = false;
 
@@ -557,7 +562,8 @@ class Lerper {
     let begin = this.state ? this.begin : this.end;
     let end = this.state ? this.end : this.begin;
     // Now lerp.
-    let rel = Math.min((x - this.ref) / this.span, 1);
+    let span = this.state ? this.span : this.spanOut;
+    let rel = Math.min((x - this.ref) / span, 1);
     return rel * (end - begin) + begin;
   } 
 
