@@ -393,24 +393,33 @@ export class Runner extends Part {
     }
     point.add(move);
     // See if we need to fix things.
-    function blockX(getBlocker: (point: Vector2) => Blocker | undefined) {
+    let blockX = (getBlocker: (point: Vector2) => Blocker | undefined) => {
       let blocker = getBlocker(point);
       if (blocker) {
+        let oldY = point.y;
         if (blocker.part.point.y - point.y >= 5) {
           // See if we can shift down.
           workPoint.set(point.x, blocker.part.point.y - 10);
           if (!getBlocker(workPoint)) {
-            // TODO Block if blocker below!
             point.y = blocker.part.point.y - 10;
-            blocker = undefined;
+            // TODO Don't cross inside solids, either!
+            if (this.encased()) {
+              point.y = oldY;
+            } else {
+              blocker = undefined;
+            }
           }
         } else if (point.y - blocker.part.point.y >= 5) {
           // See if we can shift up.
           workPoint.set(point.x, blocker.part.point.y + 10);
           if (!getBlocker(workPoint)) {
-            // TODO Block if blocker above!
             point.y = blocker.part.point.y + 10;
-            blocker = undefined;
+            // TODO Don't cross inside solids, either!
+            if (this.encased()) {
+              point.y = oldY;
+            } else {
+              blocker = undefined;
+            }
           }
         }
         if (blocker) {
@@ -418,24 +427,31 @@ export class Runner extends Part {
         }
       }
     }
-    function blockY(getBlocker: (point: Vector2) => Blocker | undefined) {
+    let blockY = (getBlocker: (point: Vector2) => Blocker | undefined) => {
       let blocker = getBlocker(point);
       if (blocker) {
+        let oldX = point.x;
         if (blocker.part.point.x - point.x >= 4) {
           // See if we can shift left.
           workPoint.set(blocker.part.point.x - 8, point.y);
           if (!getBlocker(workPoint)) {
-            // TODO Block if blocker below!
             point.x = blocker.part.point.x - 8;
-            blocker = undefined;
+            if (this.encased()) {
+              point.x = oldX;
+            } else {
+              blocker = undefined;
+            }
           }
         } else if (point.x - blocker.part.point.x >= 4) {
           // See if we can shift right.
           workPoint.set(blocker.part.point.x + 8, point.y);
           if (!getBlocker(workPoint)) {
-            // TODO Block if blocker above!
             point.x  = blocker.part.point.x + 8;
-            blocker = undefined;
+            if (this.encased()) {
+              point.x = oldX;
+            } else {
+              blocker = undefined;
+            }
           }
         }
         if (blocker) {
