@@ -13,7 +13,7 @@ webpackJsonp([1],[
 	};
 	const _1 = __webpack_require__(1);
 	const gold_1 = __webpack_require__(4);
-	__webpack_require__(50);
+	__webpack_require__(52);
 	__webpack_require__(8);
 	window.onload = main;
 	function main() {
@@ -42,15 +42,15 @@ webpackJsonp([1],[
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
 	// Some others depend on Mode and Part from these for now, so import it first.
-	__export(__webpack_require__(44));
+	__export(__webpack_require__(46));
 	__export(__webpack_require__(11));
-	__export(__webpack_require__(21));
-	__export(__webpack_require__(38));
+	__export(__webpack_require__(22));
+	__export(__webpack_require__(40));
 	__export(__webpack_require__(9));
 	__export(__webpack_require__(10));
-	__export(__webpack_require__(20));
-	__export(__webpack_require__(37));
+	__export(__webpack_require__(21));
 	__export(__webpack_require__(39));
+	__export(__webpack_require__(41));
 
 
 /***/ },
@@ -63,9 +63,8 @@ webpackJsonp([1],[
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
 	// Used by multiple parts.
-	__export(__webpack_require__(33));
+	__export(__webpack_require__(35));
 	// Parts themselves.
-	__export(__webpack_require__(22));
 	__export(__webpack_require__(23));
 	__export(__webpack_require__(24));
 	__export(__webpack_require__(25));
@@ -75,11 +74,13 @@ webpackJsonp([1],[
 	__export(__webpack_require__(29));
 	__export(__webpack_require__(30));
 	__export(__webpack_require__(31));
-	__export(__webpack_require__(34));
-	__export(__webpack_require__(35));
-	__export(__webpack_require__(36));
-	// After individual parts above.
 	__export(__webpack_require__(32));
+	__export(__webpack_require__(33));
+	__export(__webpack_require__(36));
+	__export(__webpack_require__(37));
+	__export(__webpack_require__(38));
+	// After individual parts above.
+	__export(__webpack_require__(34));
 
 
 /***/ },
@@ -91,16 +92,17 @@ webpackJsonp([1],[
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
 	// Common first.
-	__export(__webpack_require__(18));
+	__export(__webpack_require__(19));
 	// Individual parts.
 	__export(__webpack_require__(12));
 	__export(__webpack_require__(13));
 	__export(__webpack_require__(14));
 	__export(__webpack_require__(15));
-	__export(__webpack_require__(17));
-	__export(__webpack_require__(19));
-	// And the index.
 	__export(__webpack_require__(16));
+	__export(__webpack_require__(18));
+	__export(__webpack_require__(20));
+	// And the index.
+	__export(__webpack_require__(17));
 
 
 /***/ },
@@ -112,11 +114,11 @@ webpackJsonp([1],[
 	    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 	}
 	// Dependencies.
-	__export(__webpack_require__(41));
-	// Others.
-	__export(__webpack_require__(40));
-	__export(__webpack_require__(42));
 	__export(__webpack_require__(43));
+	// Others.
+	__export(__webpack_require__(42));
+	__export(__webpack_require__(44));
+	__export(__webpack_require__(45));
 
 
 /***/ },
@@ -1057,6 +1059,32 @@ webpackJsonp([1],[
 	"use strict";
 	const _1 = __webpack_require__(4);
 	const three_1 = __webpack_require__(2);
+	class DropArt extends _1.BaseArt {
+	    constructor() {
+	        super(...arguments);
+	        this.layer = _1.Layer.back;
+	    }
+	    get tile() {
+	        let { part } = this;
+	        tile.set(26, 16);
+	        if (part.stopTime) {
+	            let offset = Math.min(Math.floor(part.fadeScale * 8), 7);
+	            tile.y -= offset;
+	        }
+	        return tile;
+	    }
+	}
+	exports.DropArt = DropArt;
+	let tile = new three_1.Vector2();
+
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const _1 = __webpack_require__(4);
+	const three_1 = __webpack_require__(2);
 	class EnergyArt extends _1.BaseArt {
 	    constructor() {
 	        super(...arguments);
@@ -1109,7 +1137,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1131,7 +1159,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1141,6 +1169,7 @@ webpackJsonp([1],[
 	// Simple arts for unchanging parts.
 	exports.arts = {
 	    Bar: { layer: _1.Layer.back, tile: new three_1.Vector2(9, 17) },
+	    Dropper: { layer: _1.Layer.treasure, tile: new three_1.Vector2(14, 16) },
 	    Ladder: { layer: _1.Layer.back, tile: new three_1.Vector2(8, 17) },
 	    LauncherCenter: { layer: _1.Layer.back, tile: new three_1.Vector2(12, 17) },
 	    LauncherDown: { layer: _1.Layer.back, tile: new three_1.Vector2(11, 17) },
@@ -1162,6 +1191,8 @@ webpackJsonp([1],[
 	    [_2.BiggieRight, part => new _1.BiggieArt(part)],
 	    [_2.Bonus, part => new _1.PrizeArt(part, new three_1.Vector2(13, 16))],
 	    [_2.Brick, part => new _1.BrickArt(part)],
+	    [_2.Drop, part => new _1.DropArt(part)],
+	    [_2.Dropper, artMaker(exports.arts.Dropper)],
 	    [_2.Enemy, part => new _1.RunnerArt(part, new three_1.Vector2(15, 14))],
 	    [_2.Energy, part => new _1.EnergyArt(part)],
 	    [_2.EnergyOff, part => new _1.EnergyArt(part)],
@@ -1192,7 +1223,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1299,7 +1330,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1343,7 +1374,7 @@ webpackJsonp([1],[
 	class GoldTheme {
 	    constructor(game, image) {
 	        this.ender = false;
-	        this.fadeSee = new Lerper(0, 0x90, -100, 0.2);
+	        this.fadeSee = new Lerper(0, 0x90, -100, 0.2, 1);
 	        this.invisible = false;
 	        this.layerPartIndices = new Array();
 	        this.layers = new Array();
@@ -1375,7 +1406,7 @@ webpackJsonp([1],[
 	            });
 	            // TODO Error event?
 	        });
-	        image.src = __webpack_require__(51);
+	        image.src = __webpack_require__(53);
 	        return promise;
 	    }
 	    buildArt(part) {
@@ -1709,7 +1740,7 @@ webpackJsonp([1],[
 	        let { hero, time } = this.game.stage;
 	        // TODO Extract all this invisibility fade stuff elsewhere.
 	        let see = edit || !hero || hero.seesInvisible;
-	        if (!time) {
+	        if (time < 0.05) {
 	            // Don't observe state switch from initial state.
 	            // Just sneak it in.
 	            // TODO Going from edit to test, this doesn't seem to reset right.
@@ -1743,12 +1774,13 @@ webpackJsonp([1],[
 	}
 	exports.GoldTheme = GoldTheme;
 	class Lerper {
-	    constructor(begin, end, ref, span) {
+	    constructor(begin, end, ref, span, spanOut) {
 	        this.state = false;
 	        this.begin = begin;
 	        this.end = end;
 	        this.ref = ref;
 	        this.span = span;
+	        this.spanOut = spanOut;
 	    }
 	    update(state, x) {
 	        if (this.state != state) {
@@ -1763,7 +1795,8 @@ webpackJsonp([1],[
 	        let begin = this.state ? this.begin : this.end;
 	        let end = this.state ? this.end : this.begin;
 	        // Now lerp.
-	        let rel = Math.min((x - this.ref) / this.span, 1);
+	        let span = this.state ? this.span : this.spanOut;
+	        let rel = Math.min((x - this.ref) / span, 1);
 	        return rel * (end - begin) + begin;
 	    }
 	}
@@ -1823,7 +1856,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1845,7 +1878,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2100,7 +2133,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2219,7 +2252,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2235,7 +2268,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2357,7 +2390,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2436,7 +2469,122 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 25 */
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	const _1 = __webpack_require__(1);
+	const _2 = __webpack_require__(3);
+	const three_1 = __webpack_require__(2);
+	class Dropper extends _1.Part {
+	    constructor(game) {
+	        super(game);
+	        this.lastDropTime = 0;
+	        this.drop = new Drop(game);
+	    }
+	    get shootable() {
+	        return true;
+	    }
+	    get shotKillable() {
+	        return true;
+	    }
+	    solid(other, edge) {
+	        return edge == _1.Edge.top;
+	    }
+	    surface() {
+	        return true;
+	    }
+	    update() {
+	        let { drop } = this;
+	        let { stage } = this.game;
+	        if (this.dead) {
+	            return;
+	        }
+	        if (stage.time < 0.01) {
+	            workPoint2.copy(this.point).divide(_1.Level.tileSize).floor();
+	            this.lastDropTime =
+	                (workPoint2.x + workPoint2.y * _1.Level.tileCount.x) % 3;
+	        }
+	        let timeSince = stage.time - this.lastDropTime;
+	        if (!drop.active && timeSince > 3) {
+	            if (!drop.art) {
+	                this.game.theme.buildArt(drop);
+	            }
+	            drop.active = true;
+	            drop.point.copy(this.point);
+	            drop.stopTime = 0;
+	            stage.particles.push(drop);
+	            stage.added(drop);
+	            this.lastDropTime = stage.time;
+	        }
+	    }
+	}
+	Dropper.char = 'Y';
+	exports.Dropper = Dropper;
+	class Drop extends _2.Runner {
+	    constructor() {
+	        super(...arguments);
+	        // Never moves anywhere by choice, but eh.
+	        this.action = new _1.RunnerAction();
+	        this.active = false;
+	        this.climber = false;
+	        this.speed = new three_1.Vector2(0.8, 0.8);
+	        this.stopTime = 0;
+	    }
+	    choose() {
+	        // Just for falling and such.
+	        super.processAction(this.action);
+	    }
+	    die() {
+	        this.active = false;
+	    }
+	    get exists() {
+	        return this.active;
+	    }
+	    get fadeScale() {
+	        return (this.game.stage.time - this.stopTime) / this.fadeTime;
+	    }
+	    get fadeTime() {
+	        return 0.2;
+	    }
+	    get shootable() {
+	        return true;
+	    }
+	    update() {
+	        let { stopTime } = this;
+	        let { hero, time } = this.game.stage;
+	        super.update();
+	        // Kill.
+	        if (hero && !this.dead) {
+	            workPoint2.set(4, 5);
+	            if (stopTime) {
+	                // Intersect low as it smashes the bottom.
+	                let extra = Math.min(this.fadeScale, 1) * 4.5;
+	                workPoint2.y -= extra;
+	            }
+	            this.workPoint.copy(this.point).add(workPoint2);
+	            if (hero.contains(this.workPoint)) {
+	                hero.die();
+	            }
+	        }
+	        // Die.
+	        // TODO After fading!
+	        if (!this.moved.y) {
+	            if (!stopTime) {
+	                this.stopTime = time;
+	            }
+	        }
+	        if (this.point.y < -10 || (stopTime && time - stopTime > this.fadeTime)) {
+	            this.die();
+	        }
+	    }
+	}
+	exports.Drop = Drop;
+	let workPoint2 = new three_1.Vector2();
+
+
+/***/ },
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2528,7 +2676,7 @@ webpackJsonp([1],[
 	                    waitPointHero.y = hero.point.y;
 	                    waitTime.y = time + closeTime;
 	                }
-	                else if (diff.y) {
+	                else if (Math.abs(diff.y) >= 1) {
 	                    if (diff.y < 0) {
 	                        // Don't try to go down if we can't.
 	                        // The problem is that if we're on a ladder with a solid at
@@ -2541,7 +2689,7 @@ webpackJsonp([1],[
 	                            // TODO Reusing calculations from action processing or physics
 	                            // TODO could be nice.
 	                            let climbable = (x) => this.partAt(x, -1, part => part.climbable(this));
-	                            if (climbable(_1.TilePos.midLeft) || climbable(_1.TilePos.midRight)) {
+	                            if (climbable(4 - 1e-3) || climbable(4 + 1e-3)) {
 	                                // Let climbable trump.
 	                                solidSurface = undefined;
 	                            }
@@ -2649,7 +2797,7 @@ webpackJsonp([1],[
 	            // Don't walk into seeming walls. TODO Exact alignment against such?
 	            let x = action.left ? -this.speed.x : 8 + this.speed.x;
 	            let edge = action.left ? _2.Edge.right : _2.Edge.left;
-	            let wall = this.partAt(x, 0, part => part.solid(this, edge, true));
+	            let wall = this.partAt(x, 4, part => part.solid(this, edge, true));
 	            if (wall) {
 	                action.left = action.right = false;
 	            }
@@ -2807,7 +2955,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 26 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2909,7 +3057,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 27 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2923,6 +3071,8 @@ webpackJsonp([1],[
 	        this.action = new _2.RunnerAction();
 	        this.carried = true;
 	        this.facing = 0;
+	        // Long before the start.
+	        this.lastShootTime = -100;
 	        this.lastSupport = undefined;
 	        this.lastSupportFacing = 0;
 	        this.speed = new three_1.Vector2(0.7, 0.7);
@@ -2997,7 +3147,9 @@ webpackJsonp([1],[
 	        if (this.dead) {
 	            return;
 	        }
-	        if (!shot.active && this.heroVisible()) {
+	        // Min wait on shots recommended by Matt.
+	        let timeSince = stage.time - this.lastShootTime;
+	        if (!shot.active && timeSince > 2 && this.heroVisible()) {
 	            if (!shot.art) {
 	                this.game.theme.buildArt(shot);
 	            }
@@ -3006,6 +3158,7 @@ webpackJsonp([1],[
 	            shot.point.copy(this.point);
 	            stage.particles.push(shot);
 	            stage.added(shot);
+	            this.lastShootTime = stage.time;
 	        }
 	    }
 	}
@@ -3094,7 +3247,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 28 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3231,7 +3384,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 29 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3249,7 +3402,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 30 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3413,7 +3566,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 31 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3432,7 +3585,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 32 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3468,6 +3621,7 @@ webpackJsonp([1],[
 	    _1.BiggieRight,
 	    _1.Bonus,
 	    _1.Brick,
+	    _1.Dropper,
 	    _1.Enemy,
 	    _1.Energy,
 	    _1.EnergyOff,
@@ -3533,12 +3687,14 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 33 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 	const _1 = __webpack_require__(1);
 	const three_1 = __webpack_require__(2);
+	class Blocker {
+	}
 	class Runner extends _1.Part {
 	    constructor() {
 	        super(...arguments);
@@ -3606,6 +3762,89 @@ webpackJsonp([1],[
 	        return (climbableAt(midLeft, 0) || climbableAt(midRight, 0) ||
 	            // Allow dangling.
 	            climbableAt(midLeft, top) || climbableAt(midRight, top));
+	    }
+	    getBlockerDown(point) {
+	        let blockY = (blocker) => blocker.point.y;
+	        let offX = point.x - this.point.x;
+	        let blocker1 = this.getSolid(_1.Edge.top, offX, 0);
+	        let blocker2 = this.getSolid(_1.Edge.top, right + offX, 0);
+	        let blocker = argmax(blockY, blocker1, blocker2);
+	        let fixY = point.y;
+	        if (blocker) {
+	            fixY = blocker.point.y + _1.Level.tileSize.y;
+	        }
+	        else {
+	            blocker1 = this.getSolidInside(_1.Edge.bottom, offX, 0, 0, this.move.y);
+	            blocker2 =
+	                this.getSolidInside(_1.Edge.bottom, right + offX, 0, 0, this.move.y);
+	            blocker = argmax(blockY, blocker1, blocker2);
+	            if (blocker) {
+	                fixY = blocker.point.y;
+	            }
+	        }
+	        return blocker && { part: blocker, pos: fixY };
+	    }
+	    getBlockerLeft(point) {
+	        let blockX = (blocker) => blocker.point.x;
+	        let offY = point.y - this.point.y;
+	        let blocker1 = this.getSolid(_1.Edge.right, 0, offY);
+	        let blocker2 = this.getSolid(_1.Edge.right, 0, top + offY);
+	        let blocker = argmax(blockX, blocker1, blocker2);
+	        let fixX = point.x;
+	        if (blocker) {
+	            fixX = blocker.point.x + _1.Level.tileSize.x;
+	        }
+	        else {
+	            blocker1 = this.getSolidInside(_1.Edge.left, 0, offY, this.move.x, 0);
+	            blocker2 = this.getSolidInside(_1.Edge.left, 0, top + offY, this.move.x, 0);
+	            blocker = argmax(blockX, blocker1, blocker2);
+	            if (blocker) {
+	                fixX = blocker.point.x;
+	            }
+	        }
+	        return blocker && { part: blocker, pos: fixX };
+	    }
+	    getBlockerRight(point) {
+	        let blockX = (blocker) => blocker.point.x;
+	        let offY = point.y - this.point.y;
+	        let blocker1 = this.getSolid(_1.Edge.left, right, offY);
+	        let blocker2 = this.getSolid(_1.Edge.left, right, top + offY);
+	        let blocker = argmin(blockX, blocker1, blocker2);
+	        let fixX = point.x;
+	        if (blocker) {
+	            fixX = blocker.point.x - _1.Level.tileSize.x;
+	        }
+	        else {
+	            blocker1 = this.getSolidInside(_1.Edge.right, right, offY, this.move.x, 0);
+	            blocker2 =
+	                this.getSolidInside(_1.Edge.right, right, top + offY, this.move.x, 0);
+	            blocker = argmin(blockX, blocker1, blocker2);
+	            if (blocker) {
+	                fixX = blocker.point.x;
+	            }
+	        }
+	        return blocker && { part: blocker, pos: fixX };
+	    }
+	    getBlockerUp(point) {
+	        let blockY = (blocker) => blocker.point.y;
+	        let offX = point.x - this.point.x;
+	        let blocker1 = this.getSolid(_1.Edge.bottom, offX, top);
+	        let blocker2 = this.getSolid(_1.Edge.bottom, right + offX, top);
+	        let blocker = argmin(blockY, blocker1, blocker2);
+	        let fixY = point.y;
+	        if (blocker) {
+	            fixY = blocker.point.y - _1.Level.tileSize.y;
+	        }
+	        else {
+	            blocker1 = this.getSolidInside(_1.Edge.top, offX, top, 0, this.move.y);
+	            blocker2 =
+	                this.getSolidInside(_1.Edge.top, right + offX, top, 0, this.move.y);
+	            blocker = argmin(blockY, blocker1, blocker2);
+	            if (blocker) {
+	                fixY = blocker.point.y;
+	            }
+	        }
+	        return blocker && { part: blocker, pos: fixY };
 	    }
 	    getSolid(edge, x, y, seems) {
 	        let isSolid = (part) => part.solid(this, edge, seems) && part != this;
@@ -3708,30 +3947,85 @@ webpackJsonp([1],[
 	        else {
 	            move.y = -1;
 	        }
-	        // Align non-moving direction.
-	        // TODO Make this actually change the move. Nix the align var.
-	        // TODO Except when all on same climbable or none?
-	        // TODO No! Make align only when both allowed and needed for movement!!!!!
-	        align.setScalar(0);
-	        // Prioritize y because y move options are rarer.
+	        // Check for alignment when climbing and falling near climbables.
+	        let isClimbable = (part) => part.climbable(this) && part != this;
 	        if (move.y) {
-	            if (climbable) {
-	                // Generalize alignment to whatever provides passage.
-	                align.x = Math.sign(climbable.point.x - point.x);
-	            }
-	            else if (move.y < 0) {
-	                align.x = this.findAlign(_1.Edge.top, leftParts, rightParts);
-	            }
-	            else if (move.y > 0) {
-	                align.x = this.findAlign(_1.Edge.bottom, this.partsNear(3, 10), this.partsNear(midRight, 10));
+	            let checkY = move.y < 0 ? exports.TilePos.bottom : exports.TilePos.top;
+	            let climbLeft = this.partAt(exports.TilePos.left, checkY, isClimbable);
+	            let climbRight = this.partAt(exports.TilePos.right, checkY, isClimbable);
+	            if (climbLeft || climbRight) {
+	                if (climbLeft && climbRight) {
+	                    if (climbLeft.type != climbRight.type) {
+	                        // Find the closer one, and no need for abs, since we know order.
+	                        if (point.x - climbLeft.point.x < climbRight.point.x - point.x) {
+	                            point.x = climbLeft.point.x;
+	                        }
+	                        else {
+	                            point.x = climbRight.point.x;
+	                        }
+	                    }
+	                }
+	                else {
+	                    if (climbLeft) {
+	                        if (this.climbing) {
+	                            point.x = climbLeft.point.x;
+	                        }
+	                        else {
+	                            point.x = climbLeft.point.x + 8;
+	                        }
+	                    }
+	                    else {
+	                        if (this.climbing) {
+	                            point.x = climbRight.point.x;
+	                        }
+	                        else {
+	                            point.x = climbRight.point.x - 8;
+	                        }
+	                    }
+	                }
 	            }
 	        }
-	        else if (move.x < 0) {
-	            align.y = this.findAlign(_1.Edge.right, this.partsNear(-1, 4), this.partsNear(-1, midTop));
+	        else if (move.x) {
+	            let checkX = move.x < 0 ? exports.TilePos.left : exports.TilePos.right;
+	            let climbBottom = this.partAt(checkX, exports.TilePos.bottom, isClimbable);
+	            let climbTop = this.partAt(checkX, exports.TilePos.top, isClimbable);
+	            if (climbBottom || climbTop) {
+	                if (climbBottom && climbTop) {
+	                    if (climbBottom.type != climbTop.type) {
+	                        // Find the closer one, and no need for abs, since we know order.
+	                        if (point.y - climbBottom.point.y < climbTop.point.y - point.y) {
+	                            point.y = climbBottom.point.y;
+	                        }
+	                        else {
+	                            point.y = climbTop.point.y;
+	                        }
+	                    }
+	                }
+	                else {
+	                    // For align to row, we can fall out of climbables, unlike for column
+	                    // alignment.
+	                    // Still, err on the side of climbing with <=.
+	                    if (climbBottom) {
+	                        if (point.y - climbBottom.point.y <= 5) {
+	                            point.y = climbBottom.point.y;
+	                        }
+	                        else {
+	                            point.y = climbBottom.point.y + 10;
+	                        }
+	                    }
+	                    else {
+	                        if (climbTop.point.y - point.y <= 5) {
+	                            point.y = climbTop.point.y;
+	                        }
+	                        else {
+	                            point.y = climbTop.point.y - 10;
+	                        }
+	                    }
+	                }
+	            }
 	        }
-	        else if (move.x > 0) {
-	            align.y = this.findAlign(_1.Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop));
-	        }
+	        // TODO Add tiny random amounts here so we don't stay aligned?
+	        // TODO But no randomness so far, right?
 	        move.multiply(speed);
 	        this.oldCatcher = oldCatcher;
 	        this.support = support;
@@ -3771,108 +4065,125 @@ webpackJsonp([1],[
 	        }
 	        point.add(move);
 	        // See if we need to fix things.
-	        // TODO Align only when forced or to enable movement, not just for grid.
-	        // TODO Defer this until first pass of all moving parts so we can resolve
-	        // TODO together?
-	        if (!align.x) {
-	            // See if we need to align x for solids.
-	            // TODO If openings partially above or below, move and align y!
-	            if (move.x < 0) {
-	                let blocker1 = this.getSolid(_1.Edge.right, 0, 0);
-	                let blocker2 = this.getSolid(_1.Edge.right, 0, top);
-	                let blockX = (blocker) => blocker ? blocker.point.x : -_1.Level.tileSize.x;
-	                if (blocker1 || blocker2) {
-	                    let x = Math.max(blockX(blocker1), blockX(blocker2));
-	                    point.x = x + _1.Level.tileSize.x;
-	                }
-	                else {
-	                    blocker1 = this.getSolidInside(_1.Edge.left, 0, 0, move.x, 0);
-	                    blocker2 = this.getSolidInside(_1.Edge.left, 0, top, move.x, 0);
-	                    if (blocker1 || blocker2) {
-	                        let x = Math.max(blockX(blocker1), blockX(blocker2));
-	                        point.x = x;
-	                    }
-	                }
-	            }
-	            else if (move.x > 0) {
-	                let blocker1 = this.getSolid(_1.Edge.left, right, 0);
-	                let blocker2 = this.getSolid(_1.Edge.left, right, top);
-	                let blockX = (blocker) => blocker ? blocker.point.x : _1.Level.pixelCount.x;
-	                if (blocker1 || blocker2) {
-	                    let x = Math.min(blockX(blocker1), blockX(blocker2));
-	                    point.x = x - _1.Level.tileSize.x;
-	                }
-	                else {
-	                    blocker1 = this.getSolidInside(_1.Edge.right, right, 0, move.x, 0);
-	                    blocker2 = this.getSolidInside(_1.Edge.right, right, top, move.x, 0);
-	                    if (blocker1 || blocker2) {
-	                        let x = Math.min(blockX(blocker1), blockX(blocker2));
-	                        point.x = x;
-	                    }
-	                }
-	            }
-	        }
-	        if (!align.y) {
-	            // See if we need to align y for solids.
-	            if (move.y < 0) {
-	                // Surface checks halfway, but solid checks ends.
-	                // This seems odd, but it usually shouldn't matter, since alignment to
-	                // open spaces should make them equivalent.
-	                // I'm not sure if there are times when it will matter, but it's hard to
-	                // say in those cases what to do anyway.
-	                let newSupport = support ? undefined : this.getSurface();
-	                let blocker1 = this.getSolid(_1.Edge.top, 0, 0);
-	                let blocker2 = this.getSolid(_1.Edge.top, right, 0);
-	                let blockY = (blocker) => blocker ? blocker.point.y : -_1.Level.tileSize.y;
-	                if (newSupport || blocker1 || blocker2) {
-	                    let y = Math.max(blockY(newSupport), blockY(blocker1), blockY(blocker2));
-	                    point.y = y + _1.Level.tileSize.y;
-	                }
-	                else {
-	                    // TODO Unify catcher and inside bottom solids at all?
-	                    blocker1 = this.getSolidInside(_1.Edge.bottom, 0, 0, 0, move.y);
-	                    blocker2 = this.getSolidInside(_1.Edge.bottom, right, 0, 0, move.y);
-	                    if (blocker1 || blocker2) {
-	                        let y = Math.max(blockY(blocker1), blockY(blocker2));
-	                        point.y = y;
-	                    }
-	                    else if (this.climber) {
-	                        // See if we entered a catcher.
-	                        let newCatcher = this.getCatcher(false);
-	                        if (newCatcher && newCatcher != oldCatcher) {
-	                            point.y = newCatcher.point.y;
+	        let blockX = (getBlocker) => {
+	            let blocker = getBlocker(point);
+	            if (blocker) {
+	                let oldY = point.y;
+	                if (blocker.part.point.y - point.y >= 5) {
+	                    // See if we can shift down.
+	                    workPoint.set(point.x, blocker.part.point.y - 10);
+	                    if (!getBlocker(workPoint)) {
+	                        point.y = blocker.part.point.y - 10;
+	                        // TODO Don't cross inside solids, either!
+	                        if (this.encased()) {
+	                            point.y = oldY;
+	                        }
+	                        else {
+	                            blocker = undefined;
 	                        }
 	                    }
 	                }
-	            }
-	            else if (move.y > 0) {
-	                let blocker1 = this.getSolid(_1.Edge.bottom, 0, top);
-	                let blocker2 = this.getSolid(_1.Edge.bottom, right, top);
-	                let blockY = (blocker) => blocker ? blocker.point.y : _1.Level.pixelCount.y;
-	                if (blocker1 || blocker2) {
-	                    let y = Math.min(blockY(blocker1), blockY(blocker2));
-	                    point.y = y - _1.Level.tileSize.y;
+	                else if (point.y - blocker.part.point.y >= 5) {
+	                    // See if we can shift up.
+	                    workPoint.set(point.x, blocker.part.point.y + 10);
+	                    if (!getBlocker(workPoint)) {
+	                        point.y = blocker.part.point.y + 10;
+	                        // TODO Don't cross inside solids, either!
+	                        if (this.encased()) {
+	                            point.y = oldY;
+	                        }
+	                        else {
+	                            blocker = undefined;
+	                        }
+	                    }
 	                }
-	                else {
-	                    blocker1 = this.getSolidInside(_1.Edge.top, 0, top, 0, move.y);
-	                    blocker2 = this.getSolidInside(_1.Edge.top, right, top, 0, move.y);
-	                    if (blocker1 || blocker2) {
-	                        let y = Math.min(blockY(blocker1), blockY(blocker2));
-	                        point.y = y;
+	                if (blocker) {
+	                    point.x = blocker.pos;
+	                }
+	            }
+	        };
+	        let blockY = (getBlocker) => {
+	            let blocker = getBlocker(point);
+	            if (blocker) {
+	                let oldX = point.x;
+	                if (blocker.part.point.x - point.x >= 4) {
+	                    // See if we can shift left.
+	                    workPoint.set(blocker.part.point.x - 8, point.y);
+	                    if (!getBlocker(workPoint)) {
+	                        point.x = blocker.part.point.x - 8;
+	                        if (this.encased()) {
+	                            point.x = oldX;
+	                        }
+	                        else {
+	                            blocker = undefined;
+	                        }
+	                    }
+	                }
+	                else if (point.x - blocker.part.point.x >= 4) {
+	                    // See if we can shift right.
+	                    workPoint.set(blocker.part.point.x + 8, point.y);
+	                    if (!getBlocker(workPoint)) {
+	                        point.x = blocker.part.point.x + 8;
+	                        if (this.encased()) {
+	                            point.x = oldX;
+	                        }
+	                        else {
+	                            blocker = undefined;
+	                        }
+	                    }
+	                }
+	                if (blocker) {
+	                    point.y = blocker.pos;
+	                }
+	            }
+	        };
+	        if (move.x < 0) {
+	            blockX(point => this.getBlockerLeft(point));
+	        }
+	        else if (move.x > 0) {
+	            blockX(point => this.getBlockerRight(point));
+	        }
+	        // TODO Align only when forced or to enable movement, not just for grid.
+	        // TODO Defer this until first pass of all moving parts so we can resolve
+	        // TODO together?
+	        // See if we need to align y for solids.
+	        if (move.y < 0) {
+	            blockY(point => this.getBlockerDown(point));
+	            // TODO What below is needed? At least new catcher?
+	            // TODO It would be nice to fall full off surfaces, even if non-solid and
+	            // TODO non-climbable, but we don't right now.
+	            // Surface checks halfway, but solid checks ends.
+	            // This seems odd, but it usually shouldn't matter, since alignment to
+	            // open spaces should make them equivalent.
+	            // I'm not sure if there are times when it will matter, but it's hard to
+	            // say in those cases what to do anyway.
+	            let newSupport = support ? undefined : this.getSurface();
+	            let blocker1 = this.getSolid(_1.Edge.top, 0, 0);
+	            let blocker2 = this.getSolid(_1.Edge.top, right, 0);
+	            let blockY2 = (blocker) => blocker ? blocker.point.y : -_1.Level.tileSize.y;
+	            if (newSupport || blocker1 || blocker2) {
+	                let y = Math.max(blockY2(newSupport), blockY2(blocker1), blockY2(blocker2));
+	                point.y = y + _1.Level.tileSize.y;
+	            }
+	            else {
+	                // TODO Unify catcher and inside bottom solids at all?
+	                blocker1 = this.getSolidInside(_1.Edge.bottom, 0, 0, 0, move.y);
+	                blocker2 = this.getSolidInside(_1.Edge.bottom, right, 0, 0, move.y);
+	                if (blocker1 || blocker2) {
+	                    let y = Math.max(blockY2(blocker1), blockY2(blocker2));
+	                    point.y = y;
+	                }
+	                else if (this.climber) {
+	                    // See if we entered a catcher.
+	                    let newCatcher = this.getCatcher(false);
+	                    if (newCatcher && newCatcher != oldCatcher) {
+	                        point.y = newCatcher.point.y;
 	                    }
 	                }
 	            }
 	        }
-	        // TODO Align to blocker, not grid!!!
-	        if (align.x) {
-	            let offset = align.x < 0 ? 3 : midRight;
-	            point.x =
-	                _1.Level.tileSize.x * Math.floor((point.x + offset) / _1.Level.tileSize.x);
-	        }
-	        if (align.y) {
-	            let offset = align.y < 0 ? 4 : midTop;
-	            point.y =
-	                _1.Level.tileSize.y * Math.floor((point.y + offset) / _1.Level.tileSize.y);
+	        else if (move.y > 0) {
+	            blockY(point => this.getBlockerUp(point));
 	        }
 	        // Update moved to the actual move, and update the stage.
 	        this.moved.copy(this.point).sub(oldPoint);
@@ -3899,6 +4210,22 @@ webpackJsonp([1],[
 	    invisible: false,
 	};
 	exports.Runner = Runner;
+	function argmax(f, a, b) {
+	    if (a && b) {
+	        return f(a) > f(b) ? a : b;
+	    }
+	    else {
+	        return a || b;
+	    }
+	}
+	function argmin(f, a, b) {
+	    if (a && b) {
+	        return f(a) < f(b) ? a : b;
+	    }
+	    else {
+	        return a || b;
+	    }
+	}
 	let epsilon = 1e-2;
 	exports.TilePos = {
 	    bottom: epsilon,
@@ -3915,7 +4242,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 34 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3972,7 +4299,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 35 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3990,7 +4317,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 36 */
+/* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4031,7 +4358,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 37 */
+/* 39 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4149,7 +4476,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 38 */
+/* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4356,7 +4683,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 39 */
+/* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4764,7 +5091,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 40 */
+/* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -4772,7 +5099,7 @@ webpackJsonp([1],[
 	const _2 = __webpack_require__(1);
 	class Levels extends _1.EditorList {
 	    constructor(game) {
-	        super(game, __webpack_require__(47));
+	        super(game, __webpack_require__(49));
 	        this.updateNumbers();
 	    }
 	    addLevel() {
@@ -4870,7 +5197,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 41 */
+/* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5004,7 +5331,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 42 */
+/* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5012,7 +5339,7 @@ webpackJsonp([1],[
 	class Report extends _1.Dialog {
 	    constructor(game, message) {
 	        super(game);
-	        let content = this.content = _1.load(__webpack_require__(48));
+	        let content = this.content = _1.load(__webpack_require__(50));
 	        // Hide extras.
 	        for (let row of content.querySelectorAll('.timeRow')) {
 	            row.style.display = 'none';
@@ -5040,7 +5367,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 43 */
+/* 45 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -5048,7 +5375,7 @@ webpackJsonp([1],[
 	const _2 = __webpack_require__(1);
 	class Towers extends _1.EditorList {
 	    constructor(game) {
-	        super(game, __webpack_require__(49));
+	        super(game, __webpack_require__(51));
 	    }
 	    addTower() {
 	        let tower = new _2.Tower().encode();
@@ -5112,7 +5439,7 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 44 */
+/* 46 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -5313,8 +5640,8 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 45 */,
-/* 46 */
+/* 47 */,
+/* 48 */
 /***/ function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(6)();
@@ -5328,31 +5655,31 @@ webpackJsonp([1],[
 
 
 /***/ },
-/* 47 */
+/* 49 */
 /***/ function(module, exports) {
 
 	module.exports = "<div class=\"dialog levels\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=nameBox> <span class=name>Tower</span> </span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Marked Clipboard Level(s)\"></i> <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\" title=\"Unmark Clipboard Selections\"></i> <i class=\"fa fa-ban exclude\" title=\"Exclude Level\"></i> <i class=\"fa fa-trash delete disabled\" title=\"Delete Level\"></i> <i class=\"fa fa-download save\" title=\"Export Tower to File\"></i> <i class=\"fa fa-arrow-up towers\" title=\"List Towers\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i> <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i> <i class=\"fa fa-arrow-right edit\" title=\"Edit Level\"></i> </div> </div> </div> </div> </div> ";
 
 /***/ },
-/* 48 */
+/* 50 */
 /***/ function(module, exports) {
 
 	module.exports = "<div class=\"dialog report\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=endMessage>...</div> <table> <tr class=\"scoreTimeRow timeRow\"> <th>Time:</th><td class=scoreTime></td> </tr> </table> </div> </div> ";
 
 /***/ },
-/* 49 */
+/* 51 */
 /***/ function(module, exports) {
 
 	module.exports = "<div class=\"dialog towers\"> <div class=\"fill shade\"></div> <div class=\"fill dialogInner\"> <div class=titleBox> <div class=title> <span class=nameBox> <span class=name>Towers</span> </span> <i class=\"fa fa-search search disabled\" title=Search></i> <i class=\"fa fa-plus add\" title=\"New Level\"></i> <i class=\"fa fa-clipboard paste disabled\" title=\"Paste Marked Clipboard Tower(s)\"></i> <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\" title=\"Unmark Clipboard Selections\"></i> <i class=\"fa fa-ban exclude disabled\" title=\"Exclude Tower\"></i> <i class=\"fa fa-trash delete disabled\" title=\"Delete Tower\"></i> <i class=\"fa fa-upload load disabled\" title=\"Import Tower\"></i> </div> </div> <div class=contentBox> <div class=\"content fill\"> <div class=item> <div class=\"fill highlight\"></div> <span class=nameBox> <span class=number></span> <span class=name>Level</span> </span> <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i> <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i> <i class=\"fa fa-arrow-right edit\" title=\"List Levels\"></i> </div> </div> </div> </div> </div> ";
 
 /***/ },
-/* 50 */
+/* 52 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(46);
+	var content = __webpack_require__(48);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(7)(content, {});
@@ -5372,10 +5699,10 @@ webpackJsonp([1],[
 	}
 
 /***/ },
-/* 51 */
+/* 53 */
 /***/ function(module, exports) {
 
-	module.exports = "data:image/png;base64,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"
+	module.exports = "data:image/png;base64,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"
 
 /***/ }
 ]);
