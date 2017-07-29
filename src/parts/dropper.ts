@@ -80,6 +80,10 @@ export class Drop extends Runner {
     return this.active;
   }
 
+  get fadeScale() {
+    return (this.game.stage.time - this.stopTime) / this.fadeTime;
+  }
+
   get fadeTime() {
     return 0.2;
   }
@@ -98,7 +102,13 @@ export class Drop extends Runner {
     super.update()
     // Kill.
     if (hero && !this.dead) {
-      this.workPoint.copy(this.point).add(workPoint2.set(4, 5));
+      workPoint2.set(4, 5);
+      if (stopTime) {
+        // Intersect low as it smashes the bottom.
+        let extra = Math.min(this.fadeScale, 1) * 4.5;
+        workPoint2.y -= extra;
+      }
+      this.workPoint.copy(this.point).add(workPoint2);
       if (hero.contains(this.workPoint)) {
         hero.die();
       }
