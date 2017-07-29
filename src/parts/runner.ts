@@ -2,6 +2,11 @@ import {None, Prize} from './';
 import {Edge, Game, Level, Part, RunnerAction} from '../';
 import {Vector2} from 'three';
 
+class Blocker {
+  part: Part;
+  pos: number;
+}
+
 export class Runner extends Part {
 
   static options = {
@@ -81,6 +86,89 @@ export class Runner extends Part {
       climbableAt(midLeft, 0) || climbableAt(midRight, 0) ||
       // Allow dangling.
       climbableAt(midLeft, top) || climbableAt(midRight, top));
+  }
+
+  getBlockerDown(point: Vector2): Blocker | undefined {
+    let blockY = (blocker: Part) => blocker.point.y;
+    let offX = point.x - this.point.x;
+    let blocker1 = this.getSolid(Edge.top, offX, 0);
+    let blocker2 = this.getSolid(Edge.top, right + offX, 0);
+    let blocker = argmax(blockY, blocker1, blocker2);
+    let fixY = point.y;
+    if (blocker) {
+      fixY = blocker.point.y + Level.tileSize.y;
+    } else {
+      blocker1 = this.getSolidInside(Edge.bottom, offX, 0, 0, this.move.y);
+      blocker2 =
+        this.getSolidInside(Edge.bottom, right + offX, 0, 0, this.move.y);
+      blocker = argmax(blockY, blocker1, blocker2);
+      if (blocker) {
+        fixY = blocker.point.y;
+      }
+    }
+    return blocker && {part: blocker, pos: fixY};
+  }
+
+  getBlockerLeft(point: Vector2): Blocker | undefined {
+    let blockX = (blocker: Part) => blocker.point.x;
+    let offY = point.y - this.point.y;
+    let blocker1 = this.getSolid(Edge.right, 0, offY);
+    let blocker2 = this.getSolid(Edge.right, 0, top + offY);
+    let blocker = argmax(blockX, blocker1, blocker2);
+    let fixX = point.x;
+    if (blocker) {
+      fixX = blocker.point.x + Level.tileSize.x;
+    } else {
+      blocker1 = this.getSolidInside(Edge.left, 0, offY, this.move.x, 0);
+      blocker2 = this.getSolidInside(Edge.left, 0, top + offY, this.move.x, 0);
+      blocker = argmax(blockX, blocker1, blocker2);
+      if (blocker) {
+        fixX = blocker.point.x;
+      }
+    }
+    return blocker && {part: blocker, pos: fixX};
+  }
+
+  getBlockerRight(point: Vector2): Blocker | undefined {
+    let blockX = (blocker: Part) => blocker.point.x;
+    let offY = point.y - this.point.y;
+    let blocker1 = this.getSolid(Edge.left, right, offY);
+    let blocker2 = this.getSolid(Edge.left, right, top + offY);
+    let blocker = argmin(blockX, blocker1, blocker2);
+    let fixX = point.x;
+    if (blocker) {
+      fixX = blocker.point.x - Level.tileSize.x;
+    } else {
+      blocker1 = this.getSolidInside(Edge.right, right, offY, this.move.x, 0);
+      blocker2 =
+        this.getSolidInside(Edge.right, right, top + offY, this.move.x, 0);
+      blocker = argmin(blockX, blocker1, blocker2);
+      if (blocker) {
+        fixX = blocker.point.x;
+      }
+    }
+    return blocker && {part: blocker, pos: fixX};
+  }
+
+  getBlockerUp(point: Vector2): Blocker | undefined {
+    let blockY = (blocker: Part) => blocker.point.y;
+    let offX = point.x - this.point.x;
+    let blocker1 = this.getSolid(Edge.bottom, offX, top);
+    let blocker2 = this.getSolid(Edge.bottom, right + offX, top);
+    let blocker = argmin(blockY, blocker1, blocker2);
+    let fixY = point.y;
+    if (blocker) {
+      fixY = blocker.point.y - Level.tileSize.y;
+    } else {
+      blocker1 = this.getSolidInside(Edge.top, offX, top, 0, this.move.y);
+      blocker2 =
+        this.getSolidInside(Edge.top, right + offX, top, 0, this.move.y);
+      blocker = argmin(blockY, blocker1, blocker2);
+      if (blocker) {
+        fixY = blocker.point.y;
+      }
+    }
+    return blocker && {part: blocker, pos: fixY};
   }
 
   getSolid(edge: Edge, x: number, y: number, seems?: boolean) {
@@ -188,32 +276,74 @@ export class Runner extends Part {
     } else {
       move.y = -1;
     }
-    // Align non-moving direction.
-    // TODO Make this actually change the move. Nix the align var.
-    // TODO Except when all on same climbable or none?
-    // TODO No! Make align only when both allowed and needed for movement!!!!!
-    align.setScalar(0);
-    // Prioritize y because y move options are rarer.
+    // Check for alignment when climbing and falling near climbables.
+    let isClimbable = (part: Part) => part.climbable(this) && part != this;
     if (move.y) {
-      if (climbable) {
-        // Generalize alignment to whatever provides passage.
-        align.x = Math.sign(climbable.point.x - point.x);
-      } else if (move.y < 0) {
-        align.x = this.findAlign(Edge.top, leftParts, rightParts);
-      } else if (move.y > 0) {
-        align.x = this.findAlign(
-          Edge.bottom, this.partsNear(3, 10), this.partsNear(midRight, 10),
-        );
+      let checkY = move.y < 0 ? TilePos.bottom : TilePos.top;
+      let climbLeft = this.partAt(TilePos.left, checkY, isClimbable);
+      let climbRight = this.partAt(TilePos.right, checkY, isClimbable);
+      if (climbLeft || climbRight) {
+        if (climbLeft && climbRight) {
+          if (climbLeft.type != climbRight.type) {
+            // Find the closer one, and no need for abs, since we know order.
+            if (point.x - climbLeft.point.x < climbRight.point.x - point.x) {
+              point.x = climbLeft.point.x;
+            } else {
+              point.x = climbRight.point.x;
+            }
+          }
+        } else {
+          if (climbLeft) {
+            if (this.climbing) {
+              point.x = climbLeft.point.x;
+            } else {
+              point.x = climbLeft.point.x + 8;
+            }
+          } else {
+            if (this.climbing) {
+              point.x = climbRight!.point.x;
+            } else {
+              point.x = climbRight!.point.x - 8;
+            }
+          }
+        }
       }
-    } else if (move.x < 0) {
-      align.y = this.findAlign(
-        Edge.right, this.partsNear(-1, 4), this.partsNear(-1, midTop),
-      );
-    } else if (move.x > 0) {
-      align.y = this.findAlign(
-        Edge.left, this.partsNear(8, 4), this.partsNear(8, midTop)
-      );
+    } else if (move.x) {
+      let checkX = move.x < 0 ? TilePos.left : TilePos.right;
+      let climbBottom = this.partAt(checkX, TilePos.bottom, isClimbable);
+      let climbTop = this.partAt(checkX, TilePos.top, isClimbable);
+      if (climbBottom || climbTop) {
+        if (climbBottom && climbTop) {
+          if (climbBottom.type != climbTop.type) {
+            // Find the closer one, and no need for abs, since we know order.
+            if (point.y - climbBottom.point.y < climbTop.point.y - point.y) {
+              point.y = climbBottom.point.y;
+            } else {
+              point.y = climbTop.point.y;
+            }
+          }
+        } else {
+          // For align to row, we can fall out of climbables, unlike for column
+          // alignment.
+          // Still, err on the side of climbing with <=.
+          if (climbBottom) {
+            if (point.y - climbBottom.point.y <= 5) {
+              point.y = climbBottom.point.y;
+            } else {
+              point.y = climbBottom.point.y + 10;
+            }
+          } else {
+            if (climbTop!.point.y - point.y <= 5) {
+              point.y = climbTop!.point.y;
+            } else {
+              point.y = climbTop!.point.y - 10;
+            }
+          }
+        }
+      }
     }
+    // TODO Add tiny random amounts here so we don't stay aligned?
+    // TODO But no randomness so far, right?
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
     this.support = support;
@@ -263,106 +393,117 @@ export class Runner extends Part {
     }
     point.add(move);
     // See if we need to fix things.
-    // TODO Align only when forced or to enable movement, not just for grid.
-    // TODO Defer this until first pass of all moving parts so we can resolve
-    // TODO together?
-    if (!align.x) {
-      // See if we need to align x for solids.
-      // TODO If openings partially above or below, move and align y!
-      if (move.x < 0) {
-        let blocker1 = this.getSolid(Edge.right, 0, 0);
-        let blocker2 = this.getSolid(Edge.right, 0, top);
-        let blockX = (blocker?: Part) =>
-          blocker ? blocker.point.x : -Level.tileSize.x;
-        if (blocker1 || blocker2) {
-          let x = Math.max(blockX(blocker1), blockX(blocker2));
-          point.x = x + Level.tileSize.x;
-        } else {
-          blocker1 = this.getSolidInside(Edge.left, 0, 0, move.x, 0);
-          blocker2 = this.getSolidInside(Edge.left, 0, top, move.x, 0);
-          if (blocker1 || blocker2) {
-            let x = Math.max(blockX(blocker1), blockX(blocker2));
-            point.x = x;
+    let blockX = (getBlocker: (point: Vector2) => Blocker | undefined) => {
+      let blocker = getBlocker(point);
+      if (blocker) {
+        let oldY = point.y;
+        if (blocker.part.point.y - point.y >= 5) {
+          // See if we can shift down.
+          workPoint.set(point.x, blocker.part.point.y - 10);
+          if (!getBlocker(workPoint)) {
+            point.y = blocker.part.point.y - 10;
+            // TODO Don't cross inside solids, either!
+            if (this.encased()) {
+              point.y = oldY;
+            } else {
+              blocker = undefined;
+            }
           }
-        }
-      } else if (move.x > 0) {
-        let blocker1 = this.getSolid(Edge.left, right, 0);
-        let blocker2 = this.getSolid(Edge.left, right, top);
-        let blockX = (blocker?: Part) =>
-          blocker ? blocker.point.x : Level.pixelCount.x;
-        if (blocker1 || blocker2) {
-          let x = Math.min(blockX(blocker1), blockX(blocker2));
-          point.x = x - Level.tileSize.x;
-        } else {
-          blocker1 = this.getSolidInside(Edge.right, right, 0, move.x, 0);
-          blocker2 = this.getSolidInside(Edge.right, right, top, move.x, 0);
-          if (blocker1 || blocker2) {
-            let x = Math.min(blockX(blocker1), blockX(blocker2));
-            point.x = x;
-          }
-        }
-      }
-    }
-    if (!align.y) {
-      // See if we need to align y for solids.
-      if (move.y < 0) {
-        // Surface checks halfway, but solid checks ends.
-        // This seems odd, but it usually shouldn't matter, since alignment to
-        // open spaces should make them equivalent.
-        // I'm not sure if there are times when it will matter, but it's hard to
-        // say in those cases what to do anyway.
-        let newSupport = support ? undefined : this.getSurface();
-        let blocker1 = this.getSolid(Edge.top, 0, 0);
-        let blocker2 = this.getSolid(Edge.top, right, 0);
-        let blockY = (blocker?: Part) =>
-          blocker ? blocker.point.y : -Level.tileSize.y;
-        if (newSupport || blocker1 || blocker2) {
-          let y =
-            Math.max(blockY(newSupport), blockY(blocker1), blockY(blocker2));
-          point.y = y + Level.tileSize.y;
-        } else {
-          // TODO Unify catcher and inside bottom solids at all?
-          blocker1 = this.getSolidInside(Edge.bottom, 0, 0, 0, move.y);
-          blocker2 = this.getSolidInside(Edge.bottom, right, 0, 0, move.y);
-          if (blocker1 || blocker2) {
-            let y = Math.max(blockY(blocker1), blockY(blocker2));
-            point.y = y;
-          } else if (this.climber) {
-            // See if we entered a catcher.
-            let newCatcher = this.getCatcher(false);
-            if (newCatcher && newCatcher != oldCatcher) {
-              point.y = newCatcher.point.y;
+        } else if (point.y - blocker.part.point.y >= 5) {
+          // See if we can shift up.
+          workPoint.set(point.x, blocker.part.point.y + 10);
+          if (!getBlocker(workPoint)) {
+            point.y = blocker.part.point.y + 10;
+            // TODO Don't cross inside solids, either!
+            if (this.encased()) {
+              point.y = oldY;
+            } else {
+              blocker = undefined;
             }
           }
         }
-      } else if (move.y > 0) {
-        let blocker1 = this.getSolid(Edge.bottom, 0, top);
-        let blocker2 = this.getSolid(Edge.bottom, right, top);
-        let blockY = (blocker?: Part) =>
-          blocker ? blocker.point.y : Level.pixelCount.y;
-        if (blocker1 || blocker2) {
-          let y = Math.min(blockY(blocker1), blockY(blocker2));
-          point.y = y - Level.tileSize.y;
-        } else {
-          blocker1 = this.getSolidInside(Edge.top, 0, top, 0, move.y);
-          blocker2 = this.getSolidInside(Edge.top, right, top, 0, move.y);
-          if (blocker1 || blocker2) {
-            let y = Math.min(blockY(blocker1), blockY(blocker2));
-            point.y = y;
-          }
+        if (blocker) {
+          point.x = blocker.pos;
         }
       }
     }
-    // TODO Align to blocker, not grid!!!
-    if (align.x) {
-      let offset = align.x < 0 ? 3 : midRight;
-      point.x =
-        Level.tileSize.x * Math.floor((point.x + offset) / Level.tileSize.x);
+    let blockY = (getBlocker: (point: Vector2) => Blocker | undefined) => {
+      let blocker = getBlocker(point);
+      if (blocker) {
+        let oldX = point.x;
+        if (blocker.part.point.x - point.x >= 4) {
+          // See if we can shift left.
+          workPoint.set(blocker.part.point.x - 8, point.y);
+          if (!getBlocker(workPoint)) {
+            point.x = blocker.part.point.x - 8;
+            if (this.encased()) {
+              point.x = oldX;
+            } else {
+              blocker = undefined;
+            }
+          }
+        } else if (point.x - blocker.part.point.x >= 4) {
+          // See if we can shift right.
+          workPoint.set(blocker.part.point.x + 8, point.y);
+          if (!getBlocker(workPoint)) {
+            point.x  = blocker.part.point.x + 8;
+            if (this.encased()) {
+              point.x = oldX;
+            } else {
+              blocker = undefined;
+            }
+          }
+        }
+        if (blocker) {
+          point.y = blocker.pos;
+        }
+      }
     }
-    if (align.y) {
-      let offset = align.y < 0 ? 4 : midTop;
-      point.y =
-        Level.tileSize.y * Math.floor((point.y + offset) / Level.tileSize.y);
+    if (move.x < 0) {
+      blockX(point => this.getBlockerLeft(point));
+    } else if (move.x > 0) {
+      blockX(point => this.getBlockerRight(point));
+    }
+    // TODO Align only when forced or to enable movement, not just for grid.
+    // TODO Defer this until first pass of all moving parts so we can resolve
+    // TODO together?
+    // See if we need to align y for solids.
+    if (move.y < 0) {
+      blockY(point => this.getBlockerDown(point));
+      // TODO What below is needed? At least new catcher?
+      // TODO It would be nice to fall full off surfaces, even if non-solid and
+      // TODO non-climbable, but we don't right now.
+      // Surface checks halfway, but solid checks ends.
+      // This seems odd, but it usually shouldn't matter, since alignment to
+      // open spaces should make them equivalent.
+      // I'm not sure if there are times when it will matter, but it's hard to
+      // say in those cases what to do anyway.
+      let newSupport = support ? undefined : this.getSurface();
+      let blocker1 = this.getSolid(Edge.top, 0, 0);
+      let blocker2 = this.getSolid(Edge.top, right, 0);
+      let blockY2 = (blocker?: Part) =>
+        blocker ? blocker.point.y : -Level.tileSize.y;
+      if (newSupport || blocker1 || blocker2) {
+        let y =
+          Math.max(blockY2(newSupport), blockY2(blocker1), blockY2(blocker2));
+        point.y = y + Level.tileSize.y;
+      } else {
+        // TODO Unify catcher and inside bottom solids at all?
+        blocker1 = this.getSolidInside(Edge.bottom, 0, 0, 0, move.y);
+        blocker2 = this.getSolidInside(Edge.bottom, right, 0, 0, move.y);
+        if (blocker1 || blocker2) {
+          let y = Math.max(blockY2(blocker1), blockY2(blocker2));
+          point.y = y;
+        } else if (this.climber) {
+          // See if we entered a catcher.
+          let newCatcher = this.getCatcher(false);
+          if (newCatcher && newCatcher != oldCatcher) {
+            point.y = newCatcher.point.y;
+          }
+        }
+      }
+    } else if (move.y > 0) {
+      blockY(point => this.getBlockerUp(point));
     }
     // Update moved to the actual move, and update the stage.
     this.moved.copy(this.point).sub(oldPoint);
@@ -389,6 +530,26 @@ export class Runner extends Part {
   // Move some of these to module global. We're sync, right?
   workPointExtra = new Vector2();
 
+}
+
+function argmax<Item>(
+  f: (a: Item) => number, a: Item | undefined, b: Item | undefined
+) {
+  if (a && b) {
+    return f(a) > f(b) ? a : b;
+  } else {
+    return a || b;
+  }
+}
+
+function argmin<Item>(
+  f: (a: Item) => number, a: Item | undefined, b: Item | undefined
+) {
+  if (a && b) {
+    return f(a) < f(b) ? a : b;
+  } else {
+    return a || b;
+  }
 }
 
 let epsilon = 1e-2;

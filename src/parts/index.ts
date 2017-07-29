@@ -5,6 +5,7 @@ export * from './runner';
 export * from './bar';
 export * from './biggie';
 export * from './brick';
+export * from './dropper';
 export * from './enemy';
 export * from './energy';
 export * from './gun';

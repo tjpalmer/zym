@@ -10,7 +10,9 @@
     <!-- TODO Move out all UI! -->
     <div class="panelBox">
       <form class="panel toolbox">
-        <label class="hero"><input name="tool" type="radio"/></label>
+        <label class="hero">
+          <input name="tool" type="radio" checked="checked"/>
+        </label>
         <label>
           <input name="tool" type="radio"/>
           <div class="toolMenu">
@@ -22,12 +24,24 @@
             </label>
           </div>
         </label>
-        <label class="brick">
-          <input name="tool" type="radio" checked="checked"/>
+        <label>
+          <input name="tool" type="radio"/>
+          <div class="toolMenu">
+            <label class="brick">
+              <input name="solid" type="radio" checked="checked"/>
+            </label>
+            <label class="steel"><input name="solid" type="radio"/></label>
+          </div>
         </label>
-        <label class="steel"><input name="tool" type="radio"/></label>
-        <label class="ladder"><input name="tool" type="radio"/></label>
-        <label class="bar"><input name="tool" type="radio"/></label>
+        <label>
+          <input name="tool" type="radio"/>
+          <div class="toolMenu">
+            <label class="ladder">
+              <input name="climb" type="radio" checked="checked"/>
+            </label>
+            <label class="bar"><input name="climb" type="radio"/></label>
+          </div>
+        </label>
         <label>
           <input name="tool" type="radio"/>
           <div class="toolMenu">
@@ -78,6 +92,9 @@
               <input name="danger" type="radio"/>
             </label>
             <label class="gunleft">
+              <input name="danger" type="radio"/>
+            </label>
+            <label class="dropper">
               <input name="danger" type="radio"/>
             </label>
           </div>

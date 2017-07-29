@@ -1,7 +1,8 @@
 import {
-  Bar, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff, GunLeft,
-  GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter, LauncherDown,
-  LauncherLeft, LauncherRight, LauncherUp, None, Spawn, Steel, Treasure,
+  Bar, BiggieLeft, BiggieRight, Bonus, Brick, Dropper, Enemy, Energy, EnergyOff,
+  GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter,
+  LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None, Spawn, Steel,
+  Treasure,
 } from './';
 import {cartesianProduct, Multiple, Part, PartOptions, PartType} from '../';
 import {Vector2} from 'three';
@@ -14,6 +15,7 @@ export class Parts {
     BiggieRight,
     Bonus,
     Brick,
+    Dropper,
     Enemy,
     Energy,
     EnergyOff,

@@ -1,12 +1,12 @@
 import {
-  Art, BiggieArt, BrickArt, EnergyArt, Flame, FlameArt, GunArt, LatchArt, Layer,
-  RunnerArt, PrizeArt,
+  Art, BiggieArt, BrickArt, DropArt, EnergyArt, Flame, FlameArt, GunArt,
+  LatchArt, Layer, RunnerArt, PrizeArt,
 } from './';
 import {
-  Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Enemy, Energy, EnergyOff,
-  GunLeft, GunRight, Hero, Ladder, Latch, LatchLeft, LatchRight, LauncherCenter,
-  LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None, Prize, Runner,
-  Shot, Spawn, Steel, Treasure,
+  Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Drop, Dropper, Enemy,
+  Energy, EnergyOff, GunLeft, GunRight, Hero, Ladder, Latch, LatchLeft,
+  LatchRight, LauncherCenter, LauncherDown, LauncherLeft, LauncherRight,
+  LauncherUp, None, Prize, Runner, Shot, Spawn, Steel, Treasure,
 } from '../parts/';
 import {Part, PartType} from '../';
 import {Vector2} from 'three';
@@ -14,6 +14,7 @@ import {Vector2} from 'three';
 // Simple arts for unchanging parts.
 export let arts = {
   Bar: {layer: Layer.back, tile: new Vector2(9, 17)},
+  Dropper: {layer: Layer.treasure, tile: new Vector2(14, 16)},
   Ladder: {layer: Layer.back, tile: new Vector2(8, 17)},
   LauncherCenter: {layer: Layer.back, tile: new Vector2(12, 17)},
   LauncherDown: {layer: Layer.back, tile: new Vector2(11, 17)},
@@ -41,6 +42,8 @@ export class Parts {
     [BiggieRight, part => new BiggieArt(part as Biggie)],
     [Bonus, part => new PrizeArt(part as Prize, new Vector2(13, 16))],
     [Brick, part => new BrickArt(part as Brick)],
+    [Drop, part => new DropArt(part as Drop)],
+    [Dropper, artMaker(arts.Dropper)],
     [Enemy, part => new RunnerArt(part as Runner, new Vector2(15, 14))],
     [Energy, part => new EnergyArt(part as Energy)],
     [EnergyOff, part => new EnergyArt(part as Energy)],
