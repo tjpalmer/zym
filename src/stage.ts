@@ -15,16 +15,9 @@ export class Stage {
       }
     }
     // Fake steel at edges to block exit.
-    // Let each steel block have the right point, though we could maybe ignore
-    // position and hack a singleton.
-    let makeSteel = (j: number, i: number) => {
-      let steel = new Steel(game);
-      steel.point.copy(this.workPoint.set(j, i).multiply(Level.tileSize));
-      return [steel];
-    };
     for (let i = 0; i < Level.tileCount.y; ++i) {
-      this.edgeLeft.push(makeSteel(-1, i));
-      this.edgeRight.push(makeSteel(Level.tileCount.x, i));
+      this.edgeLeft.push([new Steel(game)]);
+      this.edgeRight.push([new Steel(game)]);
     }
   }
 
@@ -69,8 +62,6 @@ export class Stage {
       part.updateInfo();
     }
   }
-
-  spawns = new Array<Spawn>();
 
   manageParticles() {
     let {particles} = this;
@@ -130,20 +121,22 @@ export class Stage {
 
   partsNear(point: Vector2): Array<Part> | undefined {
     let {grid, workPoint} = this;
+    let {max, min} = this.tileBounds;
     workPoint.copy(point).divide(Level.tileSize).floor();
-    let parts = grid.get(workPoint);
-    if (!parts) {
-      // Give the edges a shot.
-      // We don't have a way to get past edges, so presume we're within one grid
-      // position of the edge horizontally.
-      if (point.x < 0) {
-        parts = this.edgeLeft[workPoint.y];
-      } else if (point.x >= Level.tileCount.x) {
-        parts = this.edgeRight[workPoint.y];
-      }
+    let parts: Part[] | undefined;
+    if (workPoint.y < min.y || workPoint.y >= max.y) {
+      return undefined;
+    } else if (workPoint.x < min.x) {
+      parts = this.edgeLeft[workPoint.y];
+    } else if (workPoint.x >= max.x) {
+      parts = this.edgeRight[workPoint.y];
+    } else {
+      parts = grid.get(workPoint);
     }
     return parts;
   }
+
+  pixelBounds = {max: new Vector2(), min: new Vector2()};
 
   removed(part: Part, oldPoint?: Vector2) {
     if (!oldPoint) {
@@ -164,6 +157,8 @@ export class Stage {
     }
   }
 
+  spawns = new Array<Spawn>();
+
   tick() {
     // TODO Move all updates to worker thread, and just receive state each
     // TODO frame?
@@ -183,18 +178,42 @@ export class Stage {
   tickParts(parts: Iterable<Part>) {
     // Choose based on current state.
     for (let part of parts) {
-      part.choose();
+      if (!part.cropped) {
+        part.choose();
+      }
     }
     // Update after choices.
     for (let part of parts) {
-      part.update();
+      if (!part.cropped) {
+        part.update();
+      }
     }
   }
+
+  tileBounds = {max: new Vector2(), min: new Vector2()};
 
   // Time in seconds since play start.
   time = 0;
 
   treasureCount = 0;
+
+  update() {
+    // Pixel bounds.
+    this.pixelBounds.max.copy(this.tileBounds.max).multiply(Level.tileSize);
+    this.pixelBounds.min.copy(this.tileBounds.min).multiply(Level.tileSize);
+    // Edges.
+    // Let each steel block have the right point, though we could maybe ignore
+    // position and hack a singleton.
+    let {tileBounds} = this;
+    let minX = (tileBounds.min.x - 1) * Level.tileSize.x;
+    this.edgeLeft.forEach((parts, i) => {
+      parts[0].point.set(minX, i * Level.tileSize.y);
+    });
+    let maxX = tileBounds.max.x * Level.tileSize.x;
+    this.edgeRight.forEach((parts, i) => {
+      parts[0].point.set(maxX, i * Level.tileSize.y);
+    });
+  }
 
   walkGrid(point: Vector2, handle: () => void) {
     let {workPoint} = this;

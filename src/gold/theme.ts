@@ -303,6 +303,10 @@ export class GoldTheme implements Theme {
           // That's the end of this layer.
           break;
         }
+        if (part.cropped) {
+          // Not actually here.
+          continue;
+        }
         let art = part.art as Art;
         let currentTileIndices = asTools ? art.toolTile : art.tile;
         // Translate and merge are expensive. TODO Make my own functions?

@@ -59,6 +59,11 @@ export class Part {
       point.y >= y && point.y < y + Level.tileSize.y);
   }
 
+  // A hack to work around existing code that didn't have cropping.
+  // TODO Better would be to figure out why things don't work when I don't add
+  // TODO a part to the stage.
+  cropped = false;
+
   dead = false;
 
   die(killer?: Part) {

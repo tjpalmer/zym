@@ -321,10 +321,27 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   // Lazily applied.
   number?: number;
 
+  get tileBounds() {
+    let {max, min} = this.tileBoundsCache;
+    // Required mess if I allow undefined bounds.
+    if (this.bounds) {
+      let {max: boundsMax, min: boundsMin} = this.bounds;
+      max.set(boundsMax.x, boundsMax.y);
+      min.set(boundsMin.x, boundsMin.y);
+    } else {
+      max.set(Level.tileCount.x, Level.tileCount.y);
+      min.set(0, 0);
+    }
+    return this.tileBoundsCache;
+  }
+
+  tileBoundsCache = {max: new Vector2(), min: new Vector2()};
+
   tiles: Grid<PartType>;
 
   // For use from the editor.
   updateStage(game: Game, reset = false) {
+    let {max, min} = this.tileBounds;
     let play = game.mode instanceof PlayMode;
     let stage = game.stage;
     let theme = game.theme;
@@ -340,6 +357,13 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     }
     stage.hero = undefined;
     stage.treasureCount = 0;
+    if (play) {
+      stage.tileBounds.max.copy(max);
+      stage.tileBounds.min.copy(min);
+    } else {
+      stage.tileBounds.max.copy(Level.tileCount);
+      stage.tileBounds.min.set(0, 0);
+    }
     for (let j = 0, k = 0; j < Level.tileCount.x; ++j) {
       for (let i = 0; i < Level.tileCount.y; ++i, ++k) {
         let tile = this.tiles.items[k];
@@ -371,6 +395,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         } else {
           part = oldPart;
         }
+        if (play) {
+          part.cropped = j < min.x || i < min.y || j >= max.x || i >= max.y;
+        }
         if (part instanceof Hero) {
           stage.hero = part;
         } else if (part instanceof Treasure) {
@@ -378,6 +405,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         }
       }
     }
+    stage.update();
     if (reset) {
       stage.init();
       if (!stage.treasureCount) {

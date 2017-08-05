@@ -109,15 +109,16 @@ export class Hero extends Runner {
   }
 
   update() {
+    let {stage} = this.game;
     // Update everything.
     super.update();
-    if (!this.game.stage.ended) {
+    if (!stage.ended) {
       // See if we won or lost.
       let {point: {y}} = this;
-      if (y <= -10) {
+      if (y <= stage.pixelBounds.min.y - Level.tileSize.y) {
         this.die();
       }
-      if (this.game.stage.ending && y >= Level.pixelCount.y) {
+      if (stage.ending && y >= stage.pixelBounds.max.y) {
         this.game.play.win();
       }
     }
