@@ -211,7 +211,7 @@ export class GoldTheme implements Theme {
       1, 0, 1, 1, 0, 1,
     ]), 2));
     // All tiles in a batch.
-    // '4 *' to have space for particles.
+    // '4 *' to have space for particles and such.
     let tileCount = 4 * Level.tileCount.x * Level.tileCount.y;
     this.tilePlanes = new BufferGeometry();
     for (let name in tilePlane.attributes) {
@@ -285,7 +285,7 @@ export class GoldTheme implements Theme {
   }
 
   paintStage(stage: Stage, asTools = false) {
-    let {game, time} = stage;
+    let {game, pixelBounds, tileBounds, time} = stage;
     let {tileIndices, tileModes, tileOpacities} = this;
     let tilePlanes = this.tilePlanes!;
     let tilePlane = this.tilePlane!;
@@ -296,6 +296,11 @@ export class GoldTheme implements Theme {
     this.buildLayers(stage.parts, true);
     this.buildLayers(stage.particles);
     let seeOpacity = this.updateFade();
+    let offsetX = asTools ? 0 :
+      (Level.pixelCount.x - (pixelBounds.max.x - pixelBounds.min.x)) / 2 -
+      pixelBounds.min.x;
+    // TODO Only keep offsetX as 0 in test mode, not play.
+    offsetX = 0;
     // Draw everything.
     this.layers.forEach(layer => {
       for (let part of layer) {
@@ -310,7 +315,8 @@ export class GoldTheme implements Theme {
         let art = part.art as Art;
         let currentTileIndices = asTools ? art.toolTile : art.tile;
         // Translate and merge are expensive. TODO Make my own functions?
-        tilePlane.translate(part.point.x, part.point.y, 0);
+        let posX = part.point.x + offsetX;
+        tilePlane.translate(posX, part.point.y, 0);
         for (let k = 0; k < tileIndices.length; k += 3) {
           tileIndices[k + 0] = currentTileIndices.x;
           tileIndices[k + 1] = currentTileIndices.y;
@@ -335,10 +341,51 @@ export class GoldTheme implements Theme {
           tileOpacities[n] = opacity;
         }
         tilePlanes.merge(tilePlane, 6 * partIndex);
-        tilePlane.translate(-part.point.x, -part.point.y, 0);
+        tilePlane.translate(-posX, -part.point.y, 0);
         ++partIndex;
       }
     });
+    if (!asTools) {
+      // Gray for crop.
+      for (let n = 0; n < tileModes.length; ++n) {
+        // Break state into bits.
+        tileModes[n] = 0xFF;
+        tileOpacities[n] = 0xFF;
+      }
+      if (tileBounds.min.x > 0) {
+        tilePlane.scale(tileBounds.min.x, Level.tileCount.y, 1);
+        tilePlanes.merge(tilePlane, 6 * partIndex);
+        tilePlane.scale(1 / tileBounds.min.x, 1 / Level.tileCount.y, 1);
+        ++partIndex;
+      }
+      if (tileBounds.min.y > 0) {
+        tilePlane.scale(Level.tileCount.x, tileBounds.min.y, 1);
+        tilePlanes.merge(tilePlane, 6 * partIndex);
+        tilePlane.scale(1 / Level.tileCount.x, 1 / tileBounds.min.y, 1);
+        ++partIndex;
+      }
+      if (tileBounds.max.x < Level.tileCount.x) {
+        let posX = pixelBounds.max.x;
+        let sizeX = Level.tileCount.x - tileBounds.max.x;
+        tilePlane.scale(sizeX, Level.tileCount.y, 1);
+        tilePlane.translate(posX, 0, 0);
+        tilePlanes.merge(tilePlane, 6 * partIndex);
+        tilePlane.translate(-posX, 0, 0);
+        tilePlane.scale(1 / sizeX, 1 / Level.tileCount.y, 1);
+        ++partIndex;
+      }
+      if (tileBounds.max.y < Level.tileCount.y) {
+        let posY = pixelBounds.max.y;
+        let sizeY = Level.tileCount.y - tileBounds.max.y;
+        tilePlane.scale(Level.tileCount.x, sizeY, 1);
+        tilePlane.translate(0, posY, 0);
+        tilePlanes.merge(tilePlane, 6 * partIndex);
+        tilePlane.translate(0, -posY, 0);
+        tilePlane.scale(1 / Level.tileCount.x, 1 / sizeY, 1);
+        ++partIndex;
+      }
+    }
+    // Actually get things done now.
     tilePlanes.setDrawRange(0, 6 * partIndex);
     let attributes: any = tilePlanes.attributes;
     // Older typing missed needsUpdate, but looks like it's here now.
@@ -608,11 +655,16 @@ let tileFragmentShader = `
       // TODO Break mode (in vert shader?) and state into bits.
       if (vMode != 0.0) {
         grayify(gl_FragColor.xyz);
-        if (vMode > 1.0) {
+        if (vMode == 2.0) {
           gl_FragColor.xyz *= 0.5;
         }
       }
       gl_FragColor.w = vOpacity;
+    }
+    // Cropped out area.
+    if (vMode == 255.0) {
+      gl_FragColor.xyz = vec3(0.125);
+      gl_FragColor.w = 1.0;
     }
   }
 `;

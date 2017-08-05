@@ -1,7 +1,7 @@
 body {
   align-content: stretch;
   align-items: stretch;
-  background: #111;
+  background: #202020;
   bottom: 0;
   color: white;
   cursor: default;
@@ -316,7 +316,7 @@ table {
 }
 
 .toolMenu {
-  background: #111;
+  background: #202020;
   display: none;
   /* Left margin gets overruled later, but this at least offsets some. */
   margin-left: 1em;

@@ -323,8 +323,9 @@ export class Enemy extends Runner {
     let catcher = this.getCatcher();
     if (
       catcher instanceof Brick &&
-      // Require alignment in case of horizontal entry.
-      Math.abs(this.point.x - catcher.point.x) < 1
+      // Require some alignment in case of horizontal entry.
+      // But not exact alignment, since they don't fall in exactly.
+      Math.abs(this.point.x - catcher.point.x) < 3
     ) {
       // No horizontal moving in bricks.
       this.point.x = catcher.point.x;

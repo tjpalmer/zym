@@ -60,7 +60,7 @@ export class Runner extends Part {
     }
     // In exact mode, no need to see which is higher, but we're not always
     // exact.
-    let part1 = check(3, top);
+    let part1 = check(midLeft, top);
     let part2 = check(midRight, top);
     if (!(part1 && part2)) {
       return part1 || part2;
