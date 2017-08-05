@@ -98,6 +98,10 @@ export class PlayMode extends Mode {
     });
   }
 
+  updateView() {
+    this.game.edit.cropTool.selector.style.display = 'none';
+  }
+
   won = false;
 
   win() {

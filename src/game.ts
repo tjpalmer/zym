@@ -75,6 +75,9 @@ export class Mode {
     }
   }
 
+  // Beyond updating the stage.
+  updateView() {}
+
 }
 
 export class Game {

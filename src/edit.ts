@@ -25,7 +25,7 @@ export class EditMode extends Mode {
     // Tools.
     this.namedTools.set('copy', this.copyTool = new CopyTool(this));
     this.namedTools.set('paste', new PasteTool(this));
-    this.namedTools.set('crop', new CropTool(this));
+    this.namedTools.set('crop', this.cropTool = new CropTool(this));
     // Initial history entry.
     this.editState.pushHistory(true);
   }
@@ -47,6 +47,8 @@ export class EditMode extends Mode {
   commandsContainer: HTMLElement;
 
   copyTool: CopyTool;
+
+  cropTool: CropTool;
 
   draw(tilePoint: Vector2, tile: PartType) {
     // Need to call level.updateStage after this.
@@ -98,6 +100,7 @@ export class EditMode extends Mode {
       this.game.play.togglePause();
     }
     this.tool.activate();
+    this.updateView();
   }
 
   exit() {
@@ -193,6 +196,7 @@ export class EditMode extends Mode {
     if (this.tool) {
       this.tool.resize();
     }
+    this.updateView();
   }
 
   saveAll() {
@@ -282,6 +286,10 @@ export class EditMode extends Mode {
     if (this.tool instanceof PartTool) {
       this.setToolFromName(this.tool.type.base.name.toLowerCase());
     }
+  }
+
+  updateView() {
+    this.cropTool.updateView();
   }
 
 }

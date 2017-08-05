@@ -29,7 +29,35 @@ export interface ListRaw<Item> extends ItemMeta {
 
 }
 
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface Rectangle {
+  max: Point;
+  min: Point;
+}
+
+export function copyPoint(point: Point): Point;
+export function copyPoint(point?: Point): Point | undefined;
+export function copyPoint(point?: Point): Point | undefined {
+  if (point) {
+    return {x: point.x, y: point.y};
+  }
+}
+
+export function copyRect(rect: Rectangle): Rectangle;
+export function copyRect(rect?: Rectangle): Rectangle | undefined;
+export function copyRect(rect?: Rectangle): Rectangle | undefined {
+  if (rect) {
+    return {max: copyPoint(rect.max), min: copyPoint(rect.min)};
+  }
+}
+
 export interface LevelRaw extends NumberedItem {
+
+  bounds?: Rectangle;
 
   tiles: string;
 
@@ -189,13 +217,18 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     }
   }
 
+  bounds?: Rectangle = undefined;
+
   copy() {
     // TODO Include disabled?
-    return new Level({id: this.id, tiles: this.tiles.copy()});
+    let level = new Level({id: this.id, tiles: this.tiles.copy()});
+    level.bounds = copyRect(this.bounds);
+    return level;
   }
 
   copyFrom(level: Level) {
     // TODO Include disabled?
+    this.bounds = copyRect(level.bounds);
     this.name = level.name;
     this.tiles = level.tiles.copy();
   }
@@ -205,6 +238,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     // Id. Might be missing for old saved levels.
     // TODO Not by now, surely? Try removing checks?
     // TODO Sanitize id, name, and tiles?
+    this.bounds = copyRect(encoded.bounds);
     if (encoded.id) {
       this.id = encoded.id;
     }
@@ -240,6 +274,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       tiles: rows.join('\n'),
       ...Raw.encodeMeta(this),
     } as LevelRaw;
+    if (this.bounds) {
+      raw.bounds = copyRect(this.bounds);
+    }
     return raw;
   }
 
@@ -248,6 +285,17 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       if (this.tiles.items[i] != other.tiles.items[i]) {
         return false;
       }
+    }
+    if (this.bounds || other.bounds) {
+      if (!(this.bounds && other.bounds)) {
+        return false;
+      }
+      let {max: thisMax, min: thisMin} = this.bounds!;
+      let {max: thatMax, min: thatMin} = other.bounds!;
+      return (
+        thisMax.x == thatMax.x && thisMax.y == thatMax.y &&
+        thisMin.x == thatMin.x && thisMin.y == thatMin.y
+      );
     }
     return true;
   }
@@ -280,6 +328,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     let play = game.mode instanceof PlayMode;
     let stage = game.stage;
     let theme = game.theme;
+    game.mode.updateView();
     if (reset) {
       // Had some phantoms on a level. Clear the grid helps?
       stage.clearGrid();

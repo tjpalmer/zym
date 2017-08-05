@@ -1,4 +1,4 @@
-import {EditMode, Grid, Level, Part, PartType} from './';
+import {EditMode, Grid, Level, Part, PartType, copyPoint} from './';
 import {None} from './parts';
 import {Vector2, WebGLRenderTarget} from 'three';
 
@@ -178,7 +178,6 @@ export abstract class SelectionTool extends Tool {
   borderPixels = 0;
 
   deactivate() {
-    this.selector.style.display = 'none';
     if (this.needsUpdate) {
       this.updateData();
       this.needsUpdate = false;
@@ -264,6 +263,11 @@ export class CopyTool extends SelectionTool {
     super(edit, 'selector');
   }
 
+  deactivate() {
+    this.selector.style.display = 'none';
+    super.deactivate();
+  }
+
   end() {
     let paste =
       this.edit.toolbox.container.querySelector('.paste') as HTMLElement;
@@ -307,7 +311,7 @@ export class CopyTool extends SelectionTool {
       camera.right = max.x;
       camera.top = max.y;
       camera.updateProjectionMatrix();
-      // TODO Extract this render to canvas logic?
+      // TODO Extract this render-to-canvas logic?
       renderer.render(scene, camera, target);
       let data = new Uint8Array(4 * size.x * size.y);
       renderer.readRenderTargetPixels(target, 0, 0, size.x, size.y, data);
@@ -334,7 +338,48 @@ export class CropTool extends SelectionTool {
     super(edit, 'cropper');
   }
 
-  updateData() {}
+  begin(tilePoint: Vector2) {
+    super.begin(tilePoint);
+    this.updateData();
+  }
+
+  deactivate() {
+    super.deactivate();
+    if (!this.edit.game.level.bounds) {
+      this.selector.style.display = 'none';
+    }
+  }
+
+  drag(tilePoint: Vector2) {
+    super.drag(tilePoint);
+    this.updateData();
+  }
+
+  updateData() {
+    let {edit, point, tileBottomRight, tileTopLeft} = this;
+    let {level} = edit.game;
+    let {tileCount} = Level;
+    let min = new Vector2(tileTopLeft.x, tileBottomRight.y);
+    let max = new Vector2(tileBottomRight.x, tileTopLeft.y).addScalar(1);
+    if (min.x > 0 || min.y > 0 || max.x < tileCount.x || max.y < tileCount.y) {
+      level.bounds = {max: copyPoint(max), min: copyPoint(min)};
+    } else {
+      level.bounds = undefined;
+    }
+    this.needsUpdate = false;
+  }
+
+  updateView() {
+    let {bounds} = this.edit.game.level;
+    if (bounds) {
+      this.tileBottomRight.set(bounds.max.x - 1, bounds.min.y);
+      this.tileTopLeft.set(bounds.min.x, bounds.max.y - 1);
+      this.resize();
+      this.selector.style.display = 'block';
+    } else {
+      this.selector.style.display = 'none';
+    }
+  }
 
 }
 
