@@ -149,11 +149,11 @@ export abstract class Tool {
 
 }
 
-export class CopyTool extends Tool {
+export abstract class SelectionTool extends Tool {
 
-  constructor(edit: EditMode) {
+  constructor(edit: EditMode, name: string) {
     super(edit);
-    this.selector = edit.game.body.querySelector('.selector') as HTMLElement;
+    this.selector = edit.game.body.querySelector(`.${name}`) as HTMLElement;
   }
 
   activate() {
@@ -205,13 +205,6 @@ export class CopyTool extends Tool {
     }
   }
 
-  end() {
-    let paste =
-      this.edit.toolbox.container.querySelector('.paste') as HTMLElement;
-    paste.click();
-    this.selector.style.display = 'block';
-  }
-
   needsUpdate = false;
 
   place(tilePoint: Vector2) {
@@ -260,6 +253,23 @@ export class CopyTool extends Tool {
   tileBottomRight = new Vector2();
 
   tileTopLeft = new Vector2();
+
+  abstract updateData(): void;
+
+}
+
+export class CopyTool extends SelectionTool {
+
+  constructor(edit: EditMode) {
+    super(edit, 'selector');
+  }
+
+  end() {
+    let paste =
+      this.edit.toolbox.container.querySelector('.paste') as HTMLElement;
+    paste.click();
+    this.selector.style.display = 'block';
+  }
 
   tiles: Grid<PartType> | undefined = undefined;
 
@@ -315,6 +325,16 @@ export class CopyTool extends Tool {
     clipboard.innerHTML = '';
     clipboard.appendChild(image);
   }
+
+}
+
+export class CropTool extends SelectionTool {
+
+  constructor(edit: EditMode) {
+    super(edit, 'cropper');
+  }
+
+  updateData() {}
 
 }
 

@@ -1,6 +1,6 @@
 import {
-  CopyTool, Level, Mode, NopTool, Part, PartOptions, PartTool, PartType,
-  PasteTool, PointEvent, Game, Tool, Toolbox,
+  CopyTool, CropTool, Level, Mode, NopTool, Part, PartOptions, PartTool,
+  PartType, PasteTool, PointEvent, Game, Tool, Toolbox,
 } from './';
 import {Levels} from './ui';
 import {None, Parts} from './parts';
@@ -25,6 +25,7 @@ export class EditMode extends Mode {
     // Tools.
     this.namedTools.set('copy', this.copyTool = new CopyTool(this));
     this.namedTools.set('paste', new PasteTool(this));
+    this.namedTools.set('crop', new CropTool(this));
     // Initial history entry.
     this.editState.pushHistory(true);
   }

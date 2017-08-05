@@ -45,6 +45,20 @@ body {
   color: black;
 }
 
+.cropper, .selector {
+  border: 0.2em white;
+  border-radius: 0.2em;
+  display: none;
+  height: 10em;
+  pointer-events: none;
+  position: absolute;
+  width: 10em;
+}
+
+.cropper {
+  border-style: dashed;
+}
+
 .dialog {
   bottom: 0.5em;
   border: 0.1em solid white;
@@ -211,13 +225,7 @@ body {
 }
 
 .selector {
-  border: 0.2em solid white;
-  border-radius: 0.2em;
-  display: none;
-  height: 10em;
-  pointer-events: none;
-  position: absolute;
-  width: 10em;
+  border-style: solid;
 }
 
 .shade {

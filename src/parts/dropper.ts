@@ -6,6 +6,11 @@ export class Dropper extends Part {
 
   static char = 'Y';
 
+  static options = {
+    ender: true,
+    invisible: false,
+  };
+
   constructor(game: Game) {
     super(game);
     this.drop = new Drop(game);
