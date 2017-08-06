@@ -400,7 +400,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         }
         if (part instanceof Hero) {
           stage.hero = part;
-        } else if (part instanceof Treasure) {
+        } else if (part instanceof Treasure && !part.cropped) {
           ++stage.treasureCount;
         }
       }
