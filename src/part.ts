@@ -36,6 +36,8 @@ export class Part {
     this.game = game;
   }
 
+  active = true;
+
   art: any = undefined;
 
   carried = false;
@@ -79,7 +81,7 @@ export class Part {
   editPlacedAt(tilePoint: Vector2) {}
 
   get exists() {
-    return true;
+    return this.active;
   }
 
   game: Game;
