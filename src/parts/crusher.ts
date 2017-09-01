@@ -1,5 +1,6 @@
 import {Edge, Level, Part, PartType} from '../';
 import {Vector2} from 'three';
+const {abs} = Math;
 
 export class Crusher extends Part {
 
@@ -12,37 +13,44 @@ export class Crusher extends Part {
       return;
     }
     let {stage} = this.game;
-    let {hero} = stage;
-    if (hero && hero.moved.y < 0) {
-      workPoint.copy(Level.tileSize).divideScalar(2).add(this.point);
-      if (hero.contains(workPoint)) {
-        if (Math.abs(hero.point.y - (this.point.y + 4)) <= 1) {
-          this.hit = true;
+    this.handleHit();
+    // TODO Better stacking of multiple?
+    let other = this.partAt(4, 4, part => part.moved.y < 0);
+    if (other) {
+      if (Math.abs(other.point.y - (this.point.y + 4)) <= 1) {
+        this.hit = true;
+      }
+      this.handleHit();
+      if (this.hit) {
+        if (abs(other.point.y - (this.point.y + 1)) <= 0.5) {
+          this.move.set(0, other.moved.y);
+          workPoint.copy(this.point);
+          this.point.y += other.moved.y;
+          stage.moved(this, workPoint);
         }
-        if (this.hit) {
-          let part: Part | undefined;
-          if (this.hitType) {
-            part = this.partAt(4, -1, part => part.type == this.hitType);
-          } else {
-            part = this.partAt(4, -1, part => part.surface(hero!));
-          }
-          if (part) {
-            this.hitType = part.type;
-            this.checkY = part.point.y;
-            part.die();
-            part.active = false;
-            stage.removed(part);
-          } else if (this.hitType && this.point.y <= this.checkY) {
-            this.active = false;
-            stage.removed(this);
-          }
-          if (Math.abs(hero.point.y - (this.point.y + 1)) <= 0.5) {
-            this.move.set(0, hero.moved.y);
-            workPoint.copy(this.point);
-            this.point.y += hero.moved.y;
-            stage.moved(this, workPoint);
-          }
-        }
+      }
+    }
+  }
+
+  handleHit() {
+    let {stage} = this.game;
+    if (this.hit) {
+      let part: Part | undefined;
+      if (this.hitType) {
+        part = this.partAt(4, -1, part => part.type == this.hitType);
+      } else {
+        part =
+          this.partAt(4, -1, part => part.exists && !(part instanceof Crusher));
+      }
+      if (part) {
+        this.hitType = part.type;
+        this.checkY = part.point.y;
+        part.die();
+        part.active = false;
+        stage.removed(part);
+      } else if (this.hitType && abs(this.point.y - this.checkY) <= 0.7) {
+        this.active = false;
+        stage.removed(this);
       }
     }
   }
