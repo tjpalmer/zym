@@ -1,5 +1,5 @@
-import {Runner} from './';
-import {Part} from '../';
+import {Runner} from './index';
+import {Part} from '../index';
 
 export class Bar extends Part {
 

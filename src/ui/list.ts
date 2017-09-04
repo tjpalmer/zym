@@ -1,4 +1,4 @@
-import {Dialog, Encodable, Game, ItemMeta, Raw, load} from '../';
+import {Dialog, Encodable, Game, ItemMeta, Raw, load} from '../index';
 
 export abstract class EditorList<
   Value extends ItemMeta  // , Value extends Encodable<RawItem>

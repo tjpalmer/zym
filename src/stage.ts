@@ -1,5 +1,5 @@
-import {Game, Grid, Group, Level, Part} from './';
-import {Hero, Spawn, Steel, Treasure} from './parts';
+import {Game, Grid, Group, Level, Part} from './index';
+import {Hero, Spawn, Steel, Treasure} from './parts/index';
 import {Vector2} from 'three';
 
 export class Stage {

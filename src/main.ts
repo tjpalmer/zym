@@ -1,5 +1,5 @@
-import {Game} from './';
-import {GoldTheme} from './gold';
+import {Game} from './index';
+import {GoldTheme} from './gold/index';
 import './index.css';
 import 'font-awesome';
 

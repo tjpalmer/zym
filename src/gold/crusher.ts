@@ -1,5 +1,5 @@
-import {BaseArt, Layer} from './';
-import {Crusher} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Crusher} from '../parts/index';
 import {Vector2} from 'three';
 
 export class CrusherArt extends BaseArt<Crusher> {

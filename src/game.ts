@@ -1,7 +1,7 @@
 import {
   Control, EditMode, ItemMeta, Level, LevelRaw, ListRaw, PlayMode, Raw, Stage,
   TestMode, Theme, Tower, Zone,
-} from './';
+} from './index';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,

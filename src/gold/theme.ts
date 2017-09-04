@@ -1,8 +1,8 @@
-import {Parts} from './';
+import {Parts} from './index';
 import {
   Game, GenericPartType, Level, Part, PartTool, PartType, Stage, Theme,
-} from '../';
-import {None} from '../parts';
+} from '../index';
+import {None} from '../parts/index';
 import {
   BufferAttribute, BufferGeometry, Mesh, NearestFilter, OrthographicCamera,
   PlaneBufferGeometry, Scene, ShaderMaterial, Texture, Vector2,

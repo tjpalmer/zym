@@ -1,5 +1,5 @@
-import {Edge, GenericPartType, Level, Part, PartType} from '../';
-import {Energy, Hero} from '../parts';
+import {Edge, GenericPartType, Level, Part, PartType} from '../index';
+import {Energy, Hero} from '../parts/index';
 import {Vector2} from 'three';
 
 interface LauncherType extends PartType {

@@ -1,4 +1,4 @@
-import {Game, Level} from './';
+import {Game, Level} from './index';
 import {Vector2} from 'three';
 
 export enum Edge {

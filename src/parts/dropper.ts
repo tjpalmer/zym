@@ -1,5 +1,5 @@
-import {Edge, Game, Level, Part, RunnerAction} from '../';
-import {Hero, Runner} from './';
+import {Edge, Game, Level, Part, RunnerAction} from '../index';
+import {Hero, Runner} from './index';
 import {Vector2} from 'three';
 
 export class Dropper extends Part {

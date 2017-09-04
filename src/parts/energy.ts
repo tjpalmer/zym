@@ -1,5 +1,5 @@
-import {Shot} from './';
-import {Part, PartType} from '../';
+import {Shot} from './index';
+import {Part, PartType} from '../index';
 
 interface EnergyType extends PartType {
   defaultOn: boolean;

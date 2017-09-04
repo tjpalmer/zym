@@ -1,5 +1,5 @@
-import {BaseArt, Layer} from './';
-import {Enemy, Runner} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Enemy, Runner} from '../parts/index';
 import {Vector2} from 'three';
 
 export class RunnerArt extends BaseArt<Runner> {

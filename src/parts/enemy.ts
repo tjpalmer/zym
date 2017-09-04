@@ -1,5 +1,7 @@
-import {Biggie, Bonus, Brick, Hero, None, Prize, Runner, TilePos} from './';
-import {Edge, Game, Level, Part, RunnerAction} from '../';
+import {
+  Biggie, Bonus, Brick, Hero, None, Prize, Runner, TilePos,
+} from './index';
+import {Edge, Game, Level, Part, RunnerAction} from '../index';
 import {Vector2} from 'three';
 
 export class Enemy extends Runner {

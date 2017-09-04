@@ -1,7 +1,7 @@
 import {
   Game, GenericPartType, Grid, Id, Part, PartType, PlayMode, Ref, createId,
-} from './';
-import {Hero, None, Parts, Treasure} from './parts';
+} from './index';
+import {Hero, None, Parts, Treasure} from './parts/index';
 import {Vector2} from 'three';
 
 export interface ItemMeta {

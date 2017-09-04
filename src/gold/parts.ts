@@ -1,14 +1,14 @@
 import {
   Art, BiggieArt, BrickArt, CrusherArt, DropArt, EnergyArt, Flame, FlameArt,
   GunArt, LatchArt, Layer, RunnerArt, PrizeArt,
-} from './';
+} from './index';
 import {
   Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Crusher, Drop, Dropper,
   Enemy, Energy, EnergyOff, GunLeft, GunRight, Hero, Ladder, Latch, LatchLeft,
   LatchRight, LauncherCenter, LauncherDown, LauncherLeft, LauncherRight,
   LauncherUp, None, Prize, Runner, Shot, Spawn, Steel, Treasure,
-} from '../parts/';
-import {Part, PartType} from '../';
+} from '../parts/index';
+import {Part, PartType} from '../index';
 import {Vector2} from 'three';
 
 // Simple arts for unchanging parts.

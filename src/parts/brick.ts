@@ -1,5 +1,5 @@
-import {Edge, Part} from '../';
-import {Enemy, Treasure} from '../parts';
+import {Edge, Part} from '../index';
+import {Enemy, Treasure} from '../parts/index';
 import {Vector2} from 'three';
 
 export class Brick extends Part {

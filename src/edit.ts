@@ -1,9 +1,9 @@
 import {
   CopyTool, CropTool, Level, Mode, NopTool, Part, PartOptions, PartTool,
   PartType, PasteTool, PointEvent, Game, Tool, Toolbox,
-} from './';
-import {Levels} from './ui';
-import {None, Parts} from './parts';
+} from './index';
+import {Levels} from './ui/index';
+import {None, Parts} from './parts/index';
 import {Vector2} from 'three';
 
 export class EditMode extends Mode {
@@ -161,8 +161,13 @@ export class EditMode extends Mode {
   }
 
   namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
-    type =>
-      [type.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
+    type => [
+      // Split based on ModuleConcatenationPlugin style like 'hero_Hero'.
+      // I might just need to make things explicit if I use a minifier, instead
+      // of depending on class names.
+      type.name.split('_').slice(-1)[0].toLowerCase(),
+      new PartTool(this, type),
+    ] as [string, Tool],
   ));
 
   onClick(command: string, handler: () => void) {

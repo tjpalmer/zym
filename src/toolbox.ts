@@ -1,5 +1,5 @@
-import {EditMode, Grid, Level, Part, PartType, copyPoint} from './';
-import {None} from './parts';
+import {EditMode, Grid, Level, Part, PartType, copyPoint} from './index';
+import {None} from './parts/index';
 import {Vector2, WebGLRenderTarget} from 'three';
 
 export class Toolbox {

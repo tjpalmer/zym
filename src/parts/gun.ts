@@ -1,5 +1,5 @@
-import {Biggie, Launcher, Runner} from './';
-import {Game, Level, Part, RunnerAction} from '../';
+import {Biggie, Launcher, Runner} from './index';
+import {Game, Level, Part, RunnerAction} from '../index';
 import {Vector2} from 'three';
 
 export class Gun extends Runner {

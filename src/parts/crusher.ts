@@ -1,4 +1,4 @@
-import {Edge, Level, Part, PartType} from '../';
+import {Edge, Level, Part, PartType} from '../index';
 import {Vector2} from 'three';
 const {abs} = Math;
 

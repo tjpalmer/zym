@@ -3,8 +3,10 @@ import {
   EnergyOff, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
   LauncherCenter, LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None,
   Spawn, Steel, Treasure,
-} from './';
-import {cartesianProduct, Multiple, Part, PartOptions, PartType} from '../';
+} from './index';
+import {
+  cartesianProduct, Multiple, Part, PartOptions, PartType,
+} from '../index';
 import {Vector2} from 'three';
 
 export class Parts {

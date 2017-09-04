@@ -1,4 +1,4 @@
-import {Part} from '../';
+import {Part} from '../index';
 
 export class Ladder extends Part {
 

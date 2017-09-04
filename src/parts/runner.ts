@@ -1,5 +1,5 @@
-import {None, Prize} from './';
-import {Edge, Game, Level, Part, RunnerAction} from '../';
+import {None, Prize} from './index';
+import {Edge, Game, Level, Part, RunnerAction} from '../index';
 import {Vector2} from 'three';
 
 class Blocker {

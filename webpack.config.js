@@ -2,6 +2,10 @@ let prod = process.argv.indexOf('-p') >= 0;
 let webpack = require('webpack');
 
 module.exports = {
+  devServer: {
+    hot: false,
+    inline: false,
+  },
   entry: {
     app: './src/main.ts',
     vendor: [
@@ -17,11 +21,11 @@ module.exports = {
     loaders: [
       {
         test: /\.css$/,
-        loader: 'style!css',
+        loader: 'style-loader!css-loader',
       }, {
         // Take out all but woff from font-awesome.
         test: /font-awesome\.css/,
-        loader: 'string-replace',
+        loader: 'string-replace-loader',
         query: {
           multiple: [
             {
@@ -49,48 +53,51 @@ module.exports = {
         },
       }, {
         test: /\.html$/,
-        loader: 'html',
+        loader: 'html-loader',
       }, {
         test: /\.json$/,
-        loader: 'json',
+        loader: 'json-loader',
       }, {
         test: /\.png$/,
-        loader: 'url',
+        loader: 'url-loader',
       }, {
         test: /\.ts$/,
-        loader: 'awesome-typescript',
+        loader: 'awesome-typescript-loader',
       }, {
         test: /\.woff2/,
-        loader: 'url?mimetype=application/font-woff2',
+        loader: 'url-loader?mimetype=application/font-woff2',
       },
     ],
-    preLoaders: [
-      {
-        test: /\.ts$/,
-        loader: 'tslint',
-      },
-    ],
+    // preLoaders: [
+    //   {
+    //     test: /\.ts$/,
+    //     loader: 'tslint',
+    //   },
+    // ],
   },
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.js'),
+    new webpack.optimize.CommonsChunkPlugin({
+      filename: 'vendor.js', name: 'vendor',
+    }),
+    new webpack.optimize.ModuleConcatenationPlugin(),
   ],
   resolve: {
     alias: {
       'font-awesome': 'font-awesome/css/font-awesome.css',
     },
-    extensions: ['', '.ts', '.webpack.js', '.web.js', '.js'],
+    extensions: ['.ts', '.webpack.js', '.web.js', '.js'],
   },
-  tslint: {
-    configuration: {
-      rules: {
-        curly: true,
-        indent: [true, 'spaces'],
-        'no-constructor-vars': true,
-        'no-var-keyword': true,
-        quotemark: [true, 'single', 'avoid-escape'],
-      },
-    },
-  },
+  // tslint: {
+  //   configuration: {
+  //     rules: {
+  //       curly: true,
+  //       indent: [true, 'spaces'],
+  //       'no-constructor-vars': true,
+  //       'no-var-keyword': true,
+  //       quotemark: [true, 'single', 'avoid-escape'],
+  //     },
+  //   },
+  // },
 };
 
 if (prod) {
