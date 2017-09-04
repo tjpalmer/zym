@@ -39,8 +39,9 @@ export class Crusher extends Part {
       if (this.hitType) {
         part = this.partAt(4, -1, part => part.type == this.hitType);
       } else {
-        part =
-          this.partAt(4, -1, part => part.exists && !(part instanceof Crusher));
+        part = this.partAt(
+          4, -1, part => part.substantial && !(part instanceof Crusher),
+        );
       }
       if (part) {
         this.hitType = part.type;

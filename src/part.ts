@@ -144,6 +144,10 @@ export class Part {
     return false;
   }
 
+  get substantial() {
+    return this.exists;
+  }
+
   surface(other: Part, seems?: boolean) {
     return false;
   }

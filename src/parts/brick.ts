@@ -77,6 +77,10 @@ export class Brick extends Part {
     return this.surface(other, seems);
   }
 
+  get substantial() {
+    return this.exists && !this.burned;
+  }
+
   surface(other: Part, seems?: boolean) {
     return seems ? true : !this.burned;
   }
