@@ -23,6 +23,13 @@ export class Bonus extends Prize {
   // Time is money, eh?
   static char = '$';
 
+  static options = {
+    breaking: false,
+    ender: true,
+    falling: false,
+    invisible: true,
+  };
+
   bonusEnd = 0;
 
 }
@@ -32,7 +39,9 @@ export class Treasure extends Prize {
   static char = '*';
 
   static options = {
+    breaking: false,
     ender: false,
+    falling: false,
     invisible: true,
   };
 

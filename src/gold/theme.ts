@@ -102,16 +102,18 @@ export class GoldTheme implements Theme {
     }
   }
 
+  breaking = false;
+  
   buildArt(part: Part) {
     let type = part.type;
     // TODO Change to type != type.base?
-    if (type.ender || type.invisible) {
+    if (type.breaking || type.ender || type.falling || type.invisible) {
       type = type.base;
     }
     let makeArt = Parts.tileArts.get(type);
     if (!makeArt) {
       // This makes it easier to deal with problems up front.
-      throw new Error(`No art for part type ${type.name}`);
+      throw new Error(`No art for part type ${type.key}`);
     }
     // Mark art non-optional so this would catch the error?
     part.art = makeArt(part);
@@ -148,14 +150,24 @@ export class GoldTheme implements Theme {
 
   fadeSee = new Lerper(0, 0x90, -100, 0.2, 1);
 
+  falling = false;
+  
   game: Game;
 
   handle() {
     let {game} = this;
     // In passing, see if we need to update the panels.
     let styleChanged = false;
+    if (game.edit.breaking != this.breaking) {
+      this.breaking = game.edit.breaking;
+      styleChanged = true;
+    }
     if (game.edit.ender != this.ender) {
       this.ender = game.edit.ender;
+      styleChanged = true;
+    }
+    if (game.edit.falling != this.falling) {
+      this.falling = game.edit.falling;
       styleChanged = true;
     }
     if (game.edit.invisible != this.invisible) {
@@ -325,6 +337,9 @@ export class GoldTheme implements Theme {
         let mode = +(part.type.ender || part.keyTime + 1 > time);
         if (part.dead) {
           mode = 2;
+        }
+        if (part.type.falling) {
+          mode |= 4;
         }
         let opacity = time >= part.phaseEndTime ? 0xFF :
           // TODO Look back into this with integers.
@@ -655,8 +670,12 @@ let tileFragmentShader = `
       // TODO Break mode (in vert shader?) and state into bits.
       if (vMode != 0.0) {
         grayify(gl_FragColor.xyz);
-        if (vMode == 2.0) {
+        if (mod(vMode, 4.0) == 2.0) {
           gl_FragColor.xyz *= 0.5;
+        }
+        if (vMode >= 4.0) {
+          // Falling.
+          gl_FragColor.yz *= 0.5;
         }
       }
       gl_FragColor.w = vOpacity;

@@ -19,16 +19,29 @@ export class Part {
     return this as GenericPartType;
   }
 
+  static breaking = false;
+
+  static char?: string;
+
   static ender = false;
+  
+  static falling = false;
 
   static invisible = false;
+
+  static get key() {
+    // TODO This handles name mangling. Maybe just go explicit.
+    return this.name.split('_').slice(-1)[0].toLowerCase();
+  }
 
   static make(game: Game) {
     return new this(game);
   }
 
   static options = {
+    breaking: true,
     ender: true,
+    falling: true,
     invisible: true,
   };
 
@@ -171,9 +184,13 @@ export class Part {
 
 export interface PartOptions {
 
-    ender: boolean;
+  breaking: boolean;
+  
+  ender: boolean;
 
-    invisible: boolean;
+  falling: boolean;
+
+  invisible: boolean;
 
 }
 
@@ -182,7 +199,7 @@ export interface GenericPartType extends PartOptions {
   // Whenever a group of types should be considered somewhat equivalent.
   common: GenericPartType;
 
-  name: string;
+  key: string;
 
 }
 

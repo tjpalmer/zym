@@ -10,7 +10,9 @@ class Blocker {
 export class Runner extends Part {
 
   static options = {
+    breaking: false,
     ender: true,
+    falling: false,
     invisible: false,
   };
 

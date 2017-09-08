@@ -7,7 +7,9 @@ export class Dropper extends Part {
   static char = 'Y';
 
   static options = {
+    breaking: true,
     ender: true,
+    falling: true,
     invisible: false,
   };
 

@@ -7,7 +7,9 @@ export class Hero extends Runner {
   static char = 'R';
 
   static options = {
+    breaking: false,
     ender: false,
+    falling: false,
     invisible: false,
   };
 

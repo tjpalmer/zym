@@ -44,6 +44,10 @@ export class EditMode extends Mode {
 
   bodyClass = 'editMode';
 
+  get breaking() {
+    return this.getToolBoxState('breaking');
+  }
+
   commandsContainer: HTMLElement;
 
   copyTool: CopyTool;
@@ -108,6 +112,10 @@ export class EditMode extends Mode {
     this.tool.deactivate();
   }
 
+  get falling() {
+    return this.getToolBoxState('falling');
+  }
+
   getToolBoxState(className: string) {
     // Check toolbox existence because this gets called on construction, too.
     return !!this.toolbox && this.toolbox.getState(className);
@@ -165,7 +173,7 @@ export class EditMode extends Mode {
       // Split based on ModuleConcatenationPlugin style like 'hero_Hero'.
       // I might just need to make things explicit if I use a minifier, instead
       // of depending on class names.
-      type.name.split('_').slice(-1)[0].toLowerCase(),
+      type.key,
       new PartTool(this, type),
     ] as [string, Tool],
   ));
@@ -289,7 +297,7 @@ export class EditMode extends Mode {
 
   updateTool() {
     if (this.tool instanceof PartTool) {
-      this.setToolFromName(this.tool.type.base.name.toLowerCase());
+      this.setToolFromName(this.tool.type.base.key);
     }
   }
 

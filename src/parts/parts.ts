@@ -58,7 +58,9 @@ export class Parts {
 
   static typeChar(type: PartType, options: PartOptions) {
     let char = type.char.codePointAt(0)!;
+    char |= options.breaking ? 0x200 : 0x00;
     char |= options.ender ? 0x80 : 0x00;
+    char |= options.falling ? 0x400 : 0x00;
     char |= options.invisible ? 0x100 : 0x00;
     if (char == 0xAD) {
       // Because 0xAD isn't visible, and they're nice to see, at least.
@@ -96,11 +98,10 @@ Parts.inventory.forEach(part => {
       static get base() {
         return part;
       }
+      static breaking = option.breaking;
       static char = char;
-      // TODO Are the following TODOs still relevant?
-      // TODO `make` that attends to edit or play mode for ender or base?
-      // TODO Or just reference game dynamically in parts?
       static ender = option.ender;
+      static falling = option.falling;
       static invisible = option.invisible;
     }
     // Add it to things.

@@ -21,7 +21,7 @@ module.exports = {
     loaders: [
       {
         test: /\.css$/,
-        loader: 'style-loader!css-loader',
+        loader: ['style-loader', 'css-loader'],
       }, {
         // Take out all but woff from font-awesome.
         test: /font-awesome\.css/,

@@ -40,6 +40,13 @@ export class EnergyOff extends Energy {
 
 export class Latch extends Part {
 
+  static options = {
+    breaking: true,
+    ender: true,
+    falling: false,
+    invisible: true,
+  };
+
   changeTime = NaN;
 
   die(part?: Part) {

@@ -6,6 +6,13 @@ export class Crusher extends Part {
 
   static char = 'n';
 
+  static options = {
+    breaking: false,
+    ender: true,
+    falling: false,
+    invisible: true,
+  };
+
   checkY = 0;
 
   choose() {
