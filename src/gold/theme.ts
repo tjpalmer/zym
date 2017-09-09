@@ -338,8 +338,11 @@ export class GoldTheme implements Theme {
         if (part.dead) {
           mode = 2;
         }
-        if (part.type.falling) {
+        if (part.type.breaking) {
           mode |= 4;
+        }
+        if (part.type.falling) {
+          mode |= 8;
         }
         let opacity = time >= part.phaseEndTime ? 0xFF :
           // TODO Look back into this with integers.
@@ -673,9 +676,13 @@ let tileFragmentShader = `
         if (mod(vMode, 4.0) == 2.0) {
           gl_FragColor.xyz *= 0.5;
         }
-        if (vMode >= 4.0) {
-          // Falling.
+        if (mod(vMode, 8.0) >= 4.0) {
+          // Breaking.
           gl_FragColor.yz *= 0.5;
+        }
+        if (vMode >= 8.0) {
+          // Falling.
+          gl_FragColor.xy *= 0.5;
         }
       }
       gl_FragColor.w = vOpacity;
