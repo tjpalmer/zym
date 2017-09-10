@@ -52,7 +52,7 @@ export class Latch extends Part {
   die(part?: Part) {
     super.die();
     if (part instanceof Shot) {
-      this.flip(part.gun.facing);
+      this.flip(part.facing);
     }
   }
 
