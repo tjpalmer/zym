@@ -671,14 +671,27 @@ let tileFragmentShader = `
     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
     if (gl_FragColor.w > 0.0) {
       // TODO Break mode (in vert shader?) and state into bits.
-      if (vMode != 0.0) {
+      if (mod(vMode, 8.0) >= 4.0) {
+        // Breaking.
+        vec2 offset = floor(vUv * vec2(8, 10));
+        vec2 odd = mod(vec2(offset.x, floor(offset.y * 0.5)), vec2(2.0, 2.0));
+        if (offset.y == 0.0 || offset.y == 9.0) {
+          if (offset.x == 2.0) {
+            gl_FragColor *= 0.0;
+          } else if (offset.x == 5.0 && offset.y == 9.0) {
+            gl_FragColor *= 0.0;
+          } else if (offset.x == 4.0 && offset.y == 0.0) {
+            gl_FragColor *= 0.0;
+          }
+        } else if (offset.x == 3.0 || offset.x == 4.0) {
+          if (odd.x == odd.y) {
+            gl_FragColor *= 0.0;
+          }
+        }
+      } else if (vMode != 0.0) {
         grayify(gl_FragColor.xyz);
         if (mod(vMode, 4.0) == 2.0) {
           gl_FragColor.xyz *= 0.5;
-        }
-        if (mod(vMode, 8.0) >= 4.0) {
-          // Breaking.
-          gl_FragColor.yz *= 0.5;
         }
         if (vMode >= 8.0) {
           // Falling.
