@@ -254,6 +254,7 @@ export class Runner extends Part {
       climbable = undefined;
     }
     // TODO Why did I have support.point.y < climbable.point.y?
+    // TODO Maybe so I don't get dragged by a walking enemy while on a ladder?
     // if (climbable && (!support || support.point.y < climbable.point.y)) {
     if (climbable && !support) {
       support = climbable;
