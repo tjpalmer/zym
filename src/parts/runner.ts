@@ -253,7 +253,9 @@ export class Runner extends Part {
       this.climbing = false;
       climbable = undefined;
     }
-    if (climbable && (!support || support.point.y < climbable.point.y)) {
+    // TODO Why did I have support.point.y < climbable.point.y?
+    // if (climbable && (!support || support.point.y < climbable.point.y)) {
+    if (climbable && !support) {
       support = climbable;
     }
     if (this.encased()) {
