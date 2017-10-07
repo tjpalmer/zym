@@ -64,6 +64,11 @@ export class Latch extends Part {
       this.changeTime = stage.time;
       this.facing = facing;
       stage.energyOn = !stage.energyOn;
+      if (this.type.breaking) {
+        this.die();
+        this.active = false;
+        this.game.stage.removed(this);
+      }
     }
   }
 
@@ -76,6 +81,9 @@ export class Latch extends Part {
   }
 
   update() {
+    if (this.dead) {
+      return;
+    }
     let passer = this.partAt(4, 5, part => !!part.moved.x);
     if (passer) {
       let oldX = passer.point.x - passer.moved.x;
