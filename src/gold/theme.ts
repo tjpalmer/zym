@@ -688,7 +688,8 @@ let tileFragmentShader = `
             gl_FragColor *= 0.0;
           }
         }
-      } else if (vMode != 0.0) {
+      }
+      if (mod(vMode, 2.0) == 1.0 || mod(vMode, 4.0) == 2.0 || vMode >= 8.0) {
         grayify(gl_FragColor.xyz);
         if (mod(vMode, 4.0) == 2.0) {
           gl_FragColor.xyz *= 0.5;
