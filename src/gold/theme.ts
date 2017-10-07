@@ -661,42 +661,52 @@ let tileFragmentShader = `
   }
 
   void main() {
+    vec2 uv = vUv;
+    vec2 offset = floor(vUv * vec2(8, 10));
+    if (vMode >= 8.0) {
+      if (offset.x <= 3.0) {
+        uv.x -= 0.125;
+      } else {
+        uv.x += 0.125;
+      }
+    }
     vec2 coord = (
       // Tile z is the horizontal offset to fix the offset problems with a
       // couple of the tiles.
       // The +56 in y is for the texture offset.
-      (vUv + vTile.xy) * vec2(8, 10) + vec2(vTile.z, 56)
+      (uv + vTile.xy) * vec2(8, 10) + vec2(vTile.z, 56)
     ) / vec2(512, 256);
     gl_FragColor = texture2D(map, coord);
     gl_FragColor.w = gl_FragColor.x + gl_FragColor.y + gl_FragColor.z;
-    if (gl_FragColor.w > 0.0) {
-      // TODO Break mode (in vert shader?) and state into bits.
-      if (mod(vMode, 8.0) >= 4.0) {
-        // Breaking.
-        vec2 offset = floor(vUv * vec2(8, 10));
-        vec2 odd = mod(vec2(offset.x, floor(offset.y * 0.5)), vec2(2.0, 2.0));
-        if (offset.y == 0.0 || offset.y == 9.0) {
-          if (offset.x == 2.0) {
-            gl_FragColor *= 0.0;
-          } else if (offset.x == 5.0 && offset.y == 9.0) {
-            gl_FragColor *= 0.0;
-          } else if (offset.x == 4.0 && offset.y == 0.0) {
-            gl_FragColor *= 0.0;
-          }
-        } else if (offset.x == 3.0 || offset.x == 4.0) {
-          if (odd.x == odd.y) {
-            gl_FragColor *= 0.0;
-          }
+    // Breaking.
+    if (mod(vMode, 8.0) >= 4.0) {
+      vec2 odd = mod(vec2(offset.x, floor(offset.y * 0.5)), vec2(2.0, 2.0));
+      if (offset.y == 0.0 || offset.y == 9.0) {
+        if (offset.x == 2.0) {
+          gl_FragColor *= 0.0;
+        } else if (offset.x == 5.0 && offset.y == 9.0) {
+          gl_FragColor *= 0.0;
+        } else if (offset.x == 4.0 && offset.y == 0.0) {
+          gl_FragColor *= 0.0;
+        }
+      } else if (offset.x == 3.0 || offset.x == 4.0) {
+        if (odd.x == odd.y) {
+          gl_FragColor *= 0.0;
         }
       }
-      if (mod(vMode, 2.0) == 1.0 || mod(vMode, 4.0) == 2.0 || vMode >= 8.0) {
+    }
+    // Falling.
+    if (vMode >= 8.0) {
+      if (offset.x == 0.0 || offset.x == 7.0) {
+        gl_FragColor *= 0.0;
+      }
+    }
+    // Dead and/or translucent.
+    if (gl_FragColor.w > 0.0) {
+      if (mod(vMode, 2.0) == 1.0 || mod(vMode, 4.0) == 2.0) {
         grayify(gl_FragColor.xyz);
         if (mod(vMode, 4.0) == 2.0) {
           gl_FragColor.xyz *= 0.5;
-        }
-        if (vMode >= 8.0) {
-          // Falling.
-          gl_FragColor.xy *= 0.5;
         }
       }
       gl_FragColor.w = vOpacity;
