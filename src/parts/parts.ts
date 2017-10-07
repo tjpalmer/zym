@@ -104,12 +104,27 @@ Parts.inventory.forEach(part => {
       static falling = option.falling;
       static invisible = option.invisible;
     }
+    let optionClass = OptionPart;
+    if (option.breaking) {
+      optionClass = makeBreakingClass(optionClass);
+    }
     // Add it to things.
-    Parts.inventory.push(OptionPart);
-    Parts.charParts.set(char, OptionPart);
+    Parts.inventory.push(optionClass);
+    Parts.charParts.set(char, optionClass);
     // console.log(
     //   part.char, OptionPart.char, OptionPart.ender, OptionPart.invisible,
     //   Object.getPrototypeOf(OptionPart).name
     // );
   });
 });
+
+function makeBreakingClass(optionClass: PartType) {
+  class BreakingClass extends optionClass {
+    supportedGone(oldSupported: Part) {
+      this.die(oldSupported);
+      this.active = false;
+      this.game.stage.removed(this);
+    }
+  }
+  return BreakingClass;
+}

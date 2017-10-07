@@ -161,12 +161,29 @@ export class Part {
     return this.exists;
   }
 
+  supported?: Part = undefined;
+
+  supportedGone(oldSupported: Part) {}
+
   surface(other: Part, seems?: boolean) {
     return false;
   }
 
   touchKills(other: Part) {
     return this.solid(other);
+  }
+
+  trackSupported(other: Part, active: boolean) {
+    if (active) {
+      if (!this.supported) {
+        this.supported = other;
+      }
+    } else {
+      if (this.supported == other) {
+        this.supported = undefined;
+        this.supportedGone(other);
+      }
+    }
   }
 
   get type() {

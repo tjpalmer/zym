@@ -352,7 +352,14 @@ export class Runner extends Part {
     // TODO But no randomness so far, right?
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
+    // Assign and track supports.
+    if (this.support && support != this.support) {
+      this.support.trackSupported(this, false);
+    }
     this.support = support;
+    if (support) {
+      support.trackSupported(this, true);
+    }
   }
 
   seesInvisible = false;
