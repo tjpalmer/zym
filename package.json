@@ -22,7 +22,7 @@
   },
   "scripts": {
     "prepublish": "webpack --color",
-    "watch": "webpack-dev-server --color -d --port 2017"
+    "start": "webpack-dev-server --color -d --port 2017"
   },
   "dependencies": {
     "font-awesome": "^4.7.0",
