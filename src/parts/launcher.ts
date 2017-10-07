@@ -87,6 +87,13 @@ export abstract class Launcher extends Part {
       part.point.copy(target.point);
       part.phaseEndPoint.copy(part.point);
     }
+    // TODO If we define supports better, this shouldn't be needed, but here we
+    // TODO are.
+    if (this.type.breaking) {
+      this.die();
+      this.active = false;
+      this.game.stage.removed(this);
+    }
   }
 
   outside(point: Vector2) {
