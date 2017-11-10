@@ -1,10 +1,12 @@
 import {
-  Bar, BiggieLeft, BiggieRight, Bonus, Brick, Dropper, Enemy, Energy, EnergyOff,
-  GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight, LauncherCenter,
-  LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None, Spawn, Steel,
-  Treasure,
-} from './';
-import {cartesianProduct, Multiple, Part, PartOptions, PartType} from '../';
+  Bar, BiggieLeft, BiggieRight, Bonus, Brick, Crusher, Dropper, Enemy, Energy,
+  EnergyOff, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
+  LauncherCenter, LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None,
+  Spawn, Steel, Treasure,
+} from './index';
+import {
+  cartesianProduct, Multiple, Part, PartOptions, PartType,
+} from '../index';
 import {Vector2} from 'three';
 
 export class Parts {
@@ -15,6 +17,7 @@ export class Parts {
     BiggieRight,
     Bonus,
     Brick,
+    Crusher,
     Dropper,
     Enemy,
     Energy,
@@ -55,7 +58,9 @@ export class Parts {
 
   static typeChar(type: PartType, options: PartOptions) {
     let char = type.char.codePointAt(0)!;
+    char |= options.breaking ? 0x200 : 0x00;
     char |= options.ender ? 0x80 : 0x00;
+    char |= options.falling ? 0x400 : 0x00;
     char |= options.invisible ? 0x100 : 0x00;
     if (char == 0xAD) {
       // Because 0xAD isn't visible, and they're nice to see, at least.
@@ -93,19 +98,33 @@ Parts.inventory.forEach(part => {
       static get base() {
         return part;
       }
+      static breaking = option.breaking;
       static char = char;
-      // TODO Are the following TODOs still relevant?
-      // TODO `make` that attends to edit or play mode for ender or base?
-      // TODO Or just reference game dynamically in parts?
       static ender = option.ender;
+      static falling = option.falling;
       static invisible = option.invisible;
     }
+    let optionClass = OptionPart;
+    if (option.breaking) {
+      optionClass = makeBreakingClass(optionClass);
+    }
     // Add it to things.
-    Parts.inventory.push(OptionPart);
-    Parts.charParts.set(char, OptionPart);
+    Parts.inventory.push(optionClass);
+    Parts.charParts.set(char, optionClass);
     // console.log(
     //   part.char, OptionPart.char, OptionPart.ender, OptionPart.invisible,
     //   Object.getPrototypeOf(OptionPart).name
     // );
   });
 });
+
+function makeBreakingClass(optionClass: PartType) {
+  class BreakingClass extends optionClass {
+    supportedGone(oldSupported: Part) {
+      this.die(oldSupported);
+      this.active = false;
+      this.game.stage.removed(this);
+    }
+  }
+  return BreakingClass;
+}

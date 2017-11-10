@@ -1,7 +1,7 @@
 import {
   Control, EditMode, ItemMeta, Level, LevelRaw, ListRaw, PlayMode, Raw, Stage,
   TestMode, Theme, Tower, Zone,
-} from './';
+} from './index';
 import {
   // TODO Clean out unused.
   AmbientLight, BufferAttribute, BufferGeometry, DirectionalLight, Geometry,
@@ -74,6 +74,9 @@ export class Mode {
       classList.remove(options.trueClass);
     }
   }
+
+  // Beyond updating the stage.
+  updateView() {}
 
 }
 

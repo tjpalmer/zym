@@ -1,4 +1,4 @@
-import {Dialog, Game, PlayMode, formatTime, load} from '../';
+import {Dialog, Game, PlayMode, formatTime, load} from '../index';
 
 export class Report extends Dialog {
 

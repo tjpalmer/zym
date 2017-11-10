@@ -1,5 +1,5 @@
-import {Bonus, None, Prize, Runner, Treasure} from './';
-import {Edge, Game, Level, Part, RunnerAction} from '../';
+import {Bonus, None, Prize, Runner, Treasure} from './index';
+import {Edge, Game, Level, Part, RunnerAction} from '../index';
 import {Vector2} from 'three';
 
 export class Hero extends Runner {
@@ -7,7 +7,9 @@ export class Hero extends Runner {
   static char = 'R';
 
   static options = {
+    breaking: false,
     ender: false,
+    falling: false,
     invisible: false,
   };
 
@@ -109,15 +111,16 @@ export class Hero extends Runner {
   }
 
   update() {
+    let {stage} = this.game;
     // Update everything.
     super.update();
-    if (!this.game.stage.ended) {
+    if (!stage.ended) {
       // See if we won or lost.
       let {point: {y}} = this;
-      if (y <= -10) {
+      if (y <= stage.pixelBounds.min.y - Level.tileSize.y) {
         this.die();
       }
-      if (this.game.stage.ending && y >= Level.pixelCount.y) {
+      if (stage.ending && y >= stage.pixelBounds.max.y) {
         this.game.play.win();
       }
     }

@@ -1,8 +1,8 @@
-import {EditorList, Levels} from './';
+import {EditorList, Levels} from './index';
 import {
   Game, ItemMeta, Level, LevelRaw, ListRaw, loadTower, Raw, Tower, TowerRaw,
   Zone,
-} from '../';
+} from '../index';
 
 export class Towers extends EditorList<TowerRaw> {
 

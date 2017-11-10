@@ -1,5 +1,5 @@
-import {None, Prize} from './';
-import {Edge, Game, Level, Part, RunnerAction} from '../';
+import {None, Prize} from './index';
+import {Edge, Game, Level, Part, RunnerAction} from '../index';
 import {Vector2} from 'three';
 
 class Blocker {
@@ -10,7 +10,9 @@ class Blocker {
 export class Runner extends Part {
 
   static options = {
+    breaking: false,
     ender: true,
+    falling: false,
     invisible: false,
   };
 
@@ -22,13 +24,15 @@ export class Runner extends Part {
 
   climbing = false;
 
-  encased() {
-    let touchKills = (part: Part) => part.touchKills(this) && part != this;
+  encased(solid: boolean = false) {
+    let check = solid ?
+      (part: Part) => part.solid(this) && part != this :
+      (part: Part) => part.touchKills(this) && part != this;
     return (
-      this.partsAt(0, 0).some(touchKills) ||
-      this.partsAt(0, top).some(touchKills) ||
-      this.partsAt(right, 0).some(touchKills) ||
-      this.partsAt(right, top).some(touchKills)
+      this.partsAt(0, 0).some(check) ||
+      this.partsAt(0, top).some(check) ||
+      this.partsAt(right, 0).some(check) ||
+      this.partsAt(right, top).some(check)
     );
   }
 
@@ -60,7 +64,7 @@ export class Runner extends Part {
     }
     // In exact mode, no need to see which is higher, but we're not always
     // exact.
-    let part1 = check(3, top);
+    let part1 = check(midLeft, top);
     let part2 = check(midRight, top);
     if (!(part1 && part2)) {
       return part1 || part2;
@@ -249,7 +253,10 @@ export class Runner extends Part {
       this.climbing = false;
       climbable = undefined;
     }
-    if (climbable && (!support || support.point.y < climbable.point.y)) {
+    // TODO Why did I have support.point.y < climbable.point.y?
+    // TODO Maybe so I don't get dragged by a walking enemy while on a ladder?
+    // if (climbable && (!support || support.point.y < climbable.point.y)) {
+    if (climbable && !support) {
       support = climbable;
     }
     if (this.encased()) {
@@ -258,19 +265,21 @@ export class Runner extends Part {
     } else if (support) {
       // Prioritize vertical for enemy ai reasons, also because rarer options.
       // TODO Remember old move options to allow easier transition?
-      if (climbable || !support.surface(this)) {
-        // Now move up or down.
-        if (action.down) {
-          move.y = -1;
-        } else if (action.up && inClimbable) {
-          move.y = 1;
+      if (!this.encased(true)) {
+        if (climbable || !support.surface(this)) {
+          // Now move up or down.
+          if (action.down) {
+            move.y = -1;
+          } else if (action.up && inClimbable) {
+            move.y = 1;
+          }
         }
-      }
-      if (!move.y) {
-        if (action.left) {
-          move.x = -1;
-        } else if (action.right) {
-          move.x = 1;
+        if (!move.y) {
+          if (action.left) {
+            move.x = -1;
+          } else if (action.right) {
+            move.x = 1;
+          }
         }
       }
     } else {
@@ -346,7 +355,14 @@ export class Runner extends Part {
     // TODO But no randomness so far, right?
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
+    // Assign and track supports.
+    if (this.support && support != this.support) {
+      this.support.trackSupported(this, false);
+    }
     this.support = support;
+    if (support) {
+      support.trackSupported(this, true);
+    }
   }
 
   seesInvisible = false;

@@ -1,4 +1,4 @@
-import {Game} from './';
+import {Game} from './index';
 import {Vector2} from 'three';
 
 export class RunnerAction {

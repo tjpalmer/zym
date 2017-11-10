@@ -1,5 +1,5 @@
-import {Edge, GenericPartType, Level, Part, PartType} from '../';
-import {Energy, Hero} from '../parts';
+import {Edge, GenericPartType, Level, Part, PartType} from '../index';
+import {Energy, Hero} from '../parts/index';
 import {Vector2} from 'three';
 
 interface LauncherType extends PartType {
@@ -86,6 +86,13 @@ export abstract class Launcher extends Part {
       // AI will see the destination already.
       part.point.copy(target.point);
       part.phaseEndPoint.copy(part.point);
+    }
+    // TODO If we define supports better, this shouldn't be needed, but here we
+    // TODO are.
+    if (this.type.breaking) {
+      this.die();
+      this.active = false;
+      this.game.stage.removed(this);
     }
   }
 

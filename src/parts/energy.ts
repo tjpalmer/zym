@@ -1,5 +1,5 @@
-import {Shot} from './';
-import {Part, PartType} from '../';
+import {Shot} from './index';
+import {Part, PartType} from '../index';
 
 interface EnergyType extends PartType {
   defaultOn: boolean;
@@ -40,15 +40,19 @@ export class EnergyOff extends Energy {
 
 export class Latch extends Part {
 
+  static options = {
+    breaking: true,
+    ender: true,
+    falling: false,
+    invisible: true,
+  };
+
   changeTime = NaN;
 
   die(part?: Part) {
     super.die();
     if (part instanceof Shot) {
-      let facing = part.gun.facing;
-      if (facing != this.facing) {
-        this.flip(facing);
-      }
+      this.flip(part.facing);
     }
   }
 
@@ -56,14 +60,17 @@ export class Latch extends Part {
 
   flip(facing: number) {
     let {stage} = this.game;
-    this.changeTime = stage.time;
-    this.facing = facing;
-    stage.energyOn = !stage.energyOn;
+    if (facing != this.facing) {
+      this.changeTime = stage.time;
+      this.facing = facing;
+      stage.energyOn = !stage.energyOn;
+      if (this.type.breaking) {
+        this.die();
+        this.active = false;
+        this.game.stage.removed(this);
+      }
+    }
   }
-
-  heroWasNear = false;
-
-  lastHeroSide = 0;
 
   get shotKillable() {
     return true;
@@ -74,25 +81,21 @@ export class Latch extends Part {
   }
 
   update() {
-    let {heroWasNear, workPoint} = this;
-    let {hero} = this.game.stage;
-    if (!hero) {
+    if (this.dead) {
       return;
     }
-    // See if the hero overlaps our middle.
-    workPoint.set(4, 5).add(this.point);
-    if (hero.contains(workPoint)) {
-      // If so, check for center crossings.
-      let heroSide = Math.sign(hero.point.x - this.point.x);
-      if (heroWasNear && heroSide && heroSide != this.lastHeroSide) {
-        if (heroSide == -this.facing) {
-          this.flip(heroSide);
+    let passer = this.partAt(4, 5, part => !!part.moved.x);
+    if (passer) {
+      let oldX = passer.point.x - passer.moved.x;
+      if (passer.point.x < this.point.x) {
+        if (oldX >= this.point.x) {
+          this.flip(-1);
+        }
+      } else if (passer.point.x > this.point.x) {
+        if (oldX <= this.point.x) {
+          this.flip(1);
         }
       }
-      this.lastHeroSide = heroSide;
-      this.heroWasNear = true;
-    } else {
-      this.heroWasNear = false;
     }
   }
 

@@ -4,6 +4,7 @@ export * from './theme';
 // Individual parts.
 export * from './biggie';
 export * from './brick';
+export * from './crusher';
 export * from './dropper';
 export * from './energy';
 export * from './gun';

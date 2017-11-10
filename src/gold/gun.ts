@@ -1,5 +1,5 @@
-import {BaseArt, Layer} from './';
-import {Gun} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Gun} from '../parts/index';
 import {Vector2} from 'three';
 
 export class GunArt extends BaseArt<Gun> {

@@ -1,5 +1,5 @@
-import {BaseArt, Layer} from './';
-import {Energy, EnergyOff, Latch, LatchLeft, LatchRight} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Energy, EnergyOff, Latch, LatchLeft, LatchRight} from '../parts/index';
 import {Vector2} from 'three';
 
 export class EnergyArt extends BaseArt<Energy> {

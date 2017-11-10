@@ -1,14 +1,14 @@
 import {
-  Art, BiggieArt, BrickArt, DropArt, EnergyArt, Flame, FlameArt, GunArt,
-  LatchArt, Layer, RunnerArt, PrizeArt,
-} from './';
+  Art, BiggieArt, BrickArt, CrusherArt, DropArt, EnergyArt, Flame, FlameArt,
+  GunArt, LatchArt, Layer, RunnerArt, PrizeArt,
+} from './index';
 import {
-  Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Drop, Dropper, Enemy,
-  Energy, EnergyOff, GunLeft, GunRight, Hero, Ladder, Latch, LatchLeft,
+  Bar, Biggie, BiggieLeft, BiggieRight, Bonus, Brick, Crusher, Drop, Dropper,
+  Enemy, Energy, EnergyOff, GunLeft, GunRight, Hero, Ladder, Latch, LatchLeft,
   LatchRight, LauncherCenter, LauncherDown, LauncherLeft, LauncherRight,
   LauncherUp, None, Prize, Runner, Shot, Spawn, Steel, Treasure,
-} from '../parts/';
-import {Part, PartType} from '../';
+} from '../parts/index';
+import {Part, PartType} from '../index';
 import {Vector2} from 'three';
 
 // Simple arts for unchanging parts.
@@ -43,6 +43,7 @@ export class Parts {
     [Bonus, part => new PrizeArt(part as Prize, new Vector2(13, 16))],
     [Brick, part => new BrickArt(part as Brick)],
     [Drop, part => new DropArt(part as Drop)],
+    [Crusher, part => new CrusherArt(part as Crusher)],
     [Dropper, artMaker(arts.Dropper)],
     [Enemy, part => new RunnerArt(part as Runner, new Vector2(15, 14))],
     [Energy, part => new EnergyArt(part as Energy)],

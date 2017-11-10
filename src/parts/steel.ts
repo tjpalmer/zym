@@ -1,4 +1,4 @@
-import {Edge, Part} from '../';
+import {Edge, Part} from '../index';
 
 export class Steel extends Part {
 

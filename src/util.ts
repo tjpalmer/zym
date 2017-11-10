@@ -192,7 +192,7 @@ export function cartesianProduct<Single>(object: Multiple<Single>):
     }    
     return output;
   }
-  let split = Object.keys(object).map(key => ({[key]: object[key]}));
+  let split = Object.keys(object).map(key => ({[key]: (object as any)[key]}));
   return cartProdList(split);
 }
 

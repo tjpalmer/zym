@@ -1,5 +1,5 @@
-import {BaseArt, Layer} from './';
-import {Drop} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Drop} from '../parts/index';
 import {Vector2} from 'three';
 
 export class DropArt extends BaseArt<Drop> {

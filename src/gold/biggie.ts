@@ -1,5 +1,5 @@
-import {BaseArt, Layer} from './';
-import {Biggie, BiggieLeft, BiggieRight} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Biggie, BiggieLeft, BiggieRight} from '../parts/index';
 import {Vector2} from 'three';
 
 export class BiggieArt extends BaseArt<Biggie> {

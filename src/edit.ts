@@ -1,9 +1,9 @@
 import {
-  CopyTool, Level, Mode, NopTool, Part, PartOptions, PartTool, PartType,
-  PasteTool, PointEvent, Game, Tool, Toolbox,
-} from './';
-import {Levels} from './ui';
-import {None, Parts} from './parts';
+  CopyTool, CropTool, Level, Mode, NopTool, Part, PartOptions, PartTool,
+  PartType, PasteTool, PointEvent, Game, Tool, Toolbox,
+} from './index';
+import {Levels} from './ui/index';
+import {None, Parts} from './parts/index';
 import {Vector2} from 'three';
 
 export class EditMode extends Mode {
@@ -25,6 +25,7 @@ export class EditMode extends Mode {
     // Tools.
     this.namedTools.set('copy', this.copyTool = new CopyTool(this));
     this.namedTools.set('paste', new PasteTool(this));
+    this.namedTools.set('crop', this.cropTool = new CropTool(this));
     // Initial history entry.
     this.editState.pushHistory(true);
   }
@@ -43,9 +44,15 @@ export class EditMode extends Mode {
 
   bodyClass = 'editMode';
 
+  get breaking() {
+    return this.getToolBoxState('breaking');
+  }
+
   commandsContainer: HTMLElement;
 
   copyTool: CopyTool;
+
+  cropTool: CropTool;
 
   draw(tilePoint: Vector2, tile: PartType) {
     // Need to call level.updateStage after this.
@@ -97,11 +104,16 @@ export class EditMode extends Mode {
       this.game.play.togglePause();
     }
     this.tool.activate();
+    this.updateView();
   }
 
   exit() {
     this.saveAll();
     this.tool.deactivate();
+  }
+
+  get falling() {
+    return this.getToolBoxState('falling');
   }
 
   getToolBoxState(className: string) {
@@ -157,8 +169,13 @@ export class EditMode extends Mode {
   }
 
   namedTools = new Map(Parts.inventory.filter(type => !type.ender).map(
-    type =>
-      [type.name.toLowerCase(), new PartTool(this, type)] as [string, Tool]
+    type => [
+      // Split based on ModuleConcatenationPlugin style like 'hero_Hero'.
+      // I might just need to make things explicit if I use a minifier, instead
+      // of depending on class names.
+      type.key,
+      new PartTool(this, type),
+    ] as [string, Tool],
   ));
 
   onClick(command: string, handler: () => void) {
@@ -192,6 +209,7 @@ export class EditMode extends Mode {
     if (this.tool) {
       this.tool.resize();
     }
+    this.updateView();
   }
 
   saveAll() {
@@ -279,8 +297,12 @@ export class EditMode extends Mode {
 
   updateTool() {
     if (this.tool instanceof PartTool) {
-      this.setToolFromName(this.tool.type.base.name.toLowerCase());
+      this.setToolFromName(this.tool.type.base.key);
     }
+  }
+
+  updateView() {
+    this.cropTool.updateView();
   }
 
 }

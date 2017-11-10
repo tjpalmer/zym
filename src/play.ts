@@ -1,5 +1,5 @@
-import {Dialog, Game, Mode, Tower} from './';
-import {Report} from './ui';
+import {Dialog, Game, Mode, Tower} from './index';
+import {Report} from './ui/index';
 
 export class PlayMode extends Mode {
 
@@ -96,6 +96,10 @@ export class PlayMode extends Mode {
       falseClass: 'fa-pause', trueClass: 'fa-play',
       value: this.paused,
     });
+  }
+
+  updateView() {
+    this.game.edit.cropTool.selector.style.display = 'none';
   }
 
   won = false;

@@ -31,6 +31,7 @@
               <input name="solid" type="radio" checked="checked"/>
             </label>
             <label class="steel"><input name="solid" type="radio"/></label>
+            <label class="crusher"><input name="solid" type="radio"/></label>
           </div>
         </label>
         <label>
@@ -115,15 +116,27 @@
               <i class="fa fa-th"></i>
               <input name="meta" type="radio"/>
             </label>
+            <label class="crop" title="Crop level size">
+              <i class="fa fa-crop"></i>
+              <input name="meta" type="radio"/>
+            </label>
           </div>
         </label>
-        <label class="ender">
-          <i class="fa fa-angle-double-up"></i>
+        <label class="ender" title="End-level">
+          <i class="fa fa-arrow-up"></i>
           <input name="ender" type="checkbox"/>
         </label>
-        <label class="invisible">
+        <label class="invisible" title="Invisible">
           <i class="fa fa-eye-slash"></i>
           <input name="invisible" type="checkbox"/>
+        </label>
+        <label class="breaking" title="Breaking">
+          <i class="fa fa-exclamation-circle"></i>
+          <input name="breaking" type="checkbox"/>
+        </label>
+        <label class="falling" title="Falling">
+          <i class="fa fa-arrow-circle-down"></i>
+          <input name="falling" type="checkbox"/>
         </label>
       </form>
       <div class="panel status other">
@@ -134,6 +147,7 @@
       <canvas class="stage"></canvas>
       <div class="selector"></div>
       <div class="clipboard"></div>
+      <div class="cropper"></div>
     </div>
     <div class="panelBox right">
       <div class="panel status">

@@ -1,7 +1,14 @@
-import {Enemy} from './';
-import {Part} from '../';
+import {Enemy} from './index';
+import {Part} from '../index';
 
 export class Spawn extends Part {
+
+  static options = {
+    breaking: false,
+    ender: true,
+    falling: false,
+    invisible: true,
+  };
 
   static char = 'M';
 

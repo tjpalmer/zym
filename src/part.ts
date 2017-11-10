@@ -1,4 +1,4 @@
-import {Game, Level} from './';
+import {Game, Level} from './index';
 import {Vector2} from 'three';
 
 export enum Edge {
@@ -19,22 +19,37 @@ export class Part {
     return this as GenericPartType;
   }
 
+  static breaking = false;
+
+  static char?: string;
+
   static ender = false;
+  
+  static falling = false;
 
   static invisible = false;
+
+  static get key() {
+    // TODO This handles name mangling. Maybe just go explicit.
+    return this.name.split('_').slice(-1)[0].toLowerCase();
+  }
 
   static make(game: Game) {
     return new this(game);
   }
 
   static options = {
+    breaking: true,
     ender: true,
+    falling: true,
     invisible: true,
   };
 
   constructor(game: Game) {
     this.game = game;
   }
+
+  active = true;
 
   art: any = undefined;
 
@@ -59,6 +74,11 @@ export class Part {
       point.y >= y && point.y < y + Level.tileSize.y);
   }
 
+  // A hack to work around existing code that didn't have cropping.
+  // TODO Better would be to figure out why things don't work when I don't add
+  // TODO a part to the stage.
+  cropped = false;
+
   dead = false;
 
   die(killer?: Part) {
@@ -74,7 +94,7 @@ export class Part {
   editPlacedAt(tilePoint: Vector2) {}
 
   get exists() {
-    return true;
+    return this.active;
   }
 
   game: Game;
@@ -137,12 +157,33 @@ export class Part {
     return false;
   }
 
+  get substantial() {
+    return this.exists;
+  }
+
+  supported?: Part = undefined;
+
+  supportedGone(oldSupported: Part) {}
+
   surface(other: Part, seems?: boolean) {
     return false;
   }
 
   touchKills(other: Part) {
     return this.solid(other);
+  }
+
+  trackSupported(other: Part, active: boolean) {
+    if (active) {
+      if (!this.supported) {
+        this.supported = other;
+      }
+    } else {
+      if (this.supported == other) {
+        this.supported = undefined;
+        this.supportedGone(other);
+      }
+    }
   }
 
   get type() {
@@ -160,9 +201,13 @@ export class Part {
 
 export interface PartOptions {
 
-    ender: boolean;
+  breaking: boolean;
+  
+  ender: boolean;
 
-    invisible: boolean;
+  falling: boolean;
+
+  invisible: boolean;
 
 }
 
@@ -171,7 +216,7 @@ export interface GenericPartType extends PartOptions {
   // Whenever a group of types should be considered somewhat equivalent.
   common: GenericPartType;
 
-  name: string;
+  key: string;
 
 }
 

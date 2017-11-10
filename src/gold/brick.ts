@@ -1,6 +1,6 @@
-import {BaseArt, Layer} from './';
-import {Game, Part} from '../';
-import {Brick} from '../parts';
+import {BaseArt, Layer} from './index';
+import {Game, Part} from '../index';
+import {Brick} from '../parts/index';
 import {Vector2} from 'three';
 
 export class BrickArt extends BaseArt<Brick> {

@@ -1,7 +1,7 @@
 body {
   align-content: stretch;
   align-items: stretch;
-  background: #111;
+  background: #202020;
   bottom: 0;
   color: white;
   cursor: default;
@@ -43,6 +43,20 @@ body {
 [contenteditable]::selection {
   background-color: white;
   color: black;
+}
+
+.cropper, .selector {
+  border: 0.2em white;
+  border-radius: 0.2em;
+  display: none;
+  height: 10em;
+  pointer-events: none;
+  position: absolute;
+  width: 10em;
+}
+
+.cropper {
+  border-style: dashed;
 }
 
 .dialog {
@@ -211,13 +225,7 @@ body {
 }
 
 .selector {
-  border: 0.2em solid white;
-  border-radius: 0.2em;
-  display: none;
-  height: 10em;
-  pointer-events: none;
-  position: absolute;
-  width: 10em;
+  border-style: solid;
 }
 
 .shade {
@@ -308,7 +316,7 @@ table {
 }
 
 .toolMenu {
-  background: #111;
+  background: #202020;
   display: none;
   /* Left margin gets overruled later, but this at least offsets some. */
   margin-left: 1em;
