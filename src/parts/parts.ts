@@ -108,6 +108,9 @@ Parts.inventory.forEach(part => {
     if (option.breaking) {
       optionClass = makeBreakingClass(optionClass);
     }
+    if (option.falling) {
+      optionClass = makeFallingClass(optionClass);
+    }
     // Add it to things.
     Parts.inventory.push(optionClass);
     Parts.charParts.set(char, optionClass);
@@ -128,3 +131,35 @@ function makeBreakingClass(optionClass: PartType) {
   }
   return BreakingClass;
 }
+
+function makeFallingClass(optionClass: PartType) {
+  class FallingClass extends optionClass {
+    kicker: Part | undefined = undefined;
+    choose() {
+      if (!this.exists) return;
+      if (this.kicker) {
+        // Faster than normal falling, slower than fast falling.
+        // So a fast fall should be able to land on and move off.
+        // TODO Fix physics of runner intersection.
+        let speed = 1.1;
+        this.move.set(0, speed);
+        // TODO Check collisions.
+        workPoint.copy(this.point);
+        this.point.y -= speed;
+        this.game.stage.moved(this, workPoint);
+      }
+    }
+    supportedGone(oldSupported: Part) {
+      if (!this.kicker) {
+        let {stage} = this.game;
+        this.kicker = this;
+        workPoint.set(4, 5).add(this.point);
+        // stage.partAt
+        // TODO Mark all beneath as loose.
+      }
+    }
+  }
+  return FallingClass;
+}
+
+let workPoint = new Vector2();
