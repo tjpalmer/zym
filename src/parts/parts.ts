@@ -151,11 +151,22 @@ function makeFallingClass(optionClass: PartType) {
     }
     supportedGone(oldSupported: Part) {
       if (!this.kicker) {
+        let {y} = this.point;
         let {stage} = this.game;
         this.kicker = this;
-        workPoint.set(4, 5).add(this.point);
-        // stage.partAt
         // TODO Mark all beneath as loose.
+        workPoint.set(4, 5).add(this.point);
+        while (workPoint.y >= 0) {
+          y -= 10;
+          workPoint.y -= 10;
+          let next = stage.partAt(workPoint, part => part.type.falling);
+          if (!next) break;
+          if (Math.abs(y - next.point.y) > 0.5) break;
+          // Close enough to call them touching.
+          // The cast here is a bit abusive, since it's easily a different
+          // FallingClass, but eh.
+          (next as FallingClass).kicker = this;
+        }
       }
     }
   }
