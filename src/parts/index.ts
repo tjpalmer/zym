@@ -9,6 +9,7 @@ export * from './crusher';
 export * from './dropper';
 export * from './enemy';
 export * from './energy';
+export * from './falling';
 export * from './gun';
 export * from './hero';
 export * from './ladder';

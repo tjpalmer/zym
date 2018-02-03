@@ -1,6 +1,6 @@
 import {
   Bar, BiggieLeft, BiggieRight, Bonus, Brick, Crusher, Dropper, Enemy, Energy,
-  EnergyOff, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
+  EnergyOff, Falling, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
   LauncherCenter, LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None,
   Spawn, Steel, Treasure,
 } from './index';
@@ -106,7 +106,10 @@ Parts.inventory.forEach(part => {
     }
     let optionClass = OptionPart;
     if (option.breaking) {
-      optionClass = makeBreakingClass(optionClass);
+      optionClass = Breaking(optionClass);
+    }
+    if (option.falling) {
+      optionClass = Falling(optionClass);
     }
     // Add it to things.
     Parts.inventory.push(optionClass);
@@ -118,13 +121,18 @@ Parts.inventory.forEach(part => {
   });
 });
 
-function makeBreakingClass(optionClass: PartType) {
-  class BreakingClass extends optionClass {
+// TODO Why does webpack die if I turn this into an arrow function?
+function Breaking(optionClass: PartType) {
+  // Can't call the class itself `Breaking`, because the UI ends up thinking it
+  // should add rendered blocks to the buttons on screen.
+  class BreakingPart extends optionClass {
     supportedGone(oldSupported: Part) {
       this.die(oldSupported);
       this.active = false;
       this.game.stage.removed(this);
     }
   }
-  return BreakingClass;
+  return BreakingPart;
 }
+
+let workPoint = new Vector2();
