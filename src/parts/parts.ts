@@ -123,14 +123,16 @@ Parts.inventory.forEach(part => {
 
 // TODO Why does webpack die if I turn this into an arrow function?
 function Breaking(optionClass: PartType) {
-  class Breaking extends optionClass {
+  // Can't call the class itself `Breaking`, because the UI ends up thinking it
+  // should add rendered blocks to the buttons on screen.
+  class BreakingPart extends optionClass {
     supportedGone(oldSupported: Part) {
       this.die(oldSupported);
       this.active = false;
       this.game.stage.removed(this);
     }
   }
-  return Breaking;
+  return BreakingPart;
 }
 
 let workPoint = new Vector2();
