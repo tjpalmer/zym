@@ -1,8 +1,8 @@
 import {
   Bar, BiggieLeft, BiggieRight, Bonus, Brick, Crusher, Dropper, Enemy, Energy,
-  EnergyOff, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
+  EnergyOff, Falling, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
   LauncherCenter, LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None,
-  Spawn, Steel, Treasure, makeFallingClass,
+  Spawn, Steel, Treasure,
 } from './index';
 import {
   cartesianProduct, Multiple, Part, PartOptions, PartType,
@@ -106,10 +106,10 @@ Parts.inventory.forEach(part => {
     }
     let optionClass = OptionPart;
     if (option.breaking) {
-      optionClass = makeBreakingClass(optionClass);
+      optionClass = Breaking(optionClass);
     }
     if (option.falling) {
-      optionClass = makeFallingClass(optionClass);
+      optionClass = Falling(optionClass);
     }
     // Add it to things.
     Parts.inventory.push(optionClass);
@@ -121,7 +121,8 @@ Parts.inventory.forEach(part => {
   });
 });
 
-function makeBreakingClass(optionClass: PartType) {
+// TODO Why does webpack die if I turn this into an arrow function?
+function Breaking(optionClass: PartType) {
   class Breaking extends optionClass {
     supportedGone(oldSupported: Part) {
       this.die(oldSupported);
