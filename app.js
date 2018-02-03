@@ -2057,6 +2057,66 @@ class LatchRight extends energy_Latch {
 }
 LatchRight.char = '/';
 
+// CONCATENATED MODULE: ./src/parts/falling.ts
+
+const Falling = (optionClass) => 
+// Can't call the class itself `Falling`, because the UI ends up thinking it
+// should add rendered blocks to the buttons on screen.
+class FallingPart extends optionClass {
+    constructor() {
+        super(...arguments);
+        this.kicker = undefined;
+    }
+    choose() {
+        if (!this.exists)
+            return;
+        super.choose();
+        if (this.kicker) {
+            // Faster than normal falling, slower than fast falling.
+            // So a fast fall should be able to land on and move off.
+            // TODO Fix physics of runner intersection.
+            // TODO I've seen falling faster than a falling part kill the player.
+            let speed = 1.1;
+            this.move.set(0, speed);
+            // Check collision.
+            // I haven't seen issues with colliding into other fallings.
+            // Perhaps that has to do with construction order.
+            let stopper = this.partAt(4, -speed, part => part.type.options.falling);
+            if (stopper) {
+                speed = this.point.y - stopper.point.y - 10;
+                this.kicker = undefined;
+            }
+            // Move.
+            falling_workPoint.copy(this.point);
+            this.point.y -= speed;
+            this.game.stage.moved(this, falling_workPoint);
+        }
+    }
+    supportedGone(oldSupported) {
+        super.supportedGone(oldSupported);
+        if (!this.kicker) {
+            let { y } = this.point;
+            let { stage } = this.game;
+            // Mark this one kicked.
+            this.kicker = this;
+            // Mark all beneath as kicked, too.
+            falling_workPoint.set(4, 5).add(this.point);
+            while (falling_workPoint.y >= 0) {
+                y -= 10;
+                falling_workPoint.y -= 10;
+                let next = stage.partAt(falling_workPoint, part => part.type.falling);
+                if (!next)
+                    break;
+                if (Math.abs(y - next.point.y) > 0.5)
+                    break;
+                // Close enough to call them touching.
+                next.kicker = this;
+            }
+        }
+    }
+};
+let falling_workPoint = new three["Vector2"]();
+
 // CONCATENATED MODULE: ./src/parts/gun.ts
 
 
@@ -2672,6 +2732,7 @@ Treasure.options = {
 // CONCATENATED MODULE: ./src/parts/parts.ts
 
 
+
 class Parts {
     static optionType(baseType, options) {
         // The type options should be just options, but the options passed in might
@@ -2759,7 +2820,10 @@ Parts.inventory.forEach(part => {
         OptionPart.invisible = option.invisible;
         let optionClass = OptionPart;
         if (option.breaking) {
-            optionClass = makeBreakingClass(optionClass);
+            optionClass = Breaking(optionClass);
+        }
+        if (option.falling) {
+            optionClass = Falling(optionClass);
         }
         // Add it to things.
         Parts.inventory.push(optionClass);
@@ -2770,21 +2834,26 @@ Parts.inventory.forEach(part => {
         // );
     });
 });
-function makeBreakingClass(optionClass) {
-    class BreakingClass extends optionClass {
+// TODO Why does webpack die if I turn this into an arrow function?
+function Breaking(optionClass) {
+    // Can't call the class itself `Breaking`, because the UI ends up thinking it
+    // should add rendered blocks to the buttons on screen.
+    class BreakingPart extends optionClass {
         supportedGone(oldSupported) {
             this.die(oldSupported);
             this.active = false;
             this.game.stage.removed(this);
         }
     }
-    return BreakingClass;
+    return BreakingPart;
 }
+let parts_workPoint = new three["Vector2"]();
 
 // CONCATENATED MODULE: ./src/parts/index.ts
 // Used by multiple parts.
 
 // Parts themselves.
+
 
 
 
