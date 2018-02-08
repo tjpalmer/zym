@@ -388,7 +388,7 @@ export class Runner extends Part {
     // Change player position.
     let {align, move, oldCatcher, oldPoint, point, speed, support} = this;
     if (support) {
-      if (support.move.y <= 0) {
+      if (support.move.y <= 0 && move.y <= 0) {
         let gap = support.point.y + Level.tileSize.y - point.y;
         if (gap < 0 && speed.y >= -support.move.y) {
           // Try to put us directly on the support.
