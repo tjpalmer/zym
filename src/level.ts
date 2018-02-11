@@ -3,6 +3,7 @@ import {
 } from './index';
 import {Hero, None, Parts, Treasure} from './parts/index';
 import {Vector2} from 'three';
+import md5 from 'blueimp-md5/js/md5.min.js';
 
 export interface ItemMeta {
 
@@ -218,6 +219,23 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   }
 
   bounds?: Rectangle = undefined;
+
+  contentHash() {
+    // Hash of just the things that affect gameplay, not metadata.
+    let {bounds, tiles} = this.encode();
+    let content =
+      // Deterministic bounds layout.
+      JSON.stringify(
+        bounds ?
+          [bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y] :
+          null
+      ) +
+      // Tiles are already a string.
+      tiles;
+    // MD5 is good enough since this isn't about strict security, just about an
+    // easy way to store scores by level content rather than id.
+    return md5(content);
+  }
 
   copy() {
     // TODO Include disabled?

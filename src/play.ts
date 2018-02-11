@@ -108,6 +108,8 @@ export class PlayMode extends Mode {
     this.won = true;
     this.game.stage.ended = true;
     this.showReport('Level complete!');
+    // TODO Store score by hash.
+    console.log(this.game.level.contentHash());
   }
 
 }
