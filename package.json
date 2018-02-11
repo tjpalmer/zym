@@ -21,7 +21,7 @@
     "webpack-dev-server": "^2.7.1"
   },
   "scripts": {
-    "prepublish": "webpack --color",
+    "prepare": "webpack --color",
     "start": "webpack-dev-server --color -d --port 2017"
   },
   "dependencies": {
