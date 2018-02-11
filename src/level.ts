@@ -222,16 +222,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
   contentHash() {
     // Hash of just the things that affect gameplay, not metadata.
-    let {bounds, tiles} = this.encode();
-    let content =
-      // Deterministic bounds layout.
-      JSON.stringify(
-        bounds ?
-          [bounds.min.x, bounds.min.y, bounds.max.x, bounds.max.y] :
-          null
-      ) +
-      // Tiles are already a string.
-      tiles;
+    let content = this.encodeTiles(true);
     // MD5 is good enough since this isn't about strict security, just about an
     // easy way to store scores by level content rather than id.
     return md5(content);
@@ -278,24 +269,36 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   }
 
   encode(): LevelRaw {
-    let point = new Vector2();
+    let raw = {tiles: this.encodeTiles(), ...Raw.encodeMeta(this)} as LevelRaw;
+    if (this.bounds) {
+      raw.bounds = copyRect(this.bounds);
+    }
+    return raw;
+  }
+
+  encodeTiles(boundsOnly = false) {
     let rows: Array<string> = [];
-    for (let i = Level.tileCount.y - 1 ; i >= 0; --i) {
+    let iBegin = Level.tileCount.y - 1;
+    let iEnd = -1;
+    let jBegin = 0;
+    let jEnd = Level.tileCount.x;
+    let {bounds} = this;
+    if (boundsOnly && bounds) {
+      iBegin = bounds.max.y - 1;
+      iEnd = bounds.min.y - 1;
+      jBegin = bounds.min.x;
+      jEnd = bounds.max.x;
+    }
+    let point = new Vector2();
+    for (let i = iBegin; i != iEnd; --i) {
       let row: Array<string> = [];
-      for (let j = 0; j < Level.tileCount.x; ++j) {
+      for (let j = jBegin; j != jEnd; ++j) {
         let type = this.tiles.get(point.set(j, i))!;
         row.push(type.char || '?');
       }
       rows.push(row.join(''));
     }
-    let raw = {
-      tiles: rows.join('\n'),
-      ...Raw.encodeMeta(this),
-    } as LevelRaw;
-    if (this.bounds) {
-      raw.bounds = copyRect(this.bounds);
-    }
-    return raw;
+    return rows.join('\n');
   }
 
   equals(other: Level): boolean {
