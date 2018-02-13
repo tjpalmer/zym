@@ -1,6 +1,6 @@
 import {EditorList, Towers} from './index';
 import {
-  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Tower, load,
+  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Raw, Tower, load,
 } from '../index';
 
 export class Levels extends EditorList<LevelRaw> {
@@ -12,12 +12,14 @@ export class Levels extends EditorList<LevelRaw> {
 
   addLevel() {
     let level = new Level().encode();
+    // TODO Insert after selected position.
     this.tower.items.push(level);
     this.tower.save();
     this.addItem(level);
     this.updateNumbers();
     // Select the new.
     this.selectValue(level);
+    Raw.save(this.selectedValue);
   }
 
   buildTitleBar() {
@@ -31,9 +33,29 @@ export class Levels extends EditorList<LevelRaw> {
     });
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
+    this.on('delete', () => this.deleteLevel());
     this.on('exclude', () => this.excludeValue());
     this.on('save', () => this.saveTower());
     this.on('towers', () => this.showTowers());
+  }
+
+  deleteLevel() {
+    if (window.confirm(`Are you sure you want to delete this level?`)) {
+      let levelId = this.selectedValue.id;
+      let index = this.tower.items.findIndex(level => level.id == levelId);
+      this.tower.items.splice(index, 1);
+      this.tower.save();
+      Raw.remove(levelId);
+      this.getSelectedItem().remove();
+      if (this.values.length) {
+        if (index >= this.values.length) {
+          --index;
+        }
+        this.selectValue(this.values[index]);
+      } else {
+        this.addLevel();
+      }
+    }
   }
 
   enterSelection() {

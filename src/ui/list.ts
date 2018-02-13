@@ -16,6 +16,7 @@ export abstract class EditorList<
     this.list.removeChild(this.itemTemplate);
     this.values.forEach(value => this.addItem(value));
     this.content = dialogElement;
+    this.updateDelete();
     window.setTimeout(() => this.scrollIntoView(), 0);
   }
 
@@ -71,6 +72,7 @@ export abstract class EditorList<
 
   excludeValue() {
     this.selectedValue.excluded = !this.selectedValue.excluded;
+    this.updateDelete();
     Raw.save(this.selectedValue);
   }
 
@@ -134,7 +136,12 @@ export abstract class EditorList<
   }
 
   on(name: string, action: () => void) {
-    this.getButton(name).addEventListener('click', action);
+    let button = this.getButton(name);
+    button.addEventListener('click', () => {
+      if (!button.classList.contains('disabled')) {
+        action();
+      }
+    });
   }
 
   abstract get outsideSelectedValue(): Value;
@@ -160,6 +167,7 @@ export abstract class EditorList<
     this.selectedValue = value;
     this.getSelectedItem().classList.add('selected');
     // console.log(`selected ${value.id}`);
+    this.updateDelete();
   }
 
   abstract showValue(value: Value): void;
@@ -171,5 +179,17 @@ export abstract class EditorList<
   private itemTemplate: HTMLElement;
 
   private titleBar: HTMLElement;
+
+  updateDelete() {
+    let del = this.getButton('delete');
+    if (del) {
+      // Base on whether currently excluded.
+      if (this.selectedValue.excluded) {
+        del.classList.remove('disabled');
+      } else {
+        del.classList.add('disabled');
+      }
+    }
+  }
 
 }
