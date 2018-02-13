@@ -9,6 +9,7 @@ module.exports = {
   entry: {
     app: './src/main.ts',
     vendor: [
+      'blueimp-md5/js/md5.min.js',
       'font-awesome',
       'three',
     ],

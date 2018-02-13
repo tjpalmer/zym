@@ -14,7 +14,8 @@ export abstract class EditorList<
     this.itemTemplate = dialogElement.querySelector('.item') as HTMLElement;
     this.list = this.itemTemplate.parentNode as HTMLElement;
     this.list.removeChild(this.itemTemplate);
-    this.values.forEach(value => this.addItem(value));
+    // It doesn't like accessing abstract, but we make it work, so cast.
+    (this as {values: any[]}).values.forEach(value => this.addItem(value));
     this.content = dialogElement;
     this.updateDelete();
     window.setTimeout(() => this.scrollIntoView(), 0);
