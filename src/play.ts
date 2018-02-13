@@ -1,4 +1,4 @@
-import {Dialog, Game, Mode, Tower} from './index';
+import {Dialog, Game, Mode, Raw, StatsUtil, Tower} from './index';
 import {Report} from './ui/index';
 
 export class PlayMode extends Mode {
@@ -23,6 +23,7 @@ export class PlayMode extends Mode {
 
   fail() {
     this.game.stage.ended = true;
+    this.updateStats('fails');
     this.showReport('Maybe next time.');
   }
 
@@ -98,6 +99,21 @@ export class PlayMode extends Mode {
     });
   }
 
+  updateStats(key: 'fails' | 'wins') {
+    let {level, stage} = this.game;
+    // Store score by hash.
+    // First, make sure the hash is up to date, so we associate scores right.
+    if (level.calculateContentHash() != level.contentHash) {
+      // Save should update the content hash, but be explicit anyway.
+      level.updateContentHash();
+      level.save();
+    }
+    // Update stats.
+    let levelStats = StatsUtil.loadLevelStats(level);
+    StatsUtil.update(levelStats[key], stage.time);
+    Raw.save(levelStats);
+  }
+
   updateView() {
     this.game.edit.cropTool.selector.style.display = 'none';
   }
@@ -107,9 +123,8 @@ export class PlayMode extends Mode {
   win() {
     this.won = true;
     this.game.stage.ended = true;
+    this.updateStats('wins');
     this.showReport('Level complete!');
-    // TODO Store score by hash.
-    console.log(this.game.level.contentHash());
   }
 
 }

@@ -56,11 +56,86 @@ export function copyRect(rect?: Rectangle): Rectangle | undefined {
   }
 }
 
-export interface LevelRaw extends NumberedItem {
+export interface LevelIds {
+  contentHash?: string;
+  id: string;
+}
+
+export interface LevelRaw extends LevelIds, NumberedItem {
 
   bounds?: Rectangle;
 
+  contentHash?: string;
+
   tiles: string;
+
+}
+
+export interface LevelStats {
+
+  fails: Stats;
+
+  // For scorecharts, the id is the contentHash of the level.
+  id: Id;
+
+  type: 'LevelStats';
+
+  wins: Stats;
+
+}
+
+export interface Stats {
+  count: number;
+  diff2: number;
+  max: number;
+  min: number;
+  total: number;
+}
+
+export class StatsUtil {
+
+  static initLevelStats(level: LevelIds): LevelStats {
+    if (!level.contentHash) {
+      throw new Error(`no contentHash for level ${level.id}`);
+    }
+    return {
+      fails: this.initStats(),
+      id: level.contentHash,
+      type: 'LevelStats',
+      wins: this.initStats(),
+    };
+  }
+
+  static initStats(): Stats {
+    return {count: 0, diff2: 0, max: -Infinity, min: Infinity, total: 0};
+  }
+
+  static loadLevelStats(level: LevelIds) {
+    let levelStats = Raw.load<LevelStats>(level.contentHash!);
+    if (levelStats) {
+      // No inf in json (silly Crockford), so revert nulls.
+      function fix(stats: Stats) {
+        if (stats.max == null) stats.max = -Infinity;
+        if (stats.min == null) stats.min = Infinity;
+      }
+      fix(levelStats.fails);
+      fix(levelStats.wins);
+    }
+    return levelStats || this.initLevelStats(level);
+  }
+
+  static update(stats: Stats, value: number) {
+    // Prep variance calculations. See also Wikipedia.
+    let diff = value - (stats.count ? stats.total / stats.count : 0);
+    // Easy parts.
+    stats.count += 1;
+    stats.max = Math.max(stats.max, value);
+    stats.min = Math.min(stats.min, value);
+    stats.total += value;
+    // Finish variance.
+    let diffAfter = value - (stats.total / stats.count);
+    stats.diff2 = stats.diff2 + diff * diffAfter;
+  }
 
 }
 
@@ -84,7 +159,7 @@ export class Raw {
     return meta;
   }
 
-  static load<Item extends ItemMeta>(ref: Ref<Item>) {
+  static load<Item extends {id: string}>(ref: Ref<Item>) {
     let text = window.localStorage[`zym.objects.${ref}`];
     if (text) {
       // TODO Sanitize names?
@@ -93,7 +168,7 @@ export class Raw {
     // else undefined
   }
 
-  static save(raw: ItemMeta) {
+  static save(raw: {id: string}) {
     // console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
     window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
   }
@@ -220,7 +295,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
   bounds?: Rectangle = undefined;
 
-  contentHash() {
+  contentHash: string;
+
+  calculateContentHash() {
     // Hash of just the things that affect gameplay, not metadata.
     let content = this.encodeTiles(true);
     // MD5 is good enough since this isn't about strict security, just about an
@@ -265,11 +342,20 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         this.tiles.set(point.set(j, i), type || None);
       }
     });
+    // Let this be saved over later rather than loaded here.
+    // We want people who need a hash to make sure the hash is saved for use on
+    // raw data.
+    // this.contentHash = encoded.contentHash || this.calculateContentHash();
     return this;
   }
 
   encode(): LevelRaw {
-    let raw = {tiles: this.encodeTiles(), ...Raw.encodeMeta(this)} as LevelRaw;
+    let raw = {
+      // Caching the hash could allow for easier score lookups.
+      contentHash: this.updateContentHash(),
+      tiles: this.encodeTiles(),
+      ...Raw.encodeMeta(this),
+    } as LevelRaw;
     if (this.bounds) {
       raw.bounds = copyRect(this.bounds);
     }
@@ -359,6 +445,10 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   tileBoundsCache = {max: new Vector2(), min: new Vector2()};
 
   tiles: Grid<PartType>;
+
+  updateContentHash() {
+    return this.contentHash = this.calculateContentHash();
+  }
 
   // For use from the editor.
   updateStage(game: Game, reset = false) {
