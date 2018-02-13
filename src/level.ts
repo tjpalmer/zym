@@ -168,6 +168,10 @@ export class Raw {
     // else undefined
   }
 
+  static remove(id: string) {
+    window.localStorage.removeItem(`zym.objects.${id}`);
+  }
+
   static save(raw: {id: string}) {
     // console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
     window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
