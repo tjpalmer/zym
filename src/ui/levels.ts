@@ -1,6 +1,7 @@
 import {EditorList, Towers} from './index';
 import {
-  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Raw, Tower, load,
+  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Raw, StatsUtil, Tower,
+  formatTime, load,
 } from '../index';
 
 export class Levels extends EditorList<LevelRaw> {
@@ -8,6 +9,7 @@ export class Levels extends EditorList<LevelRaw> {
   constructor(game: Game) {
     super(game, require('./levels.html'));
     this.updateNumbers();
+    this.updateStats();
   }
 
   addLevel() {
@@ -130,6 +132,22 @@ export class Levels extends EditorList<LevelRaw> {
       numberElements.forEach(numberElement => {
         numberElement.style.minWidth = `${maxWidth}px`;
       });
+    });
+  }
+
+  updateStats() {
+    let itemElements =
+      [...this.list.querySelectorAll('.item')] as Array<HTMLElement>;
+    itemElements.forEach(itemElement => {
+      let level = Raw.load<LevelRaw>(itemElement.dataset.value!)!;
+      if (level.contentHash) {
+        let levelStats = StatsUtil.loadLevelStats(level);
+        let statsElement = itemElement.querySelector('.stats') as HTMLElement;
+        let best = levelStats.wins.min;
+        if (isFinite(best)) {
+          statsElement.innerText = `(${formatTime(best)})`;
+        }
+      }
     });
   }
 

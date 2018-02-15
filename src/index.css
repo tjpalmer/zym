@@ -250,6 +250,10 @@ table {
   margin-top: 1em;
 }
 
+.stats {
+  padding-left: 0.5em;
+}
+
 .timeRow td {
   text-align: right;
 }
