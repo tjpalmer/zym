@@ -69,6 +69,11 @@ export interface LevelRaw extends LevelIds, NumberedItem {
 
   tiles: string;
 
+  // This should only be here on import or export.
+  // TODO On import, if present, prefill just this part of level stats, if it's
+  // TODO lower than any min already present.
+  winsMin?: number;
+
 }
 
 export interface LevelStats {
@@ -274,6 +279,24 @@ export class Zone extends ItemList<TowerRaw> {
 }
 
 export class Tower extends ItemList<LevelRaw> {
+
+  encodeExpanded() {
+    // Get common expanded.
+    let result = super.encodeExpanded();
+    // But we want high scores here for later player evaluation.
+    result.items = result.items.map(level => {
+      let statsLevel = {...level} as LevelRaw;
+      if (statsLevel.contentHash) {
+        let levelStats = StatsUtil.loadLevelStats(statsLevel);
+        if (isFinite(levelStats.wins.min)) {
+          statsLevel.winsMin = levelStats.wins.min;
+        }
+      }
+      return statsLevel;
+    });
+    // Good to go.
+    return result;
+  }
 
   get type() {
     return 'Tower';
