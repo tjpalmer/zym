@@ -100,6 +100,7 @@ export class PlayMode extends Mode {
   }
 
   updateStats(key: 'fails' | 'wins') {
+    let newBest = false;
     let {level, stage} = this.game;
     // Store score by hash.
     // First, make sure the hash is up to date, so we associate scores right.
@@ -110,8 +111,14 @@ export class PlayMode extends Mode {
     }
     // Update stats.
     let levelStats = StatsUtil.loadLevelStats(level);
+    if (key == 'wins' && stage.time < levelStats[key].min) {
+      levelStats.timestampBest = new Date().toISOString();
+      newBest = true;
+    }
     StatsUtil.update(levelStats[key], stage.time);
+    // Save and done.
     Raw.save(levelStats);
+    return newBest;
   }
 
   updateView() {
@@ -123,8 +130,12 @@ export class PlayMode extends Mode {
   win() {
     this.won = true;
     this.game.stage.ended = true;
-    this.updateStats('wins');
-    this.showReport('Level complete!');
+    let newBest = this.updateStats('wins');
+    let message = 'Level complete!';
+    if (newBest) {
+      message += ' New record!!!!';
+    }
+    this.showReport(message);
   }
 
 }

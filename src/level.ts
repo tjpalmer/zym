@@ -78,6 +78,9 @@ export interface LevelStats {
   // For scorecharts, the id is the contentHash of the level.
   id: Id;
 
+  // ISO  8601 UTC (...Z) formatted.
+  timestampBest?: string;
+
   type: 'LevelStats';
 
   wins: Stats;
