@@ -211,10 +211,11 @@ export function formatTime(seconds: number) {
   // Minutes, because we shouldn't ever get to hours.
   seconds = Math.floor(seconds);
   let minutes = Math.floor(seconds / 60);
+  let minutesText = minutes ? `${minutes}:` : '';
   // Seconds.
   seconds = seconds % 60;
   // All together.
-  return `${sign}${minutes}:${padZero(seconds, 2)}.${padZero(millis, 3)}`;
+  return `${sign}${minutesText}${padZero(seconds, 2)}.${padZero(millis, 3)}`;
 }
 
 export function load(html: string) {

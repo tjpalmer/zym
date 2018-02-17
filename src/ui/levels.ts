@@ -144,9 +144,22 @@ export class Levels extends EditorList<LevelRaw> {
         let levelStats = StatsUtil.loadLevelStats(level);
         let statsElement = itemElement.querySelector('.stats') as HTMLElement;
         let best = levelStats.wins.min;
+        let texts = [];
+        let titles = [
+          `Win/fail total time: ${
+            formatTime(levelStats.fails.total + levelStats.wins.total)
+          }`,
+        ];
         if (isFinite(best)) {
-          statsElement.innerText = `(${formatTime(best)})`;
+          texts.push(formatTime(best));
+          if (levelStats.timestampBest) {
+            titles.push(`Record set at ${levelStats.timestampBest}`);
+          }
         }
+        statsElement.title = titles.join(' - ');
+        let total = levelStats.wins.count + levelStats.fails.count;
+        texts.push(`${levelStats.wins.count}/${total}`);
+        statsElement.innerText = `(${texts.join(', ')})`;
       }
     });
   }
