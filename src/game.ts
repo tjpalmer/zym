@@ -379,7 +379,7 @@ function loadZone() {
     zone.save();
   }
   // Make sure we have main.
-  let mainTower = Tower.hashify(require('json-loader!./towers/main.zym'), true);
+  mainTower = Tower.hashify(require('json-loader!./towers/main.zym'), true);
   if (!zone.items.find(tower => tower.id == mainTower.id)) {
     zone.items.splice(0, 0, mainTower.encode());
     zone.save();
