@@ -21,7 +21,7 @@ export abstract class EditorList<
     window.setTimeout(() => this.scrollIntoView(), 0);
   }
 
-  addItem(value: Value) {
+  addItem(value: Value, afterSelected = false) {
     let item = this.itemTemplate.cloneNode(true) as HTMLElement;
     if (value.id == this.outsideSelectedValue.id) {
       item.classList.add('selected');
@@ -60,7 +60,12 @@ export abstract class EditorList<
       this.selectValue(value);
       this.enterSelection();
     });
-    this.list.appendChild(item);
+    // Actually add to the list. I wish I'd done this in React ...
+    if (afterSelected) {
+      this.getSelectedItem().insertAdjacentElement('afterend', item);
+    } else {
+      this.list.appendChild(item);
+    }
   }
 
   abstract buildTitleBar(): void;

@@ -15,9 +15,20 @@ export class Levels extends EditorList<LevelRaw> {
   addLevel() {
     let level = new Level().encode();
     // TODO Insert after selected position.
-    this.tower.items.push(level);
+    let {items} = this.tower;
+    let selectedIndex = items.findIndex(
+      level => level.id == this.selectedValue.id,
+    );
+    let afterSelected = selectedIndex >= 0;
+    if (afterSelected) {
+      // Insert after selected.
+      items.splice(selectedIndex + 1, 0, level);
+    } else {
+      // Should this ever happen???
+      items.push(level);
+    }
     this.tower.save();
-    this.addItem(level);
+    this.addItem(level, afterSelected);
     this.updateNumbers();
     // Select the new.
     this.selectValue(level);
