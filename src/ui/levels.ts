@@ -1,6 +1,7 @@
 import {EditorList, Towers} from './index';
 import {
-  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Tower, load,
+  Dialog, Encodable, Game, ItemList, Level, LevelRaw, Raw, StatsUtil, Tower,
+  formatTime, load,
 } from '../index';
 
 export class Levels extends EditorList<LevelRaw> {
@@ -8,16 +9,30 @@ export class Levels extends EditorList<LevelRaw> {
   constructor(game: Game) {
     super(game, require('./levels.html'));
     this.updateNumbers();
+    this.updateStats();
   }
 
   addLevel() {
     let level = new Level().encode();
-    this.tower.items.push(level);
+    // TODO Insert after selected position.
+    let {items} = this.tower;
+    let selectedIndex = items.findIndex(
+      level => level.id == this.selectedValue.id,
+    );
+    let afterSelected = selectedIndex >= 0;
+    if (afterSelected) {
+      // Insert after selected.
+      items.splice(selectedIndex + 1, 0, level);
+    } else {
+      // Should this ever happen???
+      items.push(level);
+    }
     this.tower.save();
-    this.addItem(level);
+    this.addItem(level, afterSelected);
     this.updateNumbers();
     // Select the new.
     this.selectValue(level);
+    Raw.save(this.selectedValue);
   }
 
   buildTitleBar() {
@@ -31,9 +46,29 @@ export class Levels extends EditorList<LevelRaw> {
     });
     this.on('add', () => this.addLevel());
     // this.on('close', () => this.game.hideDialog());
+    this.on('delete', () => this.deleteLevel());
     this.on('exclude', () => this.excludeValue());
     this.on('save', () => this.saveTower());
     this.on('towers', () => this.showTowers());
+  }
+
+  deleteLevel() {
+    if (window.confirm(`Are you sure you want to delete this level?`)) {
+      let levelId = this.selectedValue.id;
+      let index = this.tower.items.findIndex(level => level.id == levelId);
+      this.tower.items.splice(index, 1);
+      this.tower.save();
+      Raw.remove(levelId);
+      this.getSelectedItem().remove();
+      if (this.values.length) {
+        if (index >= this.values.length) {
+          --index;
+        }
+        this.selectValue(this.values[index]);
+      } else {
+        this.addLevel();
+      }
+    }
   }
 
   enterSelection() {
@@ -111,10 +146,37 @@ export class Levels extends EditorList<LevelRaw> {
     });
   }
 
+  updateStats() {
+    let itemElements =
+      [...this.list.querySelectorAll('.item')] as Array<HTMLElement>;
+    itemElements.forEach(itemElement => {
+      let level = Raw.load<LevelRaw>(itemElement.dataset.value!)!;
+      if (level.contentHash) {
+        let levelStats = StatsUtil.loadLevelStats(level);
+        let statsElement = itemElement.querySelector('.stats') as HTMLElement;
+        let best = levelStats.wins.min;
+        let texts = [];
+        let titles = [
+          `Win/fail total time: ${
+            formatTime(levelStats.fails.total + levelStats.wins.total)
+          }`,
+        ];
+        if (isFinite(best)) {
+          texts.push(formatTime(best));
+          if (levelStats.timestampBest) {
+            titles.push(`Record set at ${levelStats.timestampBest}`);
+          }
+        }
+        statsElement.title = titles.join(' - ');
+        let total = levelStats.wins.count + levelStats.fails.count;
+        texts.push(`${levelStats.wins.count}/${total}`);
+        statsElement.innerText = `(${texts.join(', ')})`;
+      }
+    });
+  }
+
   get values() {
     return this.tower.items;
   }
 
 }
-
-declare function require(path: string): any;

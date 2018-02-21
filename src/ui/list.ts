@@ -14,12 +14,15 @@ export abstract class EditorList<
     this.itemTemplate = dialogElement.querySelector('.item') as HTMLElement;
     this.list = this.itemTemplate.parentNode as HTMLElement;
     this.list.removeChild(this.itemTemplate);
-    this.values.forEach(value => this.addItem(value));
+    // It doesn't like accessing abstract, but we make it work, so cast.
+    let values = (this as {values: any[]}).values;
+    values.forEach(value => this.addItem(value));
     this.content = dialogElement;
+    this.updateDelete();
     window.setTimeout(() => this.scrollIntoView(), 0);
   }
 
-  addItem(value: Value) {
+  addItem(value: Value, afterSelected = false) {
     let item = this.itemTemplate.cloneNode(true) as HTMLElement;
     if (value.id == this.outsideSelectedValue.id) {
       item.classList.add('selected');
@@ -58,7 +61,12 @@ export abstract class EditorList<
       this.selectValue(value);
       this.enterSelection();
     });
-    this.list.appendChild(item);
+    // Actually add to the list. I wish I'd done this in React ...
+    if (afterSelected) {
+      this.getSelectedItem().insertAdjacentElement('afterend', item);
+    } else {
+      this.list.appendChild(item);
+    }
   }
 
   abstract buildTitleBar(): void;
@@ -71,6 +79,7 @@ export abstract class EditorList<
 
   excludeValue() {
     this.selectedValue.excluded = !this.selectedValue.excluded;
+    this.updateDelete();
     Raw.save(this.selectedValue);
   }
 
@@ -134,7 +143,12 @@ export abstract class EditorList<
   }
 
   on(name: string, action: () => void) {
-    this.getButton(name).addEventListener('click', action);
+    let button = this.getButton(name);
+    button.addEventListener('click', () => {
+      if (!button.classList.contains('disabled')) {
+        action();
+      }
+    });
   }
 
   abstract get outsideSelectedValue(): Value;
@@ -160,6 +174,7 @@ export abstract class EditorList<
     this.selectedValue = value;
     this.getSelectedItem().classList.add('selected');
     // console.log(`selected ${value.id}`);
+    this.updateDelete();
   }
 
   abstract showValue(value: Value): void;
@@ -171,5 +186,17 @@ export abstract class EditorList<
   private itemTemplate: HTMLElement;
 
   private titleBar: HTMLElement;
+
+  updateDelete() {
+    let del = this.getButton('delete');
+    if (del) {
+      // Base on whether currently excluded.
+      if (this.selectedValue.excluded) {
+        del.classList.remove('disabled');
+      } else {
+        del.classList.add('disabled');
+      }
+    }
+  }
 
 }

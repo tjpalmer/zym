@@ -21,10 +21,11 @@
     "webpack-dev-server": "^2.7.1"
   },
   "scripts": {
-    "prepublish": "webpack --color",
+    "prepare": "webpack --color",
     "start": "webpack-dev-server --color -d --port 2017"
   },
   "dependencies": {
+    "blueimp-md5": "^2.10.0",
     "font-awesome": "^4.7.0",
     "three": "^0.82.1"
   }

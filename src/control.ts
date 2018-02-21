@@ -93,8 +93,11 @@ export class Control extends RunnerAction {
         break;
       }
       case 'escape': {
+        let wasShowing = this.game.showingDialog();
         this.game.mode.onKeyDown('Escape');
-        this.game.hideDialog();
+        if (wasShowing) {
+          this.game.hideDialog();
+        }
         break;
       }
       case 'pause': {

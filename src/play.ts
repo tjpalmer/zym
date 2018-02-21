@@ -1,4 +1,4 @@
-import {Dialog, Game, Mode, Tower} from './index';
+import {Dialog, Game, Mode, Raw, StatsUtil, Tower} from './index';
 import {Report} from './ui/index';
 
 export class PlayMode extends Mode {
@@ -23,12 +23,25 @@ export class PlayMode extends Mode {
 
   fail() {
     this.game.stage.ended = true;
+    this.updateStats('fails');
     this.showReport('Maybe next time.');
   }
 
   onHideDialog(dialog: Dialog) {
     if (dialog instanceof Report) {
       this.startNextOrRestart();
+    }
+  }
+
+  onKeyDown(key: string) {
+    switch (key) {
+      case 'Escape': {
+        let {hero} = this.game.stage;
+        if (hero) {
+          hero.die();
+        }
+        break;
+      }
     }
   }
 
@@ -98,6 +111,28 @@ export class PlayMode extends Mode {
     });
   }
 
+  updateStats(key: 'fails' | 'wins') {
+    let newBest = false;
+    let {level, stage} = this.game;
+    // Store score by hash.
+    // First, make sure the hash is up to date, so we associate scores right.
+    if (level.calculateContentHash() != level.contentHash) {
+      // Save should update the content hash, but be explicit anyway.
+      level.updateContentHash();
+      level.save();
+    }
+    // Update stats.
+    let levelStats = StatsUtil.loadLevelStats(level);
+    if (key == 'wins' && stage.time < levelStats[key].min) {
+      levelStats.timestampBest = new Date().toISOString();
+      newBest = true;
+    }
+    StatsUtil.update(levelStats[key], stage.time);
+    // Save and done.
+    Raw.save(levelStats);
+    return newBest;
+  }
+
   updateView() {
     this.game.edit.cropTool.selector.style.display = 'none';
   }
@@ -107,7 +142,12 @@ export class PlayMode extends Mode {
   win() {
     this.won = true;
     this.game.stage.ended = true;
-    this.showReport('Level complete!');
+    let newBest = this.updateStats('wins');
+    let message = 'Level complete!';
+    if (newBest) {
+      message += ' New record!!!!';
+    }
+    this.showReport(message);
   }
 
 }

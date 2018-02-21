@@ -642,8 +642,6 @@ class Lerper {
 //   state: {value: number};
 // }
 
-declare function require(name: string): any;
-
 let tileFragmentShader = `
   uniform sampler2D map;
   // uniform int state;
