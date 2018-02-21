@@ -12,6 +12,9 @@ export interface ItemMeta {
 
   id: Id;
 
+  // Totally okay to leave off for unlocked items.
+  locked?: boolean;
+
   name: string;
 
   type: string;
@@ -164,10 +167,17 @@ export class Raw {
     if (item.excluded) {
       meta.excluded = true;
     }
+    if (item.locked) {
+      meta.locked = true;
+    }
     return meta;
   }
 
   static load<Item extends {id: string}>(ref: Ref<Item>) {
+    let result = internals.get(ref);
+    if (result) {
+      return result;
+    }
     let text = window.localStorage[`zym.objects.${ref}`];
     if (text) {
       // TODO Sanitize names?
@@ -180,7 +190,11 @@ export class Raw {
     window.localStorage.removeItem(`zym.objects.${id}`);
   }
 
-  static save(raw: {id: string}) {
+  static save(raw: {id: string, locked?: boolean}) {
+    if (internals.has(raw.id) || raw.locked) {
+      // Don't touch this.
+      return;
+    }
     // console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
     window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
   }
@@ -256,6 +270,8 @@ export abstract class ItemList<Item extends ItemMeta>
 
   excluded = false;
 
+  locked?: boolean;
+
   id = createId();
 
   items = new Array<Item>();
@@ -280,6 +296,34 @@ export class Zone extends ItemList<TowerRaw> {
 
 export class Tower extends ItemList<LevelRaw> {
 
+  static hashify(tower: Tower, internal = false) {
+    // Reset ids by content hashes for a constant level.
+    let ids = tower.items.map(level => {
+      let contentHash = level.contentHash;
+      if (!contentHash) {
+        // Shouldn't come here for recent exports, but I might want to try
+        // against older exports.
+        let levelFull = new Level().decode(level);
+        contentHash = levelFull.calculateContentHash();
+      }
+      level.id = md5(contentHash);
+      level.locked = true;
+      if (internal) {
+        internals.set(level.id, level);
+      }
+      return level.id;
+    });
+    tower.id = md5(ids.join());
+    tower.locked = true;
+    // This might have been a structural tower without being a tower instance.
+    let raw = Tower.prototype.encode.call(tower) as TowerRaw;
+    tower = new Tower().decode(raw);
+    if (internal) {
+      internals.set(tower.id, raw);
+    }
+    return tower;
+  }
+
   encodeExpanded() {
     // Get common expanded.
     let result = super.encodeExpanded();
@@ -297,6 +341,8 @@ export class Tower extends ItemList<LevelRaw> {
     // Good to go.
     return result;
   }
+
+  locked?: boolean;
 
   get type() {
     return 'Tower';
@@ -563,3 +609,5 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   }
 
 }
+
+var internals = new Map<string, any>();

@@ -214,8 +214,9 @@ export function formatTime(seconds: number) {
   let minutesText = minutes ? `${minutes}:` : '';
   // Seconds.
   seconds = seconds % 60;
+  let secondsText = padZero(seconds, minutes ? 2 : 1);
   // All together.
-  return `${sign}${minutesText}${padZero(seconds, 2)}.${padZero(millis, 3)}`;
+  return `${sign}${minutesText}${secondsText}.${padZero(millis, 3)}`;
 }
 
 export function load(html: string) {

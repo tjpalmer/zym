@@ -119,7 +119,7 @@ export class Game {
     this.play = new PlayMode(this);
     this.test = new TestMode(this);
     // Cheat set early to avoid errors, but it really kicks in on the timeout.
-    this.mode = this.test;
+    this.mode = this.play;
     setTimeout(() => this.setMode(this.mode), 0);
     // Input handlers.
     this.control = new Control(this)
@@ -300,14 +300,20 @@ export class Game {
 
 // TODO Simplify.
 function loadLevel(towerMeta: ItemMeta) {
+  let tower = new Tower().load(towerMeta.id);
   let levelId = window.localStorage['zym.levelId'];
   let level = new Level();
   if (levelId) {
     level = new Level().load(levelId);
   } else {
-    level.save();
+    if (tower.items.length) {
+      // Choose the first level already in the tower.
+      level = new Level().decode(tower.items[0]);
+    } else {
+      // New level in the tower.
+      level.save();
+    }
   }
-  let tower = new Tower().load(towerMeta.id);
   let found = tower.items.find(item => item.id == level!.id);
   if (!found) {
     // This level isn't in the current tower. Add it.
@@ -343,7 +349,7 @@ export function loadTower(zoneMeta: ItemMeta) {
     }
   } else {
     // Save the tower for next time.
-    tower.save();
+    tower = mainTower;
   }
   let zone = new Zone().load(zoneMeta.id);
   if (!zone.items.some(item => item.id == tower!.id)) {
@@ -372,7 +378,15 @@ function loadZone() {
   } else {
     zone.save();
   }
+  // Make sure we have main.
+  let mainTower = Tower.hashify(require('json-loader!./towers/main.zym'), true);
+  if (!zone.items.find(tower => tower.id == mainTower.id)) {
+    zone.items.splice(0, 0, mainTower.encode());
+    zone.save();
+  }
   // This might save the new id or just overwrite. TODO Be more precise?
   window.localStorage['zym.zoneId'] = zone.id;
   return Raw.encodeMeta(zone);
 }
+
+let mainTower: Tower;

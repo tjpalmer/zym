@@ -82,5 +82,3 @@ export class Towers extends EditorList<TowerRaw> {
   zone: Zone;
 
 }
-
-declare function require(path: string): any;

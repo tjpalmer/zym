@@ -33,6 +33,18 @@ export class PlayMode extends Mode {
     }
   }
 
+  onKeyDown(key: string) {
+    switch (key) {
+      case 'Escape': {
+        let {hero} = this.game.stage;
+        if (hero) {
+          hero.die();
+        }
+        break;
+      }
+    }
+  }
+
   paused = false;
 
   showReport(message: string) {
