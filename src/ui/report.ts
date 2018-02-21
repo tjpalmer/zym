@@ -34,5 +34,3 @@ export class Report extends Dialog {
   }
 
 }
-
-declare function require(path: string): any;

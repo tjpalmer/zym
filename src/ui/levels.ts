@@ -180,5 +180,3 @@ export class Levels extends EditorList<LevelRaw> {
   }
 
 }
-
-declare function require(path: string): any;
