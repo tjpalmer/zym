@@ -3,7 +3,8 @@ webpackJsonp([0],[
 /* 1 */,
 /* 2 */,
 /* 3 */,
-/* 4 */
+/* 4 */,
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -177,10 +178,12 @@ function formatTime(seconds) {
     // Minutes, because we shouldn't ever get to hours.
     seconds = Math.floor(seconds);
     let minutes = Math.floor(seconds / 60);
+    let minutesText = minutes ? `${minutes}:` : '';
     // Seconds.
     seconds = seconds % 60;
+    let secondsText = padZero(seconds, minutes ? 2 : 1);
     // All together.
-    return `${sign}${minutes}:${padZero(seconds, 2)}.${padZero(millis, 3)}`;
+    return `${sign}${minutesText}${secondsText}.${padZero(millis, 3)}`;
 }
 function load(html) {
     let div = window.document.createElement('div');
@@ -281,7 +284,7 @@ class game_Game {
         this.play = new play_PlayMode(this);
         this.test = new play_TestMode(this);
         // Cheat set early to avoid errors, but it really kicks in on the timeout.
-        this.mode = this.test;
+        this.mode = this.play;
         setTimeout(() => this.setMode(this.mode), 0);
         // Input handlers.
         this.control = new Control(this);
@@ -415,15 +418,22 @@ class game_Game {
 }
 // TODO Simplify.
 function loadLevel(towerMeta) {
+    let tower = new level_Tower().load(towerMeta.id);
     let levelId = window.localStorage['zym.levelId'];
     let level = new level_Level();
     if (levelId) {
         level = new level_Level().load(levelId);
     }
     else {
-        level.save();
+        if (tower.items.length) {
+            // Choose the first level already in the tower.
+            level = new level_Level().decode(tower.items[0]);
+        }
+        else {
+            // New level in the tower.
+            level.save();
+        }
     }
-    let tower = new Tower().load(towerMeta.id);
     let found = tower.items.find(item => item.id == level.id);
     if (!found) {
         // This level isn't in the current tower. Add it.
@@ -438,7 +448,7 @@ function loadLevel(towerMeta) {
 }
 // TODO Simplify.
 function loadTower(zoneMeta) {
-    let tower = new Tower();
+    let tower = new level_Tower();
     let towerId = window.localStorage['zym.towerId'] || window.localStorage['zym.worldId'];
     if (towerId) {
         let rawTower = Raw.load(towerId);
@@ -459,7 +469,7 @@ function loadTower(zoneMeta) {
     }
     else {
         // Save the tower for next time.
-        tower.save();
+        tower = game_mainTower;
     }
     let zone = new Zone().load(zoneMeta.id);
     if (!zone.items.some(item => item.id == tower.id)) {
@@ -489,10 +499,17 @@ function loadZone() {
     else {
         zone.save();
     }
+    // Make sure we have main.
+    let mainTower = level_Tower.hashify(__webpack_require__(6), true);
+    if (!zone.items.find(tower => tower.id == mainTower.id)) {
+        zone.items.splice(0, 0, mainTower.encode());
+        zone.save();
+    }
     // This might save the new id or just overwrite. TODO Be more precise?
     window.localStorage['zym.zoneId'] = zone.id;
     return Raw.encodeMeta(zone);
 }
+let game_mainTower;
 
 // CONCATENATED MODULE: ./src/part.ts
 
@@ -1006,7 +1023,7 @@ class runner_Runner extends part_Part {
         // Change player position.
         let { align, move, oldCatcher, oldPoint, point, speed, support } = this;
         if (support) {
-            if (support.move.y <= 0) {
+            if (support.move.y <= 0 && move.y <= 0) {
                 let gap = support.point.y + level_Level.tileSize.y - point.y;
                 if (gap < 0 && speed.y >= -support.move.y) {
                     // Try to put us directly on the support.
@@ -3166,8 +3183,11 @@ class Control extends RunnerAction {
                 break;
             }
             case 'escape': {
+                let wasShowing = this.game.showingDialog();
                 this.game.mode.onKeyDown('Escape');
-                this.game.hideDialog();
+                if (wasShowing) {
+                    this.game.hideDialog();
+                }
                 break;
             }
             case 'pause': {
@@ -3257,11 +3277,14 @@ class list_EditorList extends Dialog {
         this.itemTemplate = dialogElement.querySelector('.item');
         this.list = this.itemTemplate.parentNode;
         this.list.removeChild(this.itemTemplate);
-        this.values.forEach(value => this.addItem(value));
+        // It doesn't like accessing abstract, but we make it work, so cast.
+        let values = this.values;
+        values.forEach(value => this.addItem(value));
         this.content = dialogElement;
+        this.updateDelete();
         window.setTimeout(() => this.scrollIntoView(), 0);
     }
-    addItem(value) {
+    addItem(value, afterSelected = false) {
         let item = this.itemTemplate.cloneNode(true);
         if (value.id == this.outsideSelectedValue.id) {
             item.classList.add('selected');
@@ -3298,10 +3321,17 @@ class list_EditorList extends Dialog {
             this.selectValue(value);
             this.enterSelection();
         });
-        this.list.appendChild(item);
+        // Actually add to the list. I wish I'd done this in React ...
+        if (afterSelected) {
+            this.getSelectedItem().insertAdjacentElement('afterend', item);
+        }
+        else {
+            this.list.appendChild(item);
+        }
     }
     excludeValue() {
         this.selectedValue.excluded = !this.selectedValue.excluded;
+        this.updateDelete();
         Raw.save(this.selectedValue);
     }
     getButton(name) {
@@ -3348,7 +3378,12 @@ class list_EditorList extends Dialog {
         });
     }
     on(name, action) {
-        this.getButton(name).addEventListener('click', action);
+        let button = this.getButton(name);
+        button.addEventListener('click', () => {
+            if (!button.classList.contains('disabled')) {
+                action();
+            }
+        });
     }
     scrollIntoView() {
         let { list } = this;
@@ -3368,6 +3403,19 @@ class list_EditorList extends Dialog {
         this.selectedValue = value;
         this.getSelectedItem().classList.add('selected');
         // console.log(`selected ${value.id}`);
+        this.updateDelete();
+    }
+    updateDelete() {
+        let del = this.getButton('delete');
+        if (del) {
+            // Base on whether currently excluded.
+            if (this.selectedValue.excluded) {
+                del.classList.remove('disabled');
+            }
+            else {
+                del.classList.add('disabled');
+            }
+        }
     }
 }
 
@@ -3376,17 +3424,30 @@ class list_EditorList extends Dialog {
 
 class levels_Levels extends list_EditorList {
     constructor(game) {
-        super(game, __webpack_require__(5));
+        super(game, __webpack_require__(7));
         this.updateNumbers();
+        this.updateStats();
     }
     addLevel() {
         let level = new level_Level().encode();
-        this.tower.items.push(level);
+        // TODO Insert after selected position.
+        let { items } = this.tower;
+        let selectedIndex = items.findIndex(level => level.id == this.selectedValue.id);
+        let afterSelected = selectedIndex >= 0;
+        if (afterSelected) {
+            // Insert after selected.
+            items.splice(selectedIndex + 1, 0, level);
+        }
+        else {
+            // Should this ever happen???
+            items.push(level);
+        }
         this.tower.save();
-        this.addItem(level);
+        this.addItem(level, afterSelected);
         this.updateNumbers();
         // Select the new.
         this.selectValue(level);
+        Raw.save(this.selectedValue);
     }
     buildTitleBar() {
         // First time through, we haven't yet set our own tower.
@@ -3399,9 +3460,29 @@ class levels_Levels extends list_EditorList {
         });
         this.on('add', () => this.addLevel());
         // this.on('close', () => this.game.hideDialog());
+        this.on('delete', () => this.deleteLevel());
         this.on('exclude', () => this.excludeValue());
         this.on('save', () => this.saveTower());
         this.on('towers', () => this.showTowers());
+    }
+    deleteLevel() {
+        if (window.confirm(`Are you sure you want to delete this level?`)) {
+            let levelId = this.selectedValue.id;
+            let index = this.tower.items.findIndex(level => level.id == levelId);
+            this.tower.items.splice(index, 1);
+            this.tower.save();
+            Raw.remove(levelId);
+            this.getSelectedItem().remove();
+            if (this.values.length) {
+                if (index >= this.values.length) {
+                    --index;
+                }
+                this.selectValue(this.values[index]);
+            }
+            else {
+                this.addLevel();
+            }
+        }
     }
     enterSelection() {
         this.game.hideDialog();
@@ -3411,7 +3492,7 @@ class levels_Levels extends list_EditorList {
         this.updateNumbers();
     }
     init() {
-        this.tower = new Tower().load(this.game.tower.id);
+        this.tower = new level_Tower().load(this.game.tower.id);
         this.selectedValue = this.game.level.encode();
     }
     get outsideSelectedValue() {
@@ -3466,6 +3547,31 @@ class levels_Levels extends list_EditorList {
             });
         });
     }
+    updateStats() {
+        let itemElements = [...this.list.querySelectorAll('.item')];
+        itemElements.forEach(itemElement => {
+            let level = Raw.load(itemElement.dataset.value);
+            if (level.contentHash) {
+                let levelStats = StatsUtil.loadLevelStats(level);
+                let statsElement = itemElement.querySelector('.stats');
+                let best = levelStats.wins.min;
+                let texts = [];
+                let titles = [
+                    `Win/fail total time: ${formatTime(levelStats.fails.total + levelStats.wins.total)}`,
+                ];
+                if (isFinite(best)) {
+                    texts.push(formatTime(best));
+                    if (levelStats.timestampBest) {
+                        titles.push(`Record set at ${levelStats.timestampBest}`);
+                    }
+                }
+                statsElement.title = titles.join(' - ');
+                let total = levelStats.wins.count + levelStats.fails.count;
+                texts.push(`${levelStats.wins.count}/${total}`);
+                statsElement.innerText = `(${texts.join(', ')})`;
+            }
+        });
+    }
     get values() {
         return this.tower.items;
     }
@@ -3476,7 +3582,7 @@ class levels_Levels extends list_EditorList {
 class report_Report extends Dialog {
     constructor(game, message) {
         super(game);
-        let content = this.content = load(__webpack_require__(6));
+        let content = this.content = load(__webpack_require__(8));
         // Hide extras.
         for (let row of content.querySelectorAll('.timeRow')) {
             row.style.display = 'none';
@@ -3506,10 +3612,10 @@ class report_Report extends Dialog {
 
 class towers_Towers extends list_EditorList {
     constructor(game) {
-        super(game, __webpack_require__(7));
+        super(game, __webpack_require__(9));
     }
     addTower() {
-        let tower = new Tower().encode();
+        let tower = new level_Tower().encode();
         let level = new level_Level().encode();
         Raw.save(level);
         tower.items.push(level.id);
@@ -3918,7 +4024,12 @@ class EditState {
     }
 }
 
+// EXTERNAL MODULE: ./node_modules/blueimp-md5/js/md5.min.js
+var md5_min = __webpack_require__(1);
+var md5_min_default = /*#__PURE__*/__webpack_require__.n(md5_min);
+
 // CONCATENATED MODULE: ./src/level.ts
+
 
 
 
@@ -3932,6 +4043,49 @@ function copyRect(rect) {
         return { max: copyPoint(rect.max), min: copyPoint(rect.min) };
     }
 }
+class StatsUtil {
+    static initLevelStats(level) {
+        if (!level.contentHash) {
+            throw new Error(`no contentHash for level ${level.id}`);
+        }
+        return {
+            fails: this.initStats(),
+            id: level.contentHash,
+            type: 'LevelStats',
+            wins: this.initStats(),
+        };
+    }
+    static initStats() {
+        return { count: 0, diff2: 0, max: -Infinity, min: Infinity, total: 0 };
+    }
+    static loadLevelStats(level) {
+        let levelStats = Raw.load(level.contentHash);
+        if (levelStats) {
+            // No inf in json (silly Crockford), so revert nulls.
+            function fix(stats) {
+                if (stats.max == null)
+                    stats.max = -Infinity;
+                if (stats.min == null)
+                    stats.min = Infinity;
+            }
+            fix(levelStats.fails);
+            fix(levelStats.wins);
+        }
+        return levelStats || this.initLevelStats(level);
+    }
+    static update(stats, value) {
+        // Prep variance calculations. See also Wikipedia.
+        let diff = value - (stats.count ? stats.total / stats.count : 0);
+        // Easy parts.
+        stats.count += 1;
+        stats.max = Math.max(stats.max, value);
+        stats.min = Math.min(stats.min, value);
+        stats.total += value;
+        // Finish variance.
+        let diffAfter = value - (stats.total / stats.count);
+        stats.diff2 = stats.diff2 + diff * diffAfter;
+    }
+}
 class Raw {
     constructor() { }
     static encodeMeta(item) {
@@ -3943,9 +4097,16 @@ class Raw {
         if (item.excluded) {
             meta.excluded = true;
         }
+        if (item.locked) {
+            meta.locked = true;
+        }
         return meta;
     }
     static load(ref) {
+        let result = internals.get(ref);
+        if (result) {
+            return result;
+        }
         let text = window.localStorage[`zym.objects.${ref}`];
         if (text) {
             // TODO Sanitize names?
@@ -3953,7 +4114,14 @@ class Raw {
         }
         // else undefined
     }
+    static remove(id) {
+        window.localStorage.removeItem(`zym.objects.${id}`);
+    }
     static save(raw) {
+        if (internals.has(raw.id) || raw.locked) {
+            // Don't touch this.
+            return;
+        }
         // console.log(`Save ${raw.type} ${raw.name} (${raw.id})`);
         window.localStorage[`zym.objects.${raw.id}`] = JSON.stringify(raw);
     }
@@ -4013,7 +4181,51 @@ class Zone extends level_ItemList {
         return 'Zone';
     }
 }
-class Tower extends level_ItemList {
+class level_Tower extends level_ItemList {
+    static hashify(tower, internal = false) {
+        // Reset ids by content hashes for a constant level.
+        let ids = tower.items.map(level => {
+            let contentHash = level.contentHash;
+            if (!contentHash) {
+                // Shouldn't come here for recent exports, but I might want to try
+                // against older exports.
+                let levelFull = new level_Level().decode(level);
+                contentHash = levelFull.calculateContentHash();
+            }
+            level.id = md5_min_default()(contentHash);
+            level.locked = true;
+            if (internal) {
+                internals.set(level.id, level);
+            }
+            return level.id;
+        });
+        tower.id = md5_min_default()(ids.join());
+        tower.locked = true;
+        // This might have been a structural tower without being a tower instance.
+        let raw = level_Tower.prototype.encode.call(tower);
+        tower = new level_Tower().decode(raw);
+        if (internal) {
+            internals.set(tower.id, raw);
+        }
+        return tower;
+    }
+    encodeExpanded() {
+        // Get common expanded.
+        let result = super.encodeExpanded();
+        // But we want high scores here for later player evaluation.
+        result.items = result.items.map(level => {
+            let statsLevel = Object.assign({}, level);
+            if (statsLevel.contentHash) {
+                let levelStats = StatsUtil.loadLevelStats(statsLevel);
+                if (isFinite(levelStats.wins.min)) {
+                    statsLevel.winsMin = levelStats.wins.min;
+                }
+            }
+            return statsLevel;
+        });
+        // Good to go.
+        return result;
+    }
     get type() {
         return 'Tower';
     }
@@ -4033,6 +4245,13 @@ class level_Level extends Encodable {
             this.tiles = new Grid(level_Level.tileCount);
             this.tiles.items.fill(None);
         }
+    }
+    calculateContentHash() {
+        // Hash of just the things that affect gameplay, not metadata.
+        let content = this.encodeTiles(true);
+        // MD5 is good enough since this isn't about strict security, just about an
+        // easy way to store scores by level content rather than id.
+        return md5_min_default()(content);
     }
     copy() {
         // TODO Include disabled?
@@ -4069,24 +4288,44 @@ class level_Level extends Encodable {
                 this.tiles.set(point.set(j, i), type || None);
             }
         });
+        // Let this be saved over later rather than loaded here.
+        // We want people who need a hash to make sure the hash is saved for use on
+        // raw data.
+        // this.contentHash = encoded.contentHash || this.calculateContentHash();
         return this;
     }
     encode() {
-        let point = new three["Vector2"]();
+        let raw = Object.assign({ 
+            // Caching the hash could allow for easier score lookups.
+            contentHash: this.updateContentHash(), tiles: this.encodeTiles() }, Raw.encodeMeta(this));
+        if (this.bounds) {
+            raw.bounds = copyRect(this.bounds);
+        }
+        return raw;
+    }
+    encodeTiles(boundsOnly = false) {
         let rows = [];
-        for (let i = level_Level.tileCount.y - 1; i >= 0; --i) {
+        let iBegin = level_Level.tileCount.y - 1;
+        let iEnd = -1;
+        let jBegin = 0;
+        let jEnd = level_Level.tileCount.x;
+        let { bounds } = this;
+        if (boundsOnly && bounds) {
+            iBegin = bounds.max.y - 1;
+            iEnd = bounds.min.y - 1;
+            jBegin = bounds.min.x;
+            jEnd = bounds.max.x;
+        }
+        let point = new three["Vector2"]();
+        for (let i = iBegin; i != iEnd; --i) {
             let row = [];
-            for (let j = 0; j < level_Level.tileCount.x; ++j) {
+            for (let j = jBegin; j != jEnd; ++j) {
                 let type = this.tiles.get(point.set(j, i));
                 row.push(type.char || '?');
             }
             rows.push(row.join(''));
         }
-        let raw = Object.assign({ tiles: rows.join('\n') }, Raw.encodeMeta(this));
-        if (this.bounds) {
-            raw.bounds = copyRect(this.bounds);
-        }
-        return raw;
+        return rows.join('\n');
     }
     equals(other) {
         for (let i = 0; i < this.tiles.items.length; ++i) {
@@ -4129,6 +4368,9 @@ class level_Level extends Encodable {
             min.set(0, 0);
         }
         return this.tileBoundsCache;
+    }
+    updateContentHash() {
+        return this.contentHash = this.calculateContentHash();
     }
     // For use from the editor.
     updateStage(game, reset = false) {
@@ -4217,6 +4459,7 @@ class level_Level extends Encodable {
 level_Level.tileCount = new three["Vector2"](40, 20);
 level_Level.tileSize = new three["Vector2"](8, 10);
 level_Level.pixelCount = level_Level.tileCount.clone().multiply(level_Level.tileSize);
+var internals = new Map();
 
 // CONCATENATED MODULE: ./src/play.ts
 
@@ -4242,11 +4485,23 @@ class play_PlayMode extends Mode {
     }
     fail() {
         this.game.stage.ended = true;
+        this.updateStats('fails');
         this.showReport('Maybe next time.');
     }
     onHideDialog(dialog) {
         if (dialog instanceof report_Report) {
             this.startNextOrRestart();
+        }
+    }
+    onKeyDown(key) {
+        switch (key) {
+            case 'Escape': {
+                let { hero } = this.game.stage;
+                if (hero) {
+                    hero.die();
+                }
+                break;
+            }
         }
     }
     showReport(message) {
@@ -4256,7 +4511,7 @@ class play_PlayMode extends Mode {
         let { game } = this;
         // If we won, get the next level ready.
         if (this.won) {
-            let tower = new Tower().load(game.tower.id);
+            let tower = new level_Tower().load(game.tower.id);
             tower.numberItems();
             let index = tower.items.findIndex(item => item.id == game.level.id);
             if (index == -1) {
@@ -4304,13 +4559,39 @@ class play_PlayMode extends Mode {
             value: this.paused,
         });
     }
+    updateStats(key) {
+        let newBest = false;
+        let { level, stage } = this.game;
+        // Store score by hash.
+        // First, make sure the hash is up to date, so we associate scores right.
+        if (level.calculateContentHash() != level.contentHash) {
+            // Save should update the content hash, but be explicit anyway.
+            level.updateContentHash();
+            level.save();
+        }
+        // Update stats.
+        let levelStats = StatsUtil.loadLevelStats(level);
+        if (key == 'wins' && stage.time < levelStats[key].min) {
+            levelStats.timestampBest = new Date().toISOString();
+            newBest = true;
+        }
+        StatsUtil.update(levelStats[key], stage.time);
+        // Save and done.
+        Raw.save(levelStats);
+        return newBest;
+    }
     updateView() {
         this.game.edit.cropTool.selector.style.display = 'none';
     }
     win() {
         this.won = true;
         this.game.stage.ended = true;
-        this.showReport('Level complete!');
+        let newBest = this.updateStats('wins');
+        let message = 'Level complete!';
+        if (newBest) {
+            message += ' New record!!!!';
+        }
+        this.showReport(message);
     }
 }
 class play_TestMode extends play_PlayMode {
@@ -4870,7 +5151,7 @@ class theme_GoldTheme {
             });
             // TODO Error event?
         });
-        image.src = __webpack_require__(8);
+        image.src = __webpack_require__(10);
         return promise;
     }
     buildArt(part) {
@@ -5328,6 +5609,9 @@ class Lerper {
         return rel * (end - begin) + begin;
     }
 }
+// interface Uniforms {
+//   state: {value: number};
+// }
 let tileFragmentShader = `
   uniform sampler2D map;
   // uniform int state;
@@ -5844,11 +6128,11 @@ function artMaker({ layer, tile }) {
 
 
 // EXTERNAL MODULE: ./src/index.css
-var src = __webpack_require__(9);
+var src = __webpack_require__(11);
 var src_default = /*#__PURE__*/__webpack_require__.n(src);
 
 // EXTERNAL MODULE: ./node_modules/font-awesome/css/font-awesome.css
-var font_awesome = __webpack_require__(3);
+var font_awesome = __webpack_require__(4);
 var font_awesome_default = /*#__PURE__*/__webpack_require__.n(font_awesome);
 
 // CONCATENATED MODULE: ./src/main.ts
@@ -5881,37 +6165,43 @@ function main() {
 
 
 /***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-module.exports = "<div class=\"dialog levels\">\r\n  <div class=\"fill shade\"></div>\r\n  <div class=\"fill dialogInner\">\r\n    <div class=\"titleBox\">\r\n      <div class=\"title\">\r\n        <span class=\"nameBox\">\r\n          <span class=\"name\">Tower</span>\r\n        </span>\r\n        <i class=\"fa fa-search search disabled\" title=\"Search\"></i>\r\n        <i class=\"fa fa-plus add\" title=\"New Level\"></i>\r\n        <i class=\"fa fa-clipboard paste disabled\"\r\n          title=\"Paste Marked Clipboard Level(s)\"></i>\r\n        <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\"\r\n          title=\"Unmark Clipboard Selections\"></i>\r\n        <i class=\"fa fa-ban exclude\" title=\"Exclude Level\"></i>\r\n        <i class=\"fa fa-trash delete disabled\" title=\"Delete Level\"></i>\r\n        <i class=\"fa fa-download save\" title=\"Export Tower to File\"></i>\r\n        <i class=\"fa fa-arrow-up towers\" title=\"List Towers\"></i>\r\n        <!--<i class=\"fa fa-window-close close\"></i>-->\r\n      </div>\r\n    </div>\r\n    <div class=\"contentBox\">\r\n      <div class=\"content fill\">\r\n        <div class=\"item\">\r\n          <div class=\"fill highlight\"></div>\r\n          <span class=\"nameBox\">\r\n            <span class=\"number\"></span>\r\n            <span class=\"name\">Level</span>\r\n          </span>\r\n          <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i>\r\n          <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i>\r\n          <i class=\"fa fa-arrow-right edit\" title=\"Edit Level\"></i>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n";
-
-/***/ }),
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"dialog report\">\r\n  <div class=\"fill shade\"></div>\r\n  <div class=\"fill dialogInner\">\r\n    <div class=\"endMessage\">...</div>\r\n    <table>\r\n      <tr class=\"scoreTimeRow timeRow\">\r\n        <th>Time:</th><td class=\"scoreTime\"></td>\r\n      </tr>\r\n    </table>\r\n  </div>\r\n</div>\r\n";
+module.exports = {"items":[{"contentHash":"11ca89e950d668b178e0989c15465d20","tiles":" È                È                     \n È                È                   * \n È             ---È          ---------H \n È                HBBBBBBBBBB         HB\n È                H                   H \n È          *     H                   H \nBHBBBBBBBBBBBBB   H           --- *   H \n H                H      -----   BBB  H \n H                H           H       H \n H-----      *    H BBBBBB    H   BBBBHB\n H     BBBBBBBB   H           H       H \n H                H           H       H \n H                H           H       H \nBBBBBBBHBBBBBBBBBBHBBBBBBBBBBBH       H \n       H          H           H       H \n       H          H           H       H \n       H          H           H       H \n       H          H           H       H \nR    * H          H           H       H \nBBBBBBBBBBBBBBB   H     BBBBBBBBBBBBBBBB","id":"7e174284d2b2ddc7fd76b9697bc552","name":"Treasures","type":"Level","number":1,"winsMin":16.83333333333366},{"contentHash":"edfd9b40da86be8f050abec30b2028e9","tiles":"           È                            \n           È                            \n           È    -----------------       \n           È                     È      \n           È                     È      \n           È                     È      \n           È      -------- *     È      \n           ÈBBBB H        BBBBBB È      \n           È     H        B    B È      \n       *   È     H        B    B È      \n      HBB  HBBBBBBH       B   *B È      \n      H  BBH      H       BBBBBB È      \n      H    H      H       B    B È      \n      H    H      H       B    B È      \n      H    H  *   H B     B*     È      \n      H    H BBBB H BBBBBHBBBBBB È      \n      H    H     BB     BH     B È      \n      H    H            BH     B È      \n      H    H            BH  R  B È      \nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB","id":"916680dc21629392f329f41c7addca30","name":"Burn","type":"Level","bounds":{"max":{"x":35,"y":20},"min":{"x":5,"y":0}},"number":2,"winsMin":22.466666666666672},{"contentHash":"a745afe7d22d6ddf78c69d89cabcf0b0","tiles":"       È                                \n       È                                \n       È                                \n       È      *                         \n       HBBBBBBBBBBBHBBBBBBBBBBBBH       \n       H           H            H       \n       H           H            H       \n       H    BBBBBBBHBBHBBBBBBB  H       \n       H    B      H BH      B  H       \n       H    B      H BH     eB  H       \n       HBBBBB      H BBBBBBBBB  H       \n                   H            H       \n       *           H            H       \n          R        H            H       \n       HBBBBBBBBBBBBBBBHBBBBBBBBB       \n       H               H                \n       H               H                \n       H               H                \n       H  *            H                \n       BBBBBBBBBBBBBBBBBBBBBBBBBB       ","id":"8a7b74c233bf50f1a0aebb7ee577e3","name":"Enemy","type":"Level","bounds":{"max":{"x":33,"y":20},"min":{"x":7,"y":0}},"number":3,"winsMin":14.10000000000028},{"contentHash":"11f8c3379b5c6a8e689085456a27dbd8","tiles":"       È                       È        \n       È                       È        \n       È                       È        \n       È                       È        \n       È                       È        \n       È                       È        \n       È           *           È        \n       HBBBBBBBBBBBBBBBBBBBBBBBH        \n       HB                     BH        \n       HB                     BH        \n       H                     e H        \n       HBBBBBBBBBBBBBBBBBBBBBBBH        \n       HB                     BH        \n       HB                     BH        \n       H                       H        \n       HBBBBBBBBBBBBBBBBBBBBBBBH        \n       HB                     BH        \n       HB                     BH        \n  R    H           *         e H        \n  BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB   ","id":"3e88f9a2352bd7cf9ecb71a167cacef","name":"Capture","type":"Level","bounds":{"max":{"x":37,"y":20},"min":{"x":2,"y":0}},"number":4,"winsMin":13.266666666666906},{"contentHash":"b515ec38fc405953e452884f6246d8c8","tiles":"È                                      È\nÈ           ####H####                  È\nÈ               H                      È\nBBBBBHBBBBBB    H          H########H###\n     H          H          H        H   \n #   H          H      e   H        H   \n     H          H  BBBBBBHBBBBB     H   \n   # H          H        H          H   \n     H          H        H          H   \n     H          H        H          H   \n    #####H########       H    ##### H   \n #       H               H          HB  \n         H               H         HBB  \n  *      HBBBBBBBBBBBBBBBB         HB   \n         H                        HBB   \n   #     H        *        ###### HB    \n         H    #########           H *   \n         H                        H BH  \nR        H        *      e        H BH  \n########################################","id":"2ab86ef6d02fadc0722dcd5c9bfaaed","name":"Steel","type":"Level","number":5,"winsMin":43.36666666666549},{"contentHash":"2b01c03aeb42f2fb48de19d0de73bc15","tiles":"                    H                   \n                    H                   \n                    H                   \n                    H                   \n                    H                   \n              R     H     e             \n              B#B#B#H#B#B#B             \n              *     H     *             \n              #B#B#BHB#B#B#             \n              *     H     *             \n              B#B#B#H#B#B#B             \n              *     H     *             \n              #B#B#BHB#B#B#             \n                    H                   \n               *    H    *              \n               H    H    H              \n               H    H    H              \n               HB#B#H#B#BH              \n                                        \n                                        ","id":"289a6f78c0927226d3bcf1722e67f31","name":"* Mix","type":"Level","bounds":{"max":{"x":31,"y":20},"min":{"x":10,"y":0}},"number":6,"winsMin":28.19999999999968},{"contentHash":"3c4ff33982ea20c18f9ec27594f91603","tiles":"            È           È               \n            È           È               \n            È           È               \n            È           È               \n            Èe         eÈ               \n            HBBBBBBBBBBBH               \n            HBB#BBBBBBBBH               \n            HB    BB#BBBH               \n            HBB*  BBBBBBH               \n            HBBBBBBB  BBH               \n            HBBBBBBB *BBH               \n            HBB BBBBBBBBH               \n            HBB BBBBB  BH               \n            HB   *BBB* BH               \n            HBBB##BBBBBBH               \n            H     R     H               \n          #######BBB#######             \n                                        \n                                        \n                                        ","id":"736fa07f7977496890eb502b57d17963","name":"* Dig","type":"Level","bounds":{"max":{"x":27,"y":20},"min":{"x":10,"y":3}},"number":7,"winsMin":41.18333333333228},{"contentHash":"7167231aaf2e72f6c6cbb1b87b5a002d","tiles":"    È                              È    \n    È------------------------------È    \n    H                              H    \n    H    e                    e    H    \n    H  BB#BB                BB#BB  H    \n    H  B   B   ----------   B   B  H    \n    H  B  *B  H          H  B  *B  H    \n    H  B# #B  H          H  B# #B  H    \n    H         H          H         H    \n    H         H B*    eB H         H    \n    H   ------H B  HBBBB H------   H    \n    H  *      H B  HB  B H      *  H    \n    H  B      H BBBHB  B H      B  H    \n    H         H B  HB  B H         H    \n    H------   H B* HB *B H    -----H    \n    H      *  H BBBBBBBB H   *     H    \n    H      B  H          H   B     H    \n    H         H          H         H    \n R  H         H          H         H    \nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB","id":"88ef7a1992631e407bdd01ab71c628a","name":"* More Bars","type":"Level","number":8,"winsMin":43.799999999998796},{"contentHash":"2261e661453cd4c9158c7a4bd992386c","tiles":"--------------------------H-------------\n       -- ---------       H    ----     \n      *  H                H        H    \n         H H              H BBB    H    \n   ---   H H----------e   H        H    \n      H  H H          H   H        H    \n-- ---H  H H      B   H   H     ---H    \n  H   H  H H    H     H   H-   H   H    \n  H   H  H-H    H   R H   H    H H H    \n  H   H  H      H   H H---H    H H H    \n      H--H   *  H   H H   H    H H H    \nBB*   H  H      H   H H   H    H-H      \n BB   H  H------H    H    H    H H *    \n         H      H    H    H B  H H      \n   H     H      H    H--- H    H H------\n   H     H BBB  H   H     H    H H      \n   H     H      H   H  *  H      H      \n   H-----H      H         H      H  BBB \n   H     H      H---------H      H      \n   H     H      H         H      H      ","id":"f9be13b52bd9994eda1754e539c12476","name":"* Jungle","type":"Level","number":9,"winsMin":69.01666666666404},{"contentHash":"bdb1fc32f92890acf0f5e392ef92a4fd","tiles":"È                                     È \nÈ      *                       *      È \nÈ      H     -------------     H      È \nÈ      H    H             H    H      È \nÈ   BHBBB   H             H   BBBHB   È \nÈ    H      H             H      H    È \nÈ    H      H      *      H      H    È \nÈ    H      H             H      H    È \nÈ    H      H             H      H    È \nÈ  BBBBBHB  Hÿÿÿ       ÿÿÿH  BHBBBBB  È \nÈ       H   H   ÂÂÂÂÂÂÂ   H   H       È \nÈ       H   H             H   H       È \nÈ       H   H             H   H       È \nÈ       H   H             H   H       È \nÈ HBBBBBBBB H             HÂBBBBBBBBHÂÈ \nÈ H         H             H         H È \nÈ H         H             H         H È \nÈ H         H             H         H È \nÈeH   R     H             H         HeÈ \nBBBBBBBBBBBBBB           BBBBBBBBBBBBBB ","id":"ba6aeab44e6525c99c8a0913e863f3","name":"Bricks Appear","type":"Level","bounds":{"max":{"x":39,"y":20},"min":{"x":0,"y":0}},"number":10,"winsMin":36.14999999999923},{"contentHash":"7acc16044e4efcc0c30f1dc354fa686d","tiles":"           £È                           \n           £È         ----------------- \n           £È         £                H\n       *   £È---------£                H\n£££££HBBBBBBH         £             *  H\n     H     £H         £                H\n     H     £H         £e   *           H\n*    H     £HÂÂÂÂÂÂÂÂÂHBBBBBÂÂÂÂÂÂÂÂÂÂÂH\nBBBBBHÂÂÂÂÂÂH   £     H                H\n     H     £H   £     H                H\n     H   * £H   £     H                H\nÂÂÂÂÂHBBBBBBBBBH######H                H\n     H         H£     H------*------ e H\n     H         H£     H      H      BBBB\n     H         H£  *  H      H          \n£££££HÂÂÂÂÂÂÂÂÂBBBBBBBB££££££H££££££££££\n     H          £            H          \n     H          £            H          \n  R  H     *    £            H          \n########################################","id":"5090daf0890d61da6dc3eef9b44d858","name":"* Walls Appear","type":"Level","number":11,"winsMin":50.349999999998424},{"contentHash":"f48ec2457abf9db49bc419f60ae20ac1","tiles":"      ÈÂ                       *        \nÂÂÂÂÂÂÈÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂÂHBBBBBBHÂÂÂÂ\n      È          *          H      H    \n     ÂÂÂÂ  HBBBBBBBBBH      H      H *  \n           H         H      H      HBBBB\n     e   * H         H      H      H    \n   HBBBBBBBH         H    * H      H    \n   H       H         HBBBBBBH      H    \n   H       H         H      H      H    \n * H       H         H      H      H    \nBBBH       H         H  *   H      H    \n   H       H     *   HBBBBBBH      H    \n   H       HBBBBBBBBBH      H      H    \n   H   *   H         H      H e  * H    \n   HBBBBBBBH         H      HBBBBBBH    \n   H       H         H      H      H    \n   H       H       R H      H      H    \n###H#######H#########H######H######H####\n e È    e  È  e   e  È    e È e    È  e \n########################################","id":"3ce522861063f0986f831894e11e431","name":"* Enemy Escape","type":"Level","number":12,"winsMin":28.599999999999657},{"contentHash":"ae63e411753391d057976c64d5cd98c8","tiles":"Èå          å      å     å           åÈ \nÈ                                     È \nÈ                                     È \nÈ                  *                  È \nÈ                  H                  È \nÈ  ------------    H    ------------  È \n BH --------   HBBBHBBBH   -------- HB  \n  BH ----   HBBB   H   BBBH   ---- HB   \n   BH -  HBBB      H      BBBH  - HB    \n    BH BBB      HBBHBBH      BBB HB     \n     BH       HBB  H  BBH       HB      \n      BH   åHBB    H    BBHå   HB       \n       BH  BB    HBHBH    BB  HB        \n        BH      HB H BH      HB         \n         BH    HB  H  BH    HB          \n          BH  HB   H   BH  HB           \n           BH H    H    H HB            \n            B H    H    H B             \n         R   åH    H    Hå              \nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB ","id":"408b51a849227236e3ffe3874227e98c","name":"Enemies Fall (enemies down stair problems)","type":"Level","bounds":{"max":{"x":39,"y":20},"min":{"x":0,"y":0}},"number":13,"winsMin":10.333333333333426},{"contentHash":"3cd3d5fe0c027acad5886665c7ceeba4","tiles":"È      *B                    *  B  *   È\nHBBBBBBBBBBBBBHBBBBBHBBBBBBBHBHBBBBBBBBH\nH             H   eBH       HBH        H\nBBBBBBBBHBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\ne       H    B                     B *  \nBBBBBBBBBBBHBBBBBBBBBBBBBHBBBBBBBBBBBBBB\n*    B     H      *   B  H              \nBBHBBBBBBBBBBBBBBBBBBBBBBHBBBBBBBBBBBBBB\n  H                      H     B    *   \nBBHBBBBBBBBBBBHBBBBBBBBBBBBBBBBBBBBBBBBB\n  H   * B     H  Be                     \nBBBBBBBBBBHBBBBBBBBHBBBBBBBBBBBBBBHBBBBB\n          H        H *            H     \nBBBBBBBBBBBBBBBHBBBBBBBBBBBBBBBBBBHBBBBB\ne              H              Be  H     \nBBBBBHBBBBBBBBBBBBBBBBBBBBHBBBBBBBBBBBBB\n     H   *  B             H             \nBBBBBBBBBBBBBBBBBBHBBBBBBBHBBBBBBBBBHBBB\nR                 H     B H    *   BH  e\nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB","id":"75127a36b8e75acfdb8bde23947ca4a","name":"* Tunnels","type":"Level","number":14,"winsMin":134.86666666666613},{"contentHash":"b6313a56b99ef3692e01ad4aa1774c87","tiles":"             È             È            \n             H#############H            \n             H#           #H            \n             H# #H     H# #H            \n             H# #H####### #H            \n             H# #H#e    # #H            \n             H# #H##### # #H            \n             H  #H      # #H            \n             H########### #H            \n             H#           #H            \n             H# #H#########H            \n             H# #H#  *    #H            \n             H# #H# #H H#H#H            \n             H# #H# #H H#H#H            \n             H# #H#######H#H            \n             H# #H       H#H            \n             H# ###########H            \n             H             H            \n            RH             H            \n            BBBBBBBBBBBBBBBBB           ","id":"e84d4c6b8c99bc744491429a849935e9","name":"Manipulate","type":"Level","bounds":{"max":{"x":29,"y":20},"min":{"x":12,"y":0}},"number":15,"winsMin":34.66666666666598},{"contentHash":"58134b24d3bf3b98160de3e546848b9e","tiles":"            È                           \n            È                           \n            È                           \n       [ *  È           *           ]   \n       HBBBBH       HBBBBBBHBBBBBBBBBH  \n       H    H       H      H         H  \n       H    H       H      H         H  \n   [ * H  * H       H      H         H  \n  HBBBBHBBBBH       H      H         H  \n  H    H    H       H      H    *   ]H  \n  H    H    H       H      HBBBBBBBBBH  \n  H[ * H    H       H      H         H  \n  HBBBBBBBBBH     * H  ]   HBR      BH  \n  H         H  HBBBBBBBBH  HBB     ]BH  \n  H         H  H        H  HBBBBBBBBBH  \n  H         H  H        H  H         H  \n  H         H  H        H  H BBBBBBB H  \n  H         H  H        H  H         H  \n  H         H  H        H  H    *    H  \n########################################","id":"71fe234d48acb0a47694a7a31990de","name":"Biggies","type":"Level","number":16,"winsMin":21.03333333333342},{"contentHash":"12906d61b66385fcb32c326cf6c262e5","tiles":"        e       * È B         B         \n        HBBBBBBBB È B    R    B         \n        H         È BBBBBBBBBBB         \n        H         È B         B         \n        H         È B[        B         \n        H         È BBBBBBBBBBB         \n        H[      * È B         B         \n        HBBBBBBBB È B[        B         \n        H         È BBBBBBBBBBB         \n        H         È B         B         \n        H         È B[      *eB         \n        H         È BBBBBBBBBBB         \n        H[      * È B         B         \n        HBBBBBBBB È B[        B         \n        H         È BBBBBBBBBBB         \n        H         È B         B         \n        H         È B         B         \n        H         È           B         \n        H        ÈBH ---------B         \n        BBBBBBBBBBBBB         B         ","id":"c419461d2c88a833f9dfef3bca35eaf","name":"* Drill Down","type":"Level","bounds":{"max":{"x":31,"y":20},"min":{"x":8,"y":0}},"number":17,"winsMin":25.533333333333164},{"contentHash":"75101f80d52fc2861e92f26b3baf384b","tiles":"                                        \n                                        \n                                        \n                                        \n                                        \n                                        \n                                        \n                                        \n                                        \n                                        \n                                        \n                                        \nR             -----H# B                 \n#H#BBBBB#HBBBH      # B                 \n#H#OOOOO#H \\ H####### B                 \n#H O* @O#H B H  <     B                 \n###OOOOO#H   HBBBBBBBBB                 \n    ÿÿÿ  H   H                          \n         H   H                          \nBBBB   BBBBBBBBBBBBBBBB                 ","id":"e5d33326668d58c75944360c544630","name":"Red Herring Finale","type":"Level","number":18}],"id":"f654f92e4bee89bedfaf9a281bab913","name":"Main","type":"Tower"}
 
 /***/ }),
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"dialog towers\">\r\n  <div class=\"fill shade\"></div>\r\n  <div class=\"fill dialogInner\">\r\n    <div class=\"titleBox\">\r\n      <div class=\"title\">\r\n        <span class=\"nameBox\">\r\n          <span class=\"name\">Towers</span>\r\n        </span>\r\n        <i class=\"fa fa-search search disabled\" title=\"Search\"></i>\r\n        <i class=\"fa fa-plus add\" title=\"New Level\"></i>\r\n        <i class=\"fa fa-clipboard paste disabled\"\r\n          title=\"Paste Marked Clipboard Tower(s)\"></i>\r\n        <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\"\r\n          title=\"Unmark Clipboard Selections\"></i>\r\n        <i class=\"fa fa-ban exclude disabled\" title=\"Exclude Tower\"></i>\r\n        <i class=\"fa fa-trash delete disabled\" title=\"Delete Tower\"></i>\r\n        <i class=\"fa fa-upload load disabled\" title=\"Import Tower\"></i>\r\n        <!--<i class=\"fa fa-window-close close\"></i>-->\r\n      </div>\r\n    </div>\r\n    <div class=\"contentBox\">\r\n      <div class=\"content fill\">\r\n        <div class=\"item\">\r\n          <div class=\"fill highlight\"></div>\r\n          <span class=\"nameBox\">\r\n            <span class=\"number\"></span>\r\n            <span class=\"name\">Level</span>\r\n          </span>\r\n          <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i>\r\n          <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i>\r\n          <i class=\"fa fa-arrow-right edit\" title=\"List Levels\"></i>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n";
+module.exports = "<div class=\"dialog levels\">\r\n  <div class=\"fill shade\"></div>\r\n  <div class=\"fill dialogInner\">\r\n    <div class=\"titleBox\">\r\n      <div class=\"title\">\r\n        <span class=\"nameBox\">\r\n          <span class=\"name\">Tower</span>\r\n        </span>\r\n        <i class=\"fa fa-search search disabled\" title=\"Search\"></i>\r\n        <i class=\"fa fa-plus add\" title=\"New Level\"></i>\r\n        <i class=\"fa fa-clipboard paste disabled\"\r\n          title=\"Paste Marked Clipboard Level(s)\"></i>\r\n        <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\"\r\n          title=\"Unmark Clipboard Selections\"></i>\r\n        <i class=\"fa fa-ban exclude\" title=\"Exclude Level\"></i>\r\n        <i class=\"fa fa-trash delete disabled\" title=\"Delete Level\"></i>\r\n        <i class=\"fa fa-download save\" title=\"Export Tower to File\"></i>\r\n        <i class=\"fa fa-arrow-up towers\" title=\"List Towers\"></i>\r\n        <!--<i class=\"fa fa-window-close close\"></i>-->\r\n      </div>\r\n    </div>\r\n    <div class=\"contentBox\">\r\n      <div class=\"content fill\">\r\n        <div class=\"item\">\r\n          <div class=\"fill highlight\"></div>\r\n          <span class=\"nameBox\">\r\n            <span class=\"number\"></span>\r\n            <span class=\"name\">Level</span>\r\n            <span class=\"stats\"></span>\r\n          </span>\r\n          <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i>\r\n          <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i>\r\n          <i class=\"fa fa-arrow-right edit\" title=\"Edit Level\"></i>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n";
 
 /***/ }),
 /* 8 */
 /***/ (function(module, exports) {
 
-module.exports = "data:image/png;base64,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"
+module.exports = "<div class=\"dialog report\">\r\n  <div class=\"fill shade\"></div>\r\n  <div class=\"fill dialogInner\">\r\n    <div class=\"endMessage\">...</div>\r\n    <table>\r\n      <tr class=\"scoreTimeRow timeRow\">\r\n        <th>Time:</th><td class=\"scoreTime\"></td>\r\n      </tr>\r\n    </table>\r\n  </div>\r\n</div>\r\n";
 
 /***/ }),
 /* 9 */
+/***/ (function(module, exports) {
+
+module.exports = "<div class=\"dialog towers\">\r\n  <div class=\"fill shade\"></div>\r\n  <div class=\"fill dialogInner\">\r\n    <div class=\"titleBox\">\r\n      <div class=\"title\">\r\n        <span class=\"nameBox\">\r\n          <span class=\"name\">Towers</span>\r\n        </span>\r\n        <i class=\"fa fa-search search disabled\" title=\"Search\"></i>\r\n        <i class=\"fa fa-plus add\" title=\"New Tower\"></i>\r\n        <i class=\"fa fa-clipboard paste disabled\"\r\n          title=\"Paste Marked Clipboard Tower(s)\"></i>\r\n        <i class=\"fa fa-window-close-o fa-rotate-90 unclip disabled\"\r\n          title=\"Unmark Clipboard Selections\"></i>\r\n        <i class=\"fa fa-ban exclude disabled\" title=\"Exclude Tower\"></i>\r\n        <i class=\"fa fa-trash delete disabled\" title=\"Delete Tower\"></i>\r\n        <i class=\"fa fa-upload load disabled\" title=\"Import Tower\"></i>\r\n        <!--<i class=\"fa fa-window-close close\"></i>-->\r\n      </div>\r\n    </div>\r\n    <div class=\"contentBox\">\r\n      <div class=\"content fill\">\r\n        <div class=\"item\">\r\n          <div class=\"fill highlight\"></div>\r\n          <span class=\"nameBox\">\r\n            <span class=\"number\"></span>\r\n            <span class=\"name\">Level</span>\r\n          </span>\r\n          <i class=\"fa fa-scissors cut disabled\" title=\"Mark for Cut\"></i>\r\n          <i class=\"fa fa-files-o copy disabled\" title=\"Mark for Copy\"></i>\r\n          <i class=\"fa fa-arrow-right edit\" title=\"List Levels\"></i>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n</div>\r\n";
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+module.exports = "data:image/png;base64,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"
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(10);
+var content = __webpack_require__(12);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // Prepare cssTransformation
 var transform;
@@ -5919,7 +6209,7 @@ var transform;
 var options = {}
 options.transform = transform
 // add the styles to the DOM
-var update = __webpack_require__(2)(content, options);
+var update = __webpack_require__(3)(content, options);
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -5936,18 +6226,18 @@ if(false) {
 }
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(1)(undefined);
+exports = module.exports = __webpack_require__(2)(undefined);
 // imports
 
 
 // module
-exports.push([module.i, "body {\n  align-content: stretch;\n  align-items: stretch;\n  background: #202020;\n  bottom: 0;\n  color: white;\n  cursor: default;\n  display: flex;\n  font-family: sans-serif;\n  left: 0;\n  margin: 0;\n  position: fixed;\n  right: 0;\n  top: 0;\n}\n\n.clipboard {\n  background: black;\n  opacity: 0.75;\n  pointer-events: none;\n  position: absolute;\n}\n\n.clipboard canvas {\n  image-rendering: pixelated;\n}\n\n.commands .changing, .commands .saved  {\n  display: none;\n}\n\n.commands .play,\n.commands .redo,\n.commands .showLevels,\n.status .pause  {\n  margin-bottom: 0.5em;\n}\n\n[contenteditable]:focus {\n  outline: 1px solid white;\n}\n\n[contenteditable]::selection {\n  background-color: white;\n  color: black;\n}\n\n.cropper, .selector {\n  border: 0.2em white;\n  border-radius: 0.2em;\n  display: none;\n  height: 10em;\n  pointer-events: none;\n  position: absolute;\n  width: 10em;\n}\n\n.cropper {\n  border-style: dashed;\n}\n\n.dialog {\n  bottom: 0.5em;\n  border: 0.1em solid white;\n  border-radius: 0.2em;\n  display: inline-block;\n  left: 25%;\n  min-width: 50%;\n  padding: 0.5em;\n  position: absolute;\n  right: 25%;\n  text-align: left;\n  top: 0.5em;\n}\n\n.dialog .content {\n  counter-reset: dialogContentCounter;\n  margin-top: 0.5em;\n  overflow: auto;\n}\n\n.dialog .content .item {\n  display: flex;\n  position: relative;\n}\n\n.dialog .content .item .edit {\n  margin-right: 0.3em;\n}\n\n.dialog .content .item .fa {\n  display: none;\n  padding: 0.1em 0;\n}\n\n.dialog .content .item .highlight {\n  background: #FFF;\n  display: none;\n  opacity: 0.2;\n  pointer-events: none;\n}\n\n.dialog .content .item:hover .highlight,\n.dialog .content:not(:hover) .item.selected .highlight {\n  display: block;\n}\n\n.dialog .content .item:hover .fa {\n  display: inline;\n}\n\n.dialog .content .item .name {\n  margin-left: 0.3em;\n  /* For easier seeing of caret at right. */\n  padding-right: 0.05em;\n}\n\n.dialog .content .item .nameBox {\n  display: flex;\n  flex: 1;\n  padding: 0.1em 0.2em;\n}\n\n.dialog .content .number {\n  padding-right: 0.2em;\n  text-align: right;\n}\n\n.dialog .contentBox {\n  flex: 1;\n  position: relative;\n}\n\n.dialog .fa {\n  margin-left: 0.8em;\n  margin-top: 0.08em;\n}\n\n.dialog .copy,\n.dialog .delete,\n.dialog .fa.load,\n.dialog .fa.paste,\n.dialog .fa.redo,\n.dialog .unclip {\n  margin-left: 0.4em;\n}\n\n.dialog .title {\n  border-bottom: 0.1em solid white;\n  display: flex;\n  flex: 0;\n  padding-bottom: 0.4em;\n}\n\n.dialog .title .name {\n  /* For easier seeing of caret at right. */\n  padding-right: 0.05em;\n}\n\n.dialog .title .nameBox {\n  flex: 1;\n}\n\n.dialogInner {\n  display: flex;\n  flex-direction: column;\n  padding: 0.5em;\n}\n\n.disabled {\n  opacity: 0.4;\n}\n\n.editMode .status {\n  display: none;\n}\n\n.fill {\n  bottom: 0;\n  left: 0;\n  position: absolute;\n  right: 0;\n  top: 0;\n}\n\n.fill.relative {\n  position: relative;\n}\n\n.pane {\n  display: none;\n}\n\n.pane .dialogBox {\n  font-size: 2em;\n  padding: 0.5em;\n  text-align: center;\n}\n\n.panel {\n  display: inline-block;\n}\n\n.panel > * {\n  border: 0.1em solid transparent;\n  font-size: 2em;\n  padding: 0.1em;\n}\n\n.panelBox {\n  flex: 0;\n  min-width: 4em;\n}\n\n.playMode .commands, .playMode .toolbox {\n  display: none;\n}\n\n.right {\n  text-align: right;\n}\n\n.scoreTimeRow > * {\n  padding-top: 1em;\n}\n\n.selector {\n  border-style: solid;\n}\n\n.shade {\n  background: black;\n  /* Only to own content -> filter: blur(3px);*/\n  opacity: 0.65;\n}\n\n.stage {\n  background: black;\n  display: none;\n  margin-bottom: auto;\n  margin-top: auto;\n  position: absolute;\n}\n\n.status.other {\n  visibility: hidden;\n}\n\ntable {\n  margin-top: 1em;\n}\n\n.timeRow td {\n  text-align: right;\n}\n\n.timeRow th {\n  font-weight: normal;\n  padding-right: 0.5em;\n  text-align: right;\n}\n\n.toolbox .ender {\n  margin-top: 0.5em;\n}\n\n.toolbox input {\n  display: none;\n}\n\n.toolbox label {\n  border: 0.1em solid transparent;\n  display: block;\n  /* This margin makes the borders overlap across neighbors. */\n  margin-bottom: -0.1em;\n  position: relative;\n}\n\n.toolbox label.ender {\n  margin-bottom: 0;\n}\n\n.toolbox > label canvas {\n  display: block;\n}\n\n.toolbox > label:hover .toolMenu,\n.toolMenu:hover {\n  display: flex;\n}\n\n.toolbox i {\n  display: block;\n  position: relative;\n  text-align: center;\n  top: 50%;\n  transform: translateY(-50%);\n}\n\n.toolbox i * {\n  display: block;\n}\n\n.toolbox .selected {\n  border: 0.1em solid white;\n  border-radius: 0.2em;\n}\n\n.toolbox .toolMenu label {\n  display: block;\n  padding: 0.1em;\n}\n\n.toolbox .toolMenu label canvas {\n  display: block;\n}\n\n.toolMenu {\n  background: #202020;\n  display: none;\n  /* Left margin gets overruled later, but this at least offsets some. */\n  margin-left: 1em;\n  margin-top: -0.2em;\n  position: absolute;\n  padding: 0.1em 0.1em 0.2em 0.3em;\n  top: 0;\n  z-index: 1;\n}\n\n.view {\n  flex: 1;\n  position: relative;\n}\n", ""]);
+exports.push([module.i, "body {\r\n  align-content: stretch;\r\n  align-items: stretch;\r\n  background: #202020;\r\n  bottom: 0;\r\n  color: white;\r\n  cursor: default;\r\n  display: flex;\r\n  font-family: sans-serif;\r\n  left: 0;\r\n  margin: 0;\r\n  position: fixed;\r\n  right: 0;\r\n  top: 0;\r\n}\r\n\r\n.clipboard {\r\n  background: black;\r\n  opacity: 0.75;\r\n  pointer-events: none;\r\n  position: absolute;\r\n}\r\n\r\n.clipboard canvas {\r\n  image-rendering: pixelated;\r\n}\r\n\r\n.commands .changing, .commands .saved  {\r\n  display: none;\r\n}\r\n\r\n.commands .play,\r\n.commands .redo,\r\n.commands .showLevels,\r\n.status .pause  {\r\n  margin-bottom: 0.5em;\r\n}\r\n\r\n[contenteditable]:focus {\r\n  outline: 1px solid white;\r\n}\r\n\r\n[contenteditable]::selection {\r\n  background-color: white;\r\n  color: black;\r\n}\r\n\r\n.cropper, .selector {\r\n  border: 0.2em white;\r\n  border-radius: 0.2em;\r\n  display: none;\r\n  height: 10em;\r\n  pointer-events: none;\r\n  position: absolute;\r\n  width: 10em;\r\n}\r\n\r\n.cropper {\r\n  border-style: dashed;\r\n}\r\n\r\n.dialog {\r\n  bottom: 0.5em;\r\n  border: 0.1em solid white;\r\n  border-radius: 0.2em;\r\n  display: inline-block;\r\n  left: 25%;\r\n  min-width: 50%;\r\n  padding: 0.5em;\r\n  position: absolute;\r\n  right: 25%;\r\n  text-align: left;\r\n  top: 0.5em;\r\n}\r\n\r\n.dialog .content {\r\n  counter-reset: dialogContentCounter;\r\n  margin-top: 0.5em;\r\n  overflow: auto;\r\n}\r\n\r\n.dialog .content .item {\r\n  display: flex;\r\n  position: relative;\r\n}\r\n\r\n.dialog .content .item .edit {\r\n  margin-right: 0.3em;\r\n}\r\n\r\n.dialog .content .item .fa {\r\n  display: none;\r\n  padding: 0.1em 0;\r\n}\r\n\r\n.dialog .content .item .highlight {\r\n  background: #FFF;\r\n  display: none;\r\n  opacity: 0.2;\r\n  pointer-events: none;\r\n}\r\n\r\n.dialog .content .item:hover .highlight,\r\n.dialog .content:not(:hover) .item.selected .highlight {\r\n  display: block;\r\n}\r\n\r\n.dialog .content .item:hover .fa {\r\n  display: inline;\r\n}\r\n\r\n.dialog .content .item .name {\r\n  margin-left: 0.3em;\r\n  /* For easier seeing of caret at right. */\r\n  padding-right: 0.05em;\r\n}\r\n\r\n.dialog .content .item .nameBox {\r\n  display: flex;\r\n  flex: 1;\r\n  padding: 0.1em 0.2em;\r\n}\r\n\r\n.dialog .content .number {\r\n  padding-right: 0.2em;\r\n  text-align: right;\r\n}\r\n\r\n.dialog .contentBox {\r\n  flex: 1;\r\n  position: relative;\r\n}\r\n\r\n.dialog .fa {\r\n  margin-left: 0.8em;\r\n  margin-top: 0.08em;\r\n}\r\n\r\n.dialog .copy,\r\n.dialog .delete,\r\n.dialog .fa.load,\r\n.dialog .fa.paste,\r\n.dialog .fa.redo,\r\n.dialog .unclip {\r\n  margin-left: 0.4em;\r\n}\r\n\r\n.dialog .title {\r\n  border-bottom: 0.1em solid white;\r\n  display: flex;\r\n  flex: 0;\r\n  padding-bottom: 0.4em;\r\n}\r\n\r\n.dialog .title .name {\r\n  /* For easier seeing of caret at right. */\r\n  padding-right: 0.05em;\r\n}\r\n\r\n.dialog .title .nameBox {\r\n  flex: 1;\r\n}\r\n\r\n.dialogInner {\r\n  display: flex;\r\n  flex-direction: column;\r\n  padding: 0.5em;\r\n}\r\n\r\n.disabled {\r\n  opacity: 0.4;\r\n}\r\n\r\n.editMode .status {\r\n  display: none;\r\n}\r\n\r\n.fill {\r\n  bottom: 0;\r\n  left: 0;\r\n  position: absolute;\r\n  right: 0;\r\n  top: 0;\r\n}\r\n\r\n.fill.relative {\r\n  position: relative;\r\n}\r\n\r\n.pane {\r\n  display: none;\r\n}\r\n\r\n.pane .dialogBox {\r\n  font-size: 2em;\r\n  padding: 0.5em;\r\n  text-align: center;\r\n}\r\n\r\n.panel {\r\n  display: inline-block;\r\n}\r\n\r\n.panel > * {\r\n  border: 0.1em solid transparent;\r\n  font-size: 2em;\r\n  padding: 0.1em;\r\n}\r\n\r\n.panelBox {\r\n  flex: 0;\r\n  min-width: 4em;\r\n}\r\n\r\n.playMode .commands, .playMode .toolbox {\r\n  display: none;\r\n}\r\n\r\n.right {\r\n  text-align: right;\r\n}\r\n\r\n.scoreTimeRow > * {\r\n  padding-top: 1em;\r\n}\r\n\r\n.selector {\r\n  border-style: solid;\r\n}\r\n\r\n.shade {\r\n  background: black;\r\n  /* Only to own content -> filter: blur(3px);*/\r\n  opacity: 0.65;\r\n}\r\n\r\n.stage {\r\n  background: black;\r\n  display: none;\r\n  margin-bottom: auto;\r\n  margin-top: auto;\r\n  position: absolute;\r\n}\r\n\r\n.status.other {\r\n  visibility: hidden;\r\n}\r\n\r\ntable {\r\n  margin-top: 1em;\r\n}\r\n\r\n.stats {\r\n  padding-left: 0.5em;\r\n}\r\n\r\n.timeRow td {\r\n  text-align: right;\r\n}\r\n\r\n.timeRow th {\r\n  font-weight: normal;\r\n  padding-right: 0.5em;\r\n  text-align: right;\r\n}\r\n\r\n.toolbox .ender {\r\n  margin-top: 0.5em;\r\n}\r\n\r\n.toolbox input {\r\n  display: none;\r\n}\r\n\r\n.toolbox label {\r\n  border: 0.1em solid transparent;\r\n  display: block;\r\n  /* This margin makes the borders overlap across neighbors. */\r\n  margin-bottom: -0.1em;\r\n  position: relative;\r\n}\r\n\r\n.toolbox label.ender {\r\n  margin-bottom: 0;\r\n}\r\n\r\n.toolbox > label canvas {\r\n  display: block;\r\n}\r\n\r\n.toolbox > label:hover .toolMenu,\r\n.toolMenu:hover {\r\n  display: flex;\r\n}\r\n\r\n.toolbox i {\r\n  display: block;\r\n  position: relative;\r\n  text-align: center;\r\n  top: 50%;\r\n  transform: translateY(-50%);\r\n}\r\n\r\n.toolbox i * {\r\n  display: block;\r\n}\r\n\r\n.toolbox .selected {\r\n  border: 0.1em solid white;\r\n  border-radius: 0.2em;\r\n}\r\n\r\n.toolbox .toolMenu label {\r\n  display: block;\r\n  padding: 0.1em;\r\n}\r\n\r\n.toolbox .toolMenu label canvas {\r\n  display: block;\r\n}\r\n\r\n.toolMenu {\r\n  background: #202020;\r\n  display: none;\r\n  /* Left margin gets overruled later, but this at least offsets some. */\r\n  margin-left: 1em;\r\n  margin-top: -0.2em;\r\n  position: absolute;\r\n  padding: 0.1em 0.1em 0.2em 0.3em;\r\n  top: 0;\r\n  z-index: 1;\r\n}\r\n\r\n.view {\r\n  flex: 1;\r\n  position: relative;\r\n}\r\n", ""]);
 
 // exports
 
 
 /***/ })
-],[4]);
+],[5]);
