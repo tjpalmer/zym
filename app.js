@@ -469,7 +469,7 @@ function loadTower(zoneMeta) {
     }
     else {
         // Save the tower for next time.
-        tower = game_mainTower;
+        tower = mainTower;
     }
     let zone = new Zone().load(zoneMeta.id);
     if (!zone.items.some(item => item.id == tower.id)) {
@@ -500,7 +500,7 @@ function loadZone() {
         zone.save();
     }
     // Make sure we have main.
-    let mainTower = level_Tower.hashify(__webpack_require__(6), true);
+    mainTower = level_Tower.hashify(__webpack_require__(6), true);
     if (!zone.items.find(tower => tower.id == mainTower.id)) {
         zone.items.splice(0, 0, mainTower.encode());
         zone.save();
@@ -509,7 +509,7 @@ function loadZone() {
     window.localStorage['zym.zoneId'] = zone.id;
     return Raw.encodeMeta(zone);
 }
-let game_mainTower;
+let mainTower;
 
 // CONCATENATED MODULE: ./src/part.ts
 
