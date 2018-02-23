@@ -610,4 +610,10 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
 }
 
+export class Message {
+
+  text: string;
+
+}
+
 var internals = new Map<string, any>();

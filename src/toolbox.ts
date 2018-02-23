@@ -1,5 +1,6 @@
 import {EditMode, Grid, Level, Part, PartType, copyPoint} from './index';
 import {None} from './parts/index';
+import {Messages} from './ui/index';
 import {Vector2, WebGLRenderTarget} from 'three';
 
 export class Toolbox {
@@ -380,6 +381,20 @@ export class CropTool extends SelectionTool {
       this.selector.style.display = 'none';
     }
   }
+
+}
+
+export class MessageTool extends Tool {
+
+  activate() {
+    this.edit.game.showDialog(new Messages(this.edit));
+  }
+
+  begin(tilePoint: Vector2) {}
+
+  deactivate() {}
+
+  drag(tilePoint: Vector2) {}
 
 }
 
