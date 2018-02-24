@@ -1,9 +1,7 @@
 import {EditorList} from './index';
 import {EditMode, ItemMeta, Message} from '../index';
 
-interface FakeMessage extends ItemMeta {
-  text: string;
-}
+type FakeMessage = ItemMeta;
 
 export class Messages extends EditorList<FakeMessage> {
 
@@ -27,11 +25,16 @@ export class Messages extends EditorList<FakeMessage> {
     return message;
   }
 
+  save() {
+    // TODO Save level.
+  }
+
   showValue(value: FakeMessage) {
     // throw new Error("Method not implemented.");
   }
 
   get values() {
+    // TODO From current level messages.
     return [message];
   }
 
@@ -40,6 +43,5 @@ export class Messages extends EditorList<FakeMessage> {
 let message: FakeMessage = {
   id: 'hi',
   name: 'Message Name',
-  text: 'My lengthy message',
   type: 'Message',
 };

@@ -70,6 +70,8 @@ export interface LevelRaw extends LevelIds, NumberedItem {
 
   contentHash?: string;
 
+  messages?: Message[];
+
   tiles: string;
 
   // This should only be here on import or export.
@@ -408,6 +410,13 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       this.name = encoded.name;
     }
     this.number = encoded.number;
+    // Messages.
+    this.messages = [];
+    if (encoded.messages) {
+      for (let message of encoded.messages) {
+        this.messages.push({text: message.text});
+      }
+    }
     // Tiles.
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
@@ -432,6 +441,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       tiles: this.encodeTiles(),
       ...Raw.encodeMeta(this),
     } as LevelRaw;
+    // TODO Optional messages.
     if (this.bounds) {
       raw.bounds = copyRect(this.bounds);
     }
@@ -497,6 +507,8 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     // For convenience.
     return this;
   }
+
+  messages = [] as Message[];
 
   name = 'Level';
 

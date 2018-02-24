@@ -43,8 +43,7 @@ export abstract class EditorList<
     this.makeEditable(
       nameElement, this.defaultValueName, () => value.name, text => {
         value.name = text;
-        // console.log('saving', value);
-        Raw.save(value);
+        this.save(value);
       }
     );
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
@@ -80,7 +79,7 @@ export abstract class EditorList<
   excludeValue() {
     this.selectedValue.excluded = !this.selectedValue.excluded;
     this.updateDelete();
-    Raw.save(this.selectedValue);
+    this.save(this.selectedValue);
   }
 
   game: Game;
@@ -152,6 +151,10 @@ export abstract class EditorList<
   }
 
   abstract get outsideSelectedValue(): Value;
+
+  save(value: Value) {
+    Raw.save(value);
+  }
 
   scrollIntoView() {
     let {list} = this;
