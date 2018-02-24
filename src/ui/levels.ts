@@ -14,10 +14,10 @@ export class Levels extends EditorList<LevelRaw> {
 
   addLevel() {
     let level = new Level().encode();
-    // TODO Insert after selected position.
+    // Insert after selected position.
     let {items} = this.tower;
     let selectedIndex = items.findIndex(
-      level => level.id == this.selectedValue.id,
+      level => level.id == this.selectedValue!.id,
     );
     let afterSelected = selectedIndex >= 0;
     if (afterSelected) {
@@ -32,7 +32,7 @@ export class Levels extends EditorList<LevelRaw> {
     this.updateNumbers();
     // Select the new.
     this.selectValue(level);
-    Raw.save(this.selectedValue);
+    Raw.save(this.selectedValue!);
   }
 
   buildTitleBar() {
@@ -54,12 +54,12 @@ export class Levels extends EditorList<LevelRaw> {
 
   deleteLevel() {
     if (window.confirm(`Are you sure you want to delete this level?`)) {
-      let levelId = this.selectedValue.id;
+      let levelId = this.selectedValue!.id;
       let index = this.tower.items.findIndex(level => level.id == levelId);
       this.tower.items.splice(index, 1);
       this.tower.save();
       Raw.remove(levelId);
-      this.getSelectedItem().remove();
+      this.getSelectedItem()!.remove();
       if (this.values.length) {
         if (index >= this.values.length) {
           --index;

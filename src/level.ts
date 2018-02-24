@@ -414,7 +414,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     this.messages = [];
     if (encoded.messages) {
       for (let message of encoded.messages) {
-        this.messages.push({text: message.text});
+        this.messages.push(copyMessage(message));
       }
     }
     // Tiles.
@@ -441,7 +441,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       tiles: this.encodeTiles(),
       ...Raw.encodeMeta(this),
     } as LevelRaw;
-    // TODO Optional messages.
+    if (this.messages.length) {
+      raw.messages = this.messages.map(copyMessage);
+    }
     if (this.bounds) {
       raw.bounds = copyRect(this.bounds);
     }
@@ -622,10 +624,21 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
 }
 
-export class Message {
+export interface Message {
+
+  excluded?: boolean;
+
+  // TODO Display area.
+
+  // TODO Other conditions? (Last treasure, ...)
 
   text: string;
 
+}
+
+export function copyMessage(message: Message) {
+  // TODO Deeper copy once conditions!
+  return {...message};
 }
 
 var internals = new Map<string, any>();
