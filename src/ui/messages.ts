@@ -15,7 +15,8 @@ export class Messages extends Dialog {
   }
 
   onHide() {
-    console.log('Apply changes.');
+    this.game.level.message = this.messageText.value;
+    this.game.level.save();
   }
 
   get messageText() {
