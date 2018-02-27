@@ -20,6 +20,8 @@ export class Dialog {
 
   game: Game;
 
+  onHide() {}
+
   onKey(event: KeyboardEvent, down: boolean) {}
 
 }
@@ -140,6 +142,7 @@ export class Game {
 
   hideDialog() {
     if (this.dialog) {
+      this.dialog.onHide();
       this.mode.onHideDialog(this.dialog);
     }
     (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';

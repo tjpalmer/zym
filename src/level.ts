@@ -70,7 +70,7 @@ export interface LevelRaw extends LevelIds, NumberedItem {
 
   contentHash?: string;
 
-  messages?: Message[];
+  message?: string;
 
   tiles: string;
 
@@ -387,14 +387,14 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     // TODO Include excluded?
     let level = new Level({id: this.id, tiles: this.tiles.copy()});
     level.bounds = copyRect(this.bounds);
-    level.messages = this.messages.map(copyMessage);
+    level.message = this.message;
     return level;
   }
 
   copyFrom(level: Level) {
     // TODO Include excluded?
     this.bounds = copyRect(level.bounds);
-    this.messages = level.messages.map(copyMessage);
+    this.message = level.message;
     this.name = level.name;
     this.tiles = level.tiles.copy();
   }
@@ -413,12 +413,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     }
     this.number = encoded.number;
     // Messages.
-    this.messages = [];
-    if (encoded.messages) {
-      for (let message of encoded.messages) {
-        this.messages.push(copyMessage(message));
-      }
-    }
+    this.message = encoded.message || '';
     // Tiles.
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
@@ -443,8 +438,8 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       tiles: this.encodeTiles(),
       ...Raw.encodeMeta(this),
     } as LevelRaw;
-    if (this.messages.length) {
-      raw.messages = this.messages.map(copyMessage);
+    if (this.message) {
+      raw.message = this.message;
     }
     if (this.bounds) {
       raw.bounds = copyRect(this.bounds);
@@ -494,12 +489,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         thisMin.x == thatMin.x && thisMin.y == thatMin.y
       );
     }
-    if (this.messages.length != other.messages.length) {
+    if (this.message != other.message) {
       return false;
     }
-    this.messages.every(
-      (message, index) => equalMessages(message, other.messages[index]),
-    );
     return true;
   }
 
@@ -518,7 +510,7 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     return this;
   }
 
-  messages = [] as Message[];
+  message = '';
 
   name = 'Level';
 
@@ -632,32 +624,32 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
 
 }
 
-export interface Message {
+// export interface Message {
 
-  excluded?: boolean;
+//   excluded?: boolean;
 
-  // TODO Display area.
+//   // TODO Display area.
 
-  // TODO Other conditions? (Last treasure, ...)
+//   // TODO Other conditions? (Last treasure, ...)
 
-  text: string;
+//   text: string;
 
-}
+// }
 
-export function copyMessage(message: Message) {
-  // TODO Deeper copy once conditions!
-  return {...message};
-}
+// export function copyMessage(message: Message) {
+//   // TODO Deeper copy once conditions!
+//   return {...message};
+// }
 
-export function equalMessages(a: Message, b: Message) {
-  if (a.text != b.text) {
-    return false;
-  }
-  if (!!a.excluded != !!b.excluded) {
-    return false;
-  }
-  // TODO Bounds and conditions.
-  return true;
-}
+// export function equalMessages(a: Message, b: Message) {
+//   if (a.text != b.text) {
+//     return false;
+//   }
+//   if (!!a.excluded != !!b.excluded) {
+//     return false;
+//   }
+//   // TODO Bounds and conditions.
+//   return true;
+// }
 
 var internals = new Map<string, any>();

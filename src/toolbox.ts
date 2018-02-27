@@ -384,27 +384,27 @@ export class CropTool extends SelectionTool {
 
 }
 
-export class MessageTool extends SelectionTool {
+// export class MessageTool extends SelectionTool {
 
-  constructor(edit: EditMode) {
-    super(edit, 'selector');
-  }
+//   constructor(edit: EditMode) {
+//     super(edit, 'selector');
+//   }
 
-  activate() {
-    this.edit.game.showDialog(new Messages(this.edit));
-    super.activate();
-  }
+//   activate() {
+//     this.edit.game.showDialog(new Messages(this.edit));
+//     super.activate();
+//   }
 
-  deactivate() {
-    this.selector.style.display = 'none';
-    super.deactivate();
-  }
+//   deactivate() {
+//     this.selector.style.display = 'none';
+//     super.deactivate();
+//   }
 
-  updateData(): void {
-    // throw new Error("Method not implemented.");
-  }
+//   updateData(): void {
+//     // throw new Error("Method not implemented.");
+//   }
 
-}
+// }
 
 export class NopTool extends Tool {
   begin() {}

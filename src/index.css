@@ -29,6 +29,7 @@ body {
   display: none;
 }
 
+.commands .message,
 .commands .play,
 .commands .redo,
 .commands .showLevels,
@@ -185,6 +186,15 @@ body {
 
 .fill.relative {
   position: relative;
+}
+
+.messages textarea {
+  background: none;
+  border: none;
+  color: white;
+  font-family: sans-serif;
+  font-size: 4vmin;
+  height: 100%;
 }
 
 .pane {
