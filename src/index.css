@@ -245,6 +245,10 @@ body {
   opacity: 0.65;
 }
 
+.showMessage .messageText {
+  white-space: pre-line;
+}
+
 .stage {
   background: black;
   display: none;

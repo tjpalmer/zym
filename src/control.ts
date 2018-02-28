@@ -78,6 +78,7 @@ export class Control extends RunnerAction {
   keyAction = new RunnerAction();
 
   onDown(fieldName: string) {
+    let wasShowing = this.game.showingDialog();
     switch (fieldName) {
       case 'burnLeft':
       case 'burnRight': {
@@ -89,11 +90,12 @@ export class Control extends RunnerAction {
       }
       case 'enter': {
         this.game.mode.onKeyDown('Enter');
-        this.game.hideDialog();
+        if (wasShowing) {
+          this.game.hideDialog();
+        }
         break;
       }
       case 'escape': {
-        let wasShowing = this.game.showingDialog();
         this.game.mode.onKeyDown('Escape');
         if (wasShowing) {
           this.game.hideDialog();

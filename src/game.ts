@@ -121,7 +121,7 @@ export class Game {
     this.play = new PlayMode(this);
     this.test = new TestMode(this);
     // Cheat set early to avoid errors, but it really kicks in on the timeout.
-    this.mode = this.test;
+    this.mode = this.play;
     setTimeout(() => this.setMode(this.mode), 0);
     // Input handlers.
     this.control = new Control(this)
@@ -141,6 +141,9 @@ export class Game {
   edit: EditMode;
 
   hideDialog() {
+    if (this.keepOpen) {
+      return;
+    }
     if (this.dialog) {
       this.dialog.onHide();
       this.mode.onHideDialog(this.dialog);
@@ -148,6 +151,8 @@ export class Game {
     (this.body.querySelector('.pane') as HTMLElement).style.display = 'none';
     this.dialog = undefined;
   }
+
+  keepOpen = false;
 
   level: Level;
 

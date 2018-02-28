@@ -1,5 +1,5 @@
 import {Dialog, Game, Mode, Raw, StatsUtil, Tower} from './index';
-import {Report} from './ui/index';
+import {Report, ShowMessage} from './ui/index';
 
 export class PlayMode extends Mode {
 
@@ -13,6 +13,9 @@ export class PlayMode extends Mode {
   bodyClass = 'playMode';
 
   enter() {
+    if (this.game.level.message) {
+      this.showMessage();
+    }
     this.game.play.starting = true;
     this.won = false;
     // Sometimes things get confused, and clearing the action might help.
@@ -46,6 +49,17 @@ export class PlayMode extends Mode {
   }
 
   paused = false;
+
+  showMessage() {
+    // Override in test not to show?
+    // keepOpen is a hope to reduce flashing bring colors between dialogs.
+    // The timeout so far is necessary to get it showing at all.
+    this.game.keepOpen = true;
+    window.setTimeout(() => {
+      this.game.keepOpen = false;
+      this.game.showDialog(new ShowMessage(this.game));
+    }, 0);
+  }
 
   showReport(message: string) {
     this.game.showDialog(new Report(this.game, message));
@@ -163,6 +177,10 @@ export class TestMode extends PlayMode {
       case 'Enter':
       case 'Escape': {
         this.game.setMode(this.game.edit);
+        break;
+      }
+      default: {
+        super.onKeyDown(key);
         break;
       }
     }
