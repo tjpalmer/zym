@@ -2,7 +2,7 @@ import {
   CopyTool, CropTool, Level, Mode, NopTool, Part, PartOptions, PartTool,
   PartType, PasteTool, PointEvent, Game, Tool, Toolbox,
 } from './index';
-import {Levels} from './ui/index';
+import {Levels, Messages} from './ui/index';
 import {None, Parts} from './parts/index';
 import {Vector2} from 'three';
 
@@ -18,12 +18,14 @@ export class EditMode extends Mode {
     this.commandsContainer =
       body.querySelector('.panel.commands') as HTMLElement;
     this.onClick('exit', () => this.game.setMode(this.game.play));
+    this.onClick('message', () => game.showDialog(new Messages(this)));
     this.onClick('play', () => this.togglePlay());
     this.onClick('redo', () => this.editState.redo());
     this.onClick('showLevels', () => this.showLevels());
     this.onClick('undo', () => this.editState.undo());
     // Tools.
     this.namedTools.set('copy', this.copyTool = new CopyTool(this));
+    // this.namedTools.set('message', new MessageTool(this));
     this.namedTools.set('paste', new PasteTool(this));
     this.namedTools.set('crop', this.cropTool = new CropTool(this));
     // Initial history entry.

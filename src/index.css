@@ -29,6 +29,7 @@ body {
   display: none;
 }
 
+.commands .message,
 .commands .play,
 .commands .redo,
 .commands .showLevels,
@@ -187,6 +188,16 @@ body {
   position: relative;
 }
 
+.messages textarea {
+  background: none;
+  border: none;
+  color: white;
+  font-family: sans-serif;
+  font-size: 4vmin;
+  height: 100%;
+  resize: none;
+}
+
 .pane {
   display: none;
 }
@@ -232,6 +243,10 @@ body {
   background: black;
   /* Only to own content -> filter: blur(3px);*/
   opacity: 0.65;
+}
+
+.showMessage .messageText {
+  white-space: pre-line;
 }
 
 .stage {

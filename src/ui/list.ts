@@ -24,7 +24,8 @@ export abstract class EditorList<
 
   addItem(value: Value, afterSelected = false) {
     let item = this.itemTemplate.cloneNode(true) as HTMLElement;
-    if (value.id == this.outsideSelectedValue.id) {
+    let outsideSelectedValue = this.outsideSelectedValue;
+    if (outsideSelectedValue && value.id == outsideSelectedValue.id) {
       item.classList.add('selected');
     }
     item.dataset['value'] = value.id;
@@ -43,8 +44,7 @@ export abstract class EditorList<
     this.makeEditable(
       nameElement, this.defaultValueName, () => value.name, text => {
         value.name = text;
-        // console.log('saving', value);
-        Raw.save(value);
+        this.save(value);
       }
     );
     let nameBox = item.querySelector('.nameBox') as HTMLElement;
@@ -62,8 +62,8 @@ export abstract class EditorList<
       this.enterSelection();
     });
     // Actually add to the list. I wish I'd done this in React ...
-    if (afterSelected) {
-      this.getSelectedItem().insertAdjacentElement('afterend', item);
+    if (afterSelected && this.selectedValue) {
+      this.getSelectedItem()!.insertAdjacentElement('afterend', item);
     } else {
       this.list.appendChild(item);
     }
@@ -78,9 +78,10 @@ export abstract class EditorList<
   abstract enterSelection(): void;
 
   excludeValue() {
+    if (!this.selectedValue) return;
     this.selectedValue.excluded = !this.selectedValue.excluded;
     this.updateDelete();
-    Raw.save(this.selectedValue);
+    this.save(this.selectedValue);
   }
 
   game: Game;
@@ -90,6 +91,7 @@ export abstract class EditorList<
   }
 
   getSelectedItem() {
+    if (!this.selectedValue) return;
     return this.content.querySelector(
       `[data-value="${this.selectedValue.id}"]`
     ) as HTMLElement;
@@ -151,11 +153,16 @@ export abstract class EditorList<
     });
   }
 
-  abstract get outsideSelectedValue(): Value;
+  abstract get outsideSelectedValue(): Value | undefined;
+
+  save(value: Value) {
+    Raw.save(value);
+  }
 
   scrollIntoView() {
+    if (!this.selectedValue) return;
     let {list} = this;
-    let item = this.getSelectedItem();
+    let item = this.getSelectedItem()!;
     // This automatically limits to top and bottom of scroll area.
     // Other than that, try to center.
     let top = item.offsetTop;
@@ -164,20 +171,22 @@ export abstract class EditorList<
     list.scrollTop = top;
   }
 
-  selectedValue: Value;
+  selectedValue: Value | undefined;
 
-  selectValue(value: Value) {
+  selectValue(value: Value | undefined) {
     for (let old of this.content.querySelectorAll('.selected')) {
       old.classList.remove('selected');
     }
     this.showValue(value);
     this.selectedValue = value;
-    this.getSelectedItem().classList.add('selected');
+    if (value) {
+      this.getSelectedItem()!.classList.add('selected');
+    }
     // console.log(`selected ${value.id}`);
     this.updateDelete();
   }
 
-  abstract showValue(value: Value): void;
+  abstract showValue(value: Value | undefined): void;
 
   abstract get values(): Array<any>;
 
@@ -191,7 +200,7 @@ export abstract class EditorList<
     let del = this.getButton('delete');
     if (del) {
       // Base on whether currently excluded.
-      if (this.selectedValue.excluded) {
+      if (this.selectedValue && this.selectedValue.excluded) {
         del.classList.remove('disabled');
       } else {
         del.classList.add('disabled');

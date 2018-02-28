@@ -1,5 +1,6 @@
 import {EditMode, Grid, Level, Part, PartType, copyPoint} from './index';
 import {None} from './parts/index';
+import {Messages} from './ui/index';
 import {Vector2, WebGLRenderTarget} from 'three';
 
 export class Toolbox {
@@ -382,6 +383,28 @@ export class CropTool extends SelectionTool {
   }
 
 }
+
+// export class MessageTool extends SelectionTool {
+
+//   constructor(edit: EditMode) {
+//     super(edit, 'selector');
+//   }
+
+//   activate() {
+//     this.edit.game.showDialog(new Messages(this.edit));
+//     super.activate();
+//   }
+
+//   deactivate() {
+//     this.selector.style.display = 'none';
+//     super.deactivate();
+//   }
+
+//   updateData(): void {
+//     // throw new Error("Method not implemented.");
+//   }
+
+// }
 
 export class NopTool extends Tool {
   begin() {}

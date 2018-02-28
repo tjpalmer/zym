@@ -70,6 +70,8 @@ export interface LevelRaw extends LevelIds, NumberedItem {
 
   contentHash?: string;
 
+  message?: string;
+
   tiles: string;
 
   // This should only be here on import or export.
@@ -382,15 +384,17 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   }
 
   copy() {
-    // TODO Include disabled?
+    // TODO Include excluded?
     let level = new Level({id: this.id, tiles: this.tiles.copy()});
     level.bounds = copyRect(this.bounds);
+    level.message = this.message;
     return level;
   }
 
   copyFrom(level: Level) {
-    // TODO Include disabled?
+    // TODO Include excluded?
     this.bounds = copyRect(level.bounds);
+    this.message = level.message;
     this.name = level.name;
     this.tiles = level.tiles.copy();
   }
@@ -408,6 +412,8 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       this.name = encoded.name;
     }
     this.number = encoded.number;
+    // Messages.
+    this.message = encoded.message || '';
     // Tiles.
     let point = new Vector2();
     let rows = encoded.tiles.split('\n').slice(0, Level.tileCount.y);
@@ -432,6 +438,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
       tiles: this.encodeTiles(),
       ...Raw.encodeMeta(this),
     } as LevelRaw;
+    if (this.message) {
+      raw.message = this.message;
+    }
     if (this.bounds) {
       raw.bounds = copyRect(this.bounds);
     }
@@ -480,6 +489,9 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
         thisMin.x == thatMin.x && thisMin.y == thatMin.y
       );
     }
+    if (this.message != other.message) {
+      return false;
+    }
     return true;
   }
 
@@ -497,6 +509,8 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
     // For convenience.
     return this;
   }
+
+  message = '';
 
   name = 'Level';
 
@@ -609,5 +623,33 @@ export class Level extends Encodable<LevelRaw> implements NumberedItem {
   }
 
 }
+
+// export interface Message {
+
+//   excluded?: boolean;
+
+//   // TODO Display area.
+
+//   // TODO Other conditions? (Last treasure, ...)
+
+//   text: string;
+
+// }
+
+// export function copyMessage(message: Message) {
+//   // TODO Deeper copy once conditions!
+//   return {...message};
+// }
+
+// export function equalMessages(a: Message, b: Message) {
+//   if (a.text != b.text) {
+//     return false;
+//   }
+//   if (!!a.excluded != !!b.excluded) {
+//     return false;
+//   }
+//   // TODO Bounds and conditions.
+//   return true;
+// }
 
 var internals = new Map<string, any>();
