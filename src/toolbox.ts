@@ -384,19 +384,27 @@ export class CropTool extends SelectionTool {
 
 }
 
-export class MessageTool extends Tool {
+// export class MessageTool extends SelectionTool {
 
-  activate() {
-    this.edit.game.showDialog(new Messages(this.edit));
-  }
+//   constructor(edit: EditMode) {
+//     super(edit, 'selector');
+//   }
 
-  begin(tilePoint: Vector2) {}
+//   activate() {
+//     this.edit.game.showDialog(new Messages(this.edit));
+//     super.activate();
+//   }
 
-  deactivate() {}
+//   deactivate() {
+//     this.selector.style.display = 'none';
+//     super.deactivate();
+//   }
 
-  drag(tilePoint: Vector2) {}
+//   updateData(): void {
+//     // throw new Error("Method not implemented.");
+//   }
 
-}
+// }
 
 export class NopTool extends Tool {
   begin() {}

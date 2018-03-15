@@ -1,47 +1,26 @@
-import {EditorList} from './index';
-import {EditMode, ItemMeta, Message} from '../index';
+import {Dialog, EditMode, load} from '../index';
 
-type FakeMessage = ItemMeta;
-
-export class Messages extends EditorList<FakeMessage> {
+export class Messages extends Dialog {
 
   constructor(edit: EditMode) {
-    super(edit.game, require('./messages.html'));
+    super(edit.game);
+    this.content = load(require('./messages.html'));
+    this.messageText.value = edit.game.level.message;
   }
 
-  buildTitleBar() {
-    // throw new Error("Method not implemented.");
+  content: HTMLElement;
+
+  field(name: string) {
+    return this.content.querySelector(`.${name}`) as HTMLElement;
   }
 
-  enterSelection() {
-    // throw new Error("Method not implemented.");
+  onHide() {
+    this.game.level.message = this.messageText.value;
+    this.game.level.save();
   }
 
-  init() {
-    this.selectedValue = this.outsideSelectedValue;
-  }
-
-  get outsideSelectedValue() {
-    return message;
-  }
-
-  save() {
-    // TODO Save level.
-  }
-
-  showValue(value: FakeMessage) {
-    // throw new Error("Method not implemented.");
-  }
-
-  get values() {
-    // TODO From current level messages.
-    return [message];
+  get messageText() {
+    return this.field('messageText') as HTMLTextAreaElement;
   }
 
 }
-
-let message: FakeMessage = {
-  id: 'hi',
-  name: 'Message Name',
-  type: 'Message',
-};
