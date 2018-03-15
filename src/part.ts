@@ -1,4 +1,5 @@
 import {Game, Level} from './index';
+import {Runner} from './parts/index';
 import {Vector2} from 'three';
 
 export enum Edge {
@@ -163,7 +164,7 @@ export class Part {
 
   supported?: Part = undefined;
 
-  supportedGone(oldSupported: Part) {}
+  supportedGone(oldSupported: Runner) {}
 
   surface(other: Part, seems?: boolean) {
     return false;
@@ -173,7 +174,7 @@ export class Part {
     return this.solid(other);
   }
 
-  trackSupported(other: Part, active: boolean) {
+  trackSupported(other: Runner, active: boolean) {
     if (active) {
       if (!this.supported) {
         this.supported = other;

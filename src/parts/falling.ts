@@ -1,3 +1,4 @@
+import {Runner} from './index';
 import {Part, PartType} from '../index';
 import {Vector2} from 'three';
 
@@ -33,24 +34,46 @@ class FallingPart extends optionClass {
     }
   }
 
-  supportedGone(oldSupported: Part) {
+  spanGroup(handler: (part: FallingPart) => boolean | void) {
+    if (this.spanHalf(10, handler)) return true;
+    if (this.spanHalf(-10, handler)) return true;
+  }
+
+  spanHalf(step: number, handler: (part: FallingPart) => boolean | void) {
+    let {y} = this.point;
+    let {stage} = this.game;
+    // Search to see if someone's still in this group.
+    let someSupported = false;
+    workPoint.set(4, 5).add(this.point);
+    while (workPoint.y < stage.pixelBounds.max.y) {
+      y += step;
+      workPoint.y += step;
+      let next = stage.partAt(workPoint, part => part.type.falling);
+      if (!next) break;
+      if (Math.abs(y - next.point.y) > 0.5) break;
+      // Close enough to call them touching.
+      if (handler(next as FallingPart)) {
+        return true;
+      }
+    }
+  }
+
+  supportedGone(oldSupported: Runner) {
     super.supportedGone(oldSupported);
     if (!this.kicker) {
       let {y} = this.point;
       let {stage} = this.game;
+      // Search to see if someone's still in this group.
+      if (this.spanGroup(part => !!part.supported)) {
+        // Yep, so don't fall yet.
+        return;
+      }
       // Mark this one kicked.
       this.kicker = this;
-      // Mark all beneath as kicked, too.
-      workPoint.set(4, 5).add(this.point);
-      while (workPoint.y >= 0) {
-        y -= 10;
-        workPoint.y -= 10;
-        let next = stage.partAt(workPoint, part => part.type.falling);
-        if (!next) break;
-        if (Math.abs(y - next.point.y) > 0.5) break;
-        // Close enough to call them touching.
-        (next as FallingPart).kicker = this;
-      }
+      // Mark all in group as kicked, too.
+      this.spanGroup(part => {
+        part.kicker = this;
+      });
     }
   }
 

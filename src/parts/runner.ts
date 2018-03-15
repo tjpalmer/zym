@@ -356,12 +356,18 @@ export class Runner extends Part {
     move.multiply(speed);
     this.oldCatcher = oldCatcher;
     // Assign and track supports.
+    let oldSupport: Part | undefined;
     if (this.support && support != this.support) {
-      this.support.trackSupported(this, false);
+      oldSupport = this.support;
     }
     this.support = support;
     if (support) {
       support.trackSupported(this, true);
+    }
+    // Remove old after adding new, so falling can track if we're still in the
+    // group.
+    if (oldSupport) {
+      oldSupport.trackSupported(this, false);
     }
   }
 

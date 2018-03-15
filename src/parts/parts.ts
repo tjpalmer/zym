@@ -2,7 +2,7 @@ import {
   Bar, BiggieLeft, BiggieRight, Bonus, Brick, Crusher, Dropper, Enemy, Energy,
   EnergyOff, Falling, GunLeft, GunRight, Hero, Ladder, LatchLeft, LatchRight,
   LauncherCenter, LauncherDown, LauncherLeft, LauncherRight, LauncherUp, None,
-  Spawn, Steel, Treasure,
+  Runner, Spawn, Steel, Treasure,
 } from './index';
 import {
   cartesianProduct, Multiple, Part, PartOptions, PartType,
@@ -126,7 +126,7 @@ function Breaking(optionClass: PartType) {
   // Can't call the class itself `Breaking`, because the UI ends up thinking it
   // should add rendered blocks to the buttons on screen.
   class BreakingPart extends optionClass {
-    supportedGone(oldSupported: Part) {
+    supportedGone(oldSupported: Runner) {
       this.die(oldSupported);
       this.active = false;
       this.game.stage.removed(this);
